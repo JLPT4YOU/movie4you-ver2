@@ -164,9 +164,13 @@ const Footer = () => {
               Xem phim HD online với đường truyền cao tốc, không giật lag. Tất cả phim đều có độ phân giải cao từ HD 720p, Full HD 1080p đến 4K. 
               Nội dung phim đa dạng: phim bộ Hàn Quốc, phim bộ Trung Quốc, phim chiếu rạp, phim hành động Mỹ, phim Ma Kinh Dị, phim Tâm Lý Tình Cảm và nhiều thể loại khác.
             </p>
-            <p className="text-xs text-gray-500 mt-2">
-              MOVIE4YOU - Website xem phim online miễn phí chất lượng cao với giao diện trực quan, tốc độ tải nhanh. Phim online Vietsub, thuyết minh chất lượng Full HD. Cập nhật phim mới mỗi ngày cùng kho phim với hơn 10.000+ bộ phim và 100.000+ tập phim. Xem phim HD online với đường truyền cao tốc, không giật lag. Tất cả phim đều có độ phân giải cao từ HD 720p, Full HD 1080p đến 4K. Nội dung phim đa dạng: phim bộ Hàn Quốc, phim bộ Trung Quốc, phim chiếu rạp, phim hành động Mỹ, phim Ma Kinh Dị, phim Tâm Lý Tình Cảm và nhiều thể loại khác.
-            </p>
+            <div className="mt-3 text-[11px] sm:text-xs text-gray-500">
+              <span className="font-semibold">Liên hệ:</span>
+              {" "}Vui lòng thông báo nếu quyền lợi của bạn bị vi phạm, chúng tôi sẽ xóa nội dung vi phạm kịp thời.
+              <span className="mx-2 text-gray-600">|</span>
+              <span className="font-semibold">Thông tin:</span>
+              {" "}Tất cả nội dung được thu thập từ các trang web video trên Internet, không cung cấp phát trực tuyến chính hãng. Cảm ơn sự hợp tác của bạn!
+            </div>
           </div>
         </div>
 
@@ -196,23 +200,6 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Disclaimer */}
-        <div className="border-t border-gray-800 mt-8 pt-6">
-          <div className="text-center space-y-2">
-            <p className="text-xs text-gray-500 font-semibold">
-              Liên hệ
-            </p>
-            <p className="text-xs text-gray-500">
-              Vui lòng thông báo nếu quyền lợi của bạn bị vi phạm, chúng tôi sẽ xóa nội dung vi phạm kịp thời.
-            </p>
-            <p className="text-xs text-gray-500 font-semibold mt-4">
-              Thông tin
-            </p>
-            <p className="text-xs text-gray-500">
-              Tất cả nội dung được thu thập từ các trang web video trên Internet, không cung cấp phát trực tuyến chính hãng. Cảm ơn sự hợp tác của bạn!
-            </p>
-          </div>
-        </div>
       </div>
     </footer>
   );
