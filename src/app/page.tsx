@@ -31,11 +31,23 @@ interface Movie {
 
 async function fetchCinemaMoviesData() {
   try {
-    // Fetch 6 movies at once
+    // Fetch 6 movies at once instead of duplicating calls
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/ophim/v1/api/danh-sach/phim-chieu-rap?page=1&limit=6&sort_field=modified.time&sort_type=desc`,
       { cache: 'no-store' }
     );
+    
+    if (!response.ok) {
+      console.error('Failed to fetch cinema movies:', response.status, response.statusText);
+      return { heroMovies: [], cinemaMovies: [] };
+    }
+    
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      console.error('Response is not JSON, got:', contentType);
+      return { heroMovies: [], cinemaMovies: [] };
+    }
+    
     const data = await response.json();
     const arr = data?.data?.items ?? data?.items ?? data?.data ?? [] as Array<Record<string, unknown>>;
     const movieItems = arr;
@@ -54,6 +66,11 @@ async function fetchCinemaMoviesData() {
         `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/ophim/v1/api/phim/${(movie as Record<string, any>).slug}`,
         { cache: 'no-store' }
       );
+      
+      if (!detailResponse.ok || !detailResponse.headers.get('content-type')?.includes('application/json')) {
+        throw new Error('Invalid response from API');
+      }
+      
       const detailData = await detailResponse.json();
       const movieDetail = detailData?.data?.item || {};
 
@@ -93,6 +110,11 @@ async function fetchCinemaMoviesData() {
             `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/ophim/v1/api/phim/${(m as Record<string, any>).slug}`,
             { cache: 'no-store' }
           );
+          
+          if (!res.ok || !res.headers.get('content-type')?.includes('application/json')) {
+            throw new Error('Invalid response from API');
+          }
+          
           const detailData = await res.json();
           const detail = detailData?.data?.item || {};
           
