@@ -31,10 +31,12 @@ interface Movie {
 
 async function fetchCinemaMoviesData() {
   try {
-    // Auto-detect URL on Vercel or use env variable
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
-                    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
-                    'http://localhost:3000');
+    // Use absolute URL for Vercel deployment
+    const baseUrl = process.env.NODE_ENV === 'production' 
+      ? 'https://movie4you-ver2.vercel.app'
+      : (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000');
+    
+    console.log('Fetching from URL:', baseUrl);
     
     // Fetch 6 movies at once instead of duplicating calls
     const response = await fetch(
@@ -67,9 +69,9 @@ async function fetchCinemaMoviesData() {
     
     let firstMovie: Movie;
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
-                      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
-                      'http://localhost:3000');
+      const baseUrl = process.env.NODE_ENV === 'production' 
+        ? 'https://movie4you-ver2.vercel.app'
+        : (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000');
       const detailResponse = await fetch(
         `${baseUrl}/api/ophim/v1/api/phim/${(movie as Record<string, any>).slug}`,
         { cache: 'no-store' }
@@ -114,9 +116,9 @@ async function fetchCinemaMoviesData() {
       movieItems.slice(1, 6).map(async (item: any) => {
         const m = (item as Record<string, any>)?.movie || item;
         try {
-          const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
-                        (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
-                        'http://localhost:3000');
+          const baseUrl = process.env.NODE_ENV === 'production' 
+            ? 'https://movie4you-ver2.vercel.app'
+            : (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000');
           const res = await fetch(
             `${baseUrl}/api/ophim/v1/api/phim/${(m as Record<string, any>).slug}`,
             { cache: 'no-store' }
