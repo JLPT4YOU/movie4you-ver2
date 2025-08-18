@@ -199,6 +199,9 @@ const Footer = () => {
               <Link href="/sitemap.xml" className="text-gray-400 hover:text-white transition-colors">
                 Sitemap
               </Link>
+              <Link href="/terms" className="text-gray-400 hover:text-white transition-colors">
+                Điều khoản dịch vụ
+              </Link>
             </div>
           </div>
         </div>
