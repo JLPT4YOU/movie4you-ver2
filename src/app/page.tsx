@@ -31,9 +31,14 @@ interface Movie {
 
 async function fetchCinemaMoviesData() {
   try {
+    // Auto-detect URL on Vercel or use env variable
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
+                    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
+                    'http://localhost:3000');
+    
     // Fetch 6 movies at once instead of duplicating calls
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/ophim/v1/api/danh-sach/phim-chieu-rap?page=1&limit=6&sort_field=modified.time&sort_type=desc`,
+      `${baseUrl}/api/ophim/v1/api/danh-sach/phim-chieu-rap?page=1&limit=6&sort_field=modified.time&sort_type=desc`,
       { cache: 'no-store' }
     );
     
@@ -62,8 +67,11 @@ async function fetchCinemaMoviesData() {
     
     let firstMovie: Movie;
     try {
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
+                      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
+                      'http://localhost:3000');
       const detailResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/ophim/v1/api/phim/${(movie as Record<string, any>).slug}`,
+        `${baseUrl}/api/ophim/v1/api/phim/${(movie as Record<string, any>).slug}`,
         { cache: 'no-store' }
       );
       
@@ -106,8 +114,11 @@ async function fetchCinemaMoviesData() {
       movieItems.slice(1, 6).map(async (item: any) => {
         const m = (item as Record<string, any>)?.movie || item;
         try {
+          const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
+                        (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
+                        'http://localhost:3000');
           const res = await fetch(
-            `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/ophim/v1/api/phim/${(m as Record<string, any>).slug}`,
+            `${baseUrl}/api/ophim/v1/api/phim/${(m as Record<string, any>).slug}`,
             { cache: 'no-store' }
           );
           
