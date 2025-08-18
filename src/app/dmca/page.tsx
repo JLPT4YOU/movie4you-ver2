@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Page() {
   return (
@@ -18,8 +19,22 @@ export default function Page() {
         {/* Header */}
         <header className="mb-6">
           <h1 className="text-3xl sm:text-4xl font-bold text-white">DMCA - Thông báo và Gỡ bỏ</h1>
-          <p className="text-sm text-gray-400 mt-2">Hiệu lực: 18/08/2025 • Liên hệ: <a href="mailto:movie4you.owner@gmail.com" className="text-red-300">movie4you.owner@gmail.com</a></p>
+          <p className="text-sm text-gray-400 mt-2">Hiệu lực: 18/12/2024 • Liên hệ: <a href="mailto:movie4you.owner@gmail.com" className="text-red-300">movie4you.owner@gmail.com</a></p>
         </header>
+
+        {/* DMCA Protection Badge */}
+        <div className="flex justify-center mb-8">
+          <div className="bg-white rounded-lg p-4 shadow-lg">
+            <Image 
+              src="https://images.dmca.com/Badges/dmca-badge-w200-5x1-10.png?ID=movie4you" 
+              alt="DMCA.com Protection Status" 
+              width={200} 
+              height={40}
+              className="h-auto"
+              priority
+            />
+          </div>
+        </div>
 
         <section className="bg-gray-800/30 rounded-lg p-6 border border-gray-700 mb-6">
           <h2 className="text-2xl font-semibold text-white mb-3 flex items-center">
