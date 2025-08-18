@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Script from "next/script";
 
 export default function Page() {
   return (
@@ -21,16 +21,17 @@ export default function Page() {
 
         {/* DMCA Protection Badge */}
         <div className="flex justify-center mb-8">
-          <div className="bg-white rounded-lg p-4 shadow-lg">
-            <Image 
-              src="https://images.dmca.com/Badges/dmca-badge-w200-5x1-10.png?ID=movie4you" 
-              alt="DMCA.com Protection Status" 
-              width={200} 
-              height={40}
-              className="h-auto"
-              priority
+          <a
+            href="//www.dmca.com/Protection/Status.aspx?id=62c781dd-83be-490e-af79-9276c36c6411"
+            title="DMCA.com Protection Status"
+            className="dmca-badge"
+          >
+            <img
+              src="//images.dmca.com/Badges/dmca-badge-w150-5x1-01.png?ID=//www.dmca.com/Protection/Status.aspx?id=62c781dd-83be-490e-af79-9276c36c6411"
+              alt="DMCA.com Protection Status"
             />
-          </div>
+          </a>
+          <Script src="//images.dmca.com/Badges/DMCABadgeHelper.min.js" strategy="afterInteractive" />
         </div>
 
         <section className="bg-zinc-900/50 backdrop-blur-sm rounded-lg p-6 mb-6 border border-zinc-800">
