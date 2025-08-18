@@ -164,12 +164,15 @@ const Footer = () => {
               Xem phim HD online với đường truyền cao tốc, không giật lag. Tất cả phim đều có độ phân giải cao từ HD 720p, Full HD 1080p đến 4K. 
               Nội dung phim đa dạng: phim bộ Hàn Quốc, phim bộ Trung Quốc, phim chiếu rạp, phim hành động Mỹ, phim Ma Kinh Dị, phim Tâm Lý Tình Cảm và nhiều thể loại khác.
             </p>
-            <div className="mt-3 text-[11px] sm:text-xs text-gray-500">
-              <span className="font-semibold">Liên hệ:</span>
-              {" "}Vui lòng thông báo nếu quyền lợi của bạn bị vi phạm, chúng tôi sẽ xóa nội dung vi phạm kịp thời.
-              <span className="mx-2 text-gray-600">|</span>
-              <span className="font-semibold">Thông tin:</span>
-              {" "}Tất cả nội dung được thu thập từ các trang web video trên Internet, không cung cấp phát trực tuyến chính hãng. Cảm ơn sự hợp tác của bạn!
+            <div className="mt-3 space-y-1 text-[11px] sm:text-xs text-gray-500">
+              <p>
+                <span className="font-semibold">Liên hệ:</span>
+                {" "}Vui lòng thông báo nếu quyền lợi của bạn bị vi phạm, chúng tôi sẽ xóa nội dung vi phạm kịp thời.
+              </p>
+              <p>
+                <span className="font-semibold">Thông tin:</span>
+                {" "}Tất cả nội dung được thu thập từ các trang web video trên Internet, không cung cấp phát trực tuyến chính hãng. Cảm ơn sự hợp tác của bạn!
+              </p>
             </div>
           </div>
         </div>
