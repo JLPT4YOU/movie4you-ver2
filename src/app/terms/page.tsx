@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useEffect } from 'react';
 
 export default function TermsOfService() {
@@ -9,37 +8,31 @@ export default function TermsOfService() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-gray-300">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Breadcrumb */}
-        <nav className="mb-8">
-          <ol className="flex items-center space-x-2 text-sm">
-            <li>
-              <Link href="/" className="text-gray-400 hover:text-red-500 transition-colors">
-                Trang chủ
-              </Link>
-            </li>
-            <li className="text-gray-500">/</li>
-            <li className="text-red-500">Điều khoản dịch vụ</li>
-          </ol>
-        </nav>
-
+    <div className="min-h-screen bg-black">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pt-36">
+        
         {/* Header */}
-        <div className="mb-12 text-center">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-red-600 to-red-400 bg-clip-text text-transparent mb-4">
+        <header className="mb-12">
+          <h1 className="text-5xl md:text-6xl font-extrabold text-white mb-4 text-center">
             Điều Khoản Dịch Vụ
           </h1>
-          <p className="text-gray-400">Cập nhật lần cuối: {new Date().toLocaleDateString('vi-VN')}</p>
-        </div>
+          <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-gray-400 text-center">
+            <span>Hiệu lực từ : Ngày 18 tháng 8 năm 2025</span>
+            <span className="hidden sm:inline">•</span>
+            <a href="mailto:movie4you.owner@gmail.com" className="text-red-500 hover:text-red-400 transition-colors">
+              movie4you.owner@gmail.com
+            </a>
+          </div>
+        </header>
 
         {/* Content */}
-        <div className="space-y-8 text-gray-300">
+        <div className="space-y-8">
           {/* Section 1 */}
-          <section className="bg-gray-800/30 rounded-lg p-6 border border-gray-700">
-            <h2 className="text-2xl font-semibold text-white mb-4 flex items-center">
-              <span className="text-red-500 mr-3">1.</span> Chấp thuận Điều khoản
+          <section className="bg-zinc-900/50 backdrop-blur-sm rounded-lg p-6 mb-6 border border-zinc-800">
+            <h2 className="text-2xl font-semibold text-white mb-4">
+              1. Chấp thuận Điều khoản
             </h2>
-            <p className="leading-relaxed">
+            <p className="text-gray-300 leading-relaxed">
               Bằng việc truy cập hoặc sử dụng MOVIE4YOU tại movie4you.net ("Dịch vụ"), bạn xác nhận đã đọc, 
               hiểu và đồng ý bị ràng buộc bởi Điều khoản Dịch vụ này ("ToS") và Chính sách Quyền riêng tư. 
               Nếu không đồng ý, vui lòng rời khỏi trang ngay.
@@ -47,9 +40,9 @@ export default function TermsOfService() {
           </section>
 
           {/* Section 2 */}
-          <section className="bg-gray-800/30 rounded-lg p-6 border border-gray-700">
-            <h2 className="text-2xl font-semibold text-white mb-4 flex items-center">
-              <span className="text-red-500 mr-3">2.</span> Định nghĩa
+          <section className="bg-zinc-900/50 backdrop-blur-sm rounded-lg p-6 mb-6 border border-zinc-800">
+            <h2 className="text-2xl font-semibold text-white mb-4">
+              2. Định nghĩa
             </h2>
             <div className="space-y-3">
               <p>
@@ -68,11 +61,11 @@ export default function TermsOfService() {
           </section>
 
           {/* Section 3 */}
-          <section className="bg-gray-800/30 rounded-lg p-6 border border-gray-700">
-            <h2 className="text-2xl font-semibold text-white mb-4 flex items-center">
-              <span className="text-red-500 mr-3">3.</span> Điều kiện sử dụng
+          <section className="bg-zinc-900/50 backdrop-blur-sm rounded-lg p-6 mb-6 border border-zinc-800">
+            <h2 className="text-2xl font-semibold text-white mb-4">
+              3. Điều kiện sử dụng
             </h2>
-            <ul className="space-y-2 list-disc list-inside">
+            <ul className="space-y-2 list-disc list-inside text-gray-300">
               <li>
                 Bạn phải đủ độ tuổi hợp lệ theo pháp luật nơi cư trú (nếu là vị thành niên: cần sự đồng ý 
                 hợp lệ của người giám hộ).
@@ -85,9 +78,9 @@ export default function TermsOfService() {
           </section>
 
           {/* Section 4 */}
-          <section className="bg-gray-800/30 rounded-lg p-6 border border-gray-700">
-            <h2 className="text-2xl font-semibold text-white mb-4 flex items-center">
-              <span className="text-red-500 mr-3">4.</span> Bản chất Dịch vụ & Nội dung Bên thứ ba
+          <section className="bg-zinc-900/50 backdrop-blur-sm rounded-lg p-6 mb-6 border border-zinc-800">
+            <h2 className="text-2xl font-semibold text-white mb-4">
+              4. Bản chất Dịch vụ & Nội dung Bên thứ ba
             </h2>
             <div className="space-y-3">
               <div className="flex items-start">
@@ -114,9 +107,9 @@ export default function TermsOfService() {
           </section>
 
           {/* Section 5 */}
-          <section className="bg-gray-800/30 rounded-lg p-6 border border-gray-700">
-            <h2 className="text-2xl font-semibold text-white mb-4 flex items-center">
-              <span className="text-red-500 mr-3">5.</span> Quyền sở hữu trí tuệ
+          <section className="bg-zinc-900/50 backdrop-blur-sm rounded-lg p-6 mb-6 border border-zinc-800">
+            <h2 className="text-2xl font-semibold text-white mb-4">
+              5. Quyền sở hữu trí tuệ
             </h2>
             <ul className="space-y-2">
               <li>• Nhãn hiệu, logo, giao diện, mã nguồn của MOVIE4YOU và các bên cấp quyền được pháp luật 
@@ -127,9 +120,9 @@ export default function TermsOfService() {
           </section>
 
           {/* Section 6 */}
-          <section className="bg-gray-800/30 rounded-lg p-6 border border-gray-700">
-            <h2 className="text-2xl font-semibold text-white mb-4 flex items-center">
-              <span className="text-red-500 mr-3">6.</span> Tài khoản (nếu áp dụng)
+          <section className="bg-zinc-900/50 backdrop-blur-sm rounded-lg p-6 mb-6 border border-zinc-800">
+            <h2 className="text-2xl font-semibold text-white mb-4">
+              6. Tài khoản (nếu áp dụng)
             </h2>
             <ul className="space-y-2">
               <li>• Bạn chịu trách nhiệm bảo mật thông tin đăng nhập và mọi hoạt động phát sinh.</li>
@@ -138,9 +131,9 @@ export default function TermsOfService() {
           </section>
 
           {/* Section 7 */}
-          <section className="bg-gray-800/30 rounded-lg p-6 border border-gray-700">
-            <h2 className="text-2xl font-semibold text-white mb-4 flex items-center">
-              <span className="text-red-500 mr-3">7.</span> Quy tắc sử dụng chấp nhận được (AUP)
+          <section className="bg-zinc-900/50 backdrop-blur-sm rounded-lg p-6 mb-6 border border-zinc-800">
+            <h2 className="text-2xl font-semibold text-white mb-4">
+              7. Quy tắc sử dụng chấp nhận được (AUP)
             </h2>
             <div className="space-y-4">
               <p className="font-semibold text-white">Nghiêm cấm:</p>
@@ -170,9 +163,9 @@ export default function TermsOfService() {
           </section>
 
           {/* Section 8 */}
-          <section className="bg-gray-800/30 rounded-lg p-6 border border-gray-700">
-            <h2 className="text-2xl font-semibold text-white mb-4 flex items-center">
-              <span className="text-red-500 mr-3">8.</span> Trách nhiệm người dùng & Bồi thường
+          <section className="bg-zinc-900/50 backdrop-blur-sm rounded-lg p-6 mb-6 border border-zinc-800">
+            <h2 className="text-2xl font-semibold text-white mb-4">
+              8. Trách nhiệm người dùng & Bồi thường
             </h2>
             <div className="bg-red-900/20 border border-red-800 rounded-lg p-4 mb-4">
               <p className="text-red-400">
@@ -193,9 +186,9 @@ export default function TermsOfService() {
           </section>
 
           {/* Section 9 */}
-          <section className="bg-gray-800/30 rounded-lg p-6 border border-gray-700">
-            <h2 className="text-2xl font-semibold text-white mb-4 flex items-center">
-              <span className="text-red-500 mr-3">9.</span> Thông báo & Gỡ bỏ về bản quyền
+          <section className="bg-zinc-900/50 backdrop-blur-sm rounded-lg p-6 mb-6 border border-zinc-800">
+            <h2 className="text-2xl font-semibold text-white mb-4">
+              9. Thông báo & Gỡ bỏ về bản quyền
             </h2>
             <div className="space-y-3">
               <p>MOVIE4YOU thực hiện quy trình tiếp nhận thông báo vi phạm và gỡ bỏ hợp lý, phù hợp 
@@ -213,9 +206,9 @@ export default function TermsOfService() {
           </section>
 
           {/* Section 10 */}
-          <section className="bg-gray-800/30 rounded-lg p-6 border border-gray-700">
-            <h2 className="text-2xl font-semibold text-white mb-4 flex items-center">
-              <span className="text-red-500 mr-3">10.</span> API Bên thứ ba & Liên kết ngoài
+          <section className="bg-zinc-900/50 backdrop-blur-sm rounded-lg p-6 mb-6 border border-zinc-800">
+            <h2 className="text-2xl font-semibold text-white mb-4">
+              10. API Bên thứ ba & Liên kết ngoài
             </h2>
             <ul className="space-y-2">
               <li>• Dịch vụ phụ thuộc vào API nguồn mở/nhà cung cấp thứ ba; bạn đồng ý tuân theo điều 
@@ -227,9 +220,9 @@ export default function TermsOfService() {
           </section>
 
           {/* Section 11 */}
-          <section className="bg-gray-800/30 rounded-lg p-6 border border-gray-700">
-            <h2 className="text-2xl font-semibold text-white mb-4 flex items-center">
-              <span className="text-red-500 mr-3">11.</span> Quyền riêng tư & Dữ liệu
+          <section className="bg-zinc-900/50 backdrop-blur-sm rounded-lg p-6 mb-6 border border-zinc-800">
+            <h2 className="text-2xl font-semibold text-white mb-4">
+              11. Quyền riêng tư & Dữ liệu
             </h2>
             <ul className="space-y-2">
               <li>• Việc xử lý dữ liệu cá nhân tuân theo Chính sách Quyền riêng tư (được dẫn liên kết 
@@ -240,9 +233,9 @@ export default function TermsOfService() {
           </section>
 
           {/* Section 12 */}
-          <section className="bg-gray-800/30 rounded-lg p-6 border border-gray-700">
-            <h2 className="text-2xl font-semibold text-white mb-4 flex items-center">
-              <span className="text-red-500 mr-3">12.</span> Miễn trừ bảo đảm
+          <section className="bg-zinc-900/50 backdrop-blur-sm rounded-lg p-6 mb-6 border border-zinc-800">
+            <h2 className="text-2xl font-semibold text-white mb-4">
+              12. Miễn trừ bảo đảm
             </h2>
             <div className="bg-yellow-900/20 border border-yellow-800 rounded-lg p-4">
               <p className="text-yellow-400">
@@ -254,9 +247,9 @@ export default function TermsOfService() {
           </section>
 
           {/* Section 13 */}
-          <section className="bg-gray-800/30 rounded-lg p-6 border border-gray-700">
-            <h2 className="text-2xl font-semibold text-white mb-4 flex items-center">
-              <span className="text-red-500 mr-3">13.</span> Giới hạn trách nhiệm
+          <section className="bg-zinc-900/50 backdrop-blur-sm rounded-lg p-6 mb-6 border border-zinc-800">
+            <h2 className="text-2xl font-semibold text-white mb-4">
+              13. Giới hạn trách nhiệm
             </h2>
             <p>Trong phạm vi tối đa pháp luật cho phép, MOVIE4YOU không chịu trách nhiệm với:</p>
             <ul className="mt-3 space-y-1 list-disc list-inside">
@@ -271,9 +264,9 @@ export default function TermsOfService() {
           </section>
 
           {/* Section 14 */}
-          <section className="bg-gray-800/30 rounded-lg p-6 border border-gray-700">
-            <h2 className="text-2xl font-semibold text-white mb-4 flex items-center">
-              <span className="text-red-500 mr-3">14.</span> Chấm dứt
+          <section className="bg-zinc-900/50 backdrop-blur-sm rounded-lg p-6 mb-6 border border-zinc-800">
+            <h2 className="text-2xl font-semibold text-white mb-4">
+              14. Chấm dứt
             </h2>
             <ul className="space-y-2">
               <li>• MOVIE4YOU có thể tạm ngừng/chấm dứt một phần/toàn bộ Dịch vụ bất cứ lúc nào vì lý do 
@@ -284,9 +277,9 @@ export default function TermsOfService() {
           </section>
 
           {/* Section 15 */}
-          <section className="bg-gray-800/30 rounded-lg p-6 border border-gray-700">
-            <h2 className="text-2xl font-semibold text-white mb-4 flex items-center">
-              <span className="text-red-500 mr-3">15.</span> Thay đổi Điều khoản
+          <section className="bg-zinc-900/50 backdrop-blur-sm rounded-lg p-6 mb-6 border border-zinc-800">
+            <h2 className="text-2xl font-semibold text-white mb-4">
+              15. Thay đổi Điều khoản
             </h2>
             <p>
               MOVIE4YOU có thể cập nhật ToS; bản cập nhật có hiệu lực khi đăng tải. Tiếp tục sử dụng = 
@@ -295,9 +288,9 @@ export default function TermsOfService() {
           </section>
 
           {/* Section 16 */}
-          <section className="bg-gray-800/30 rounded-lg p-6 border border-gray-700">
-            <h2 className="text-2xl font-semibold text-white mb-4 flex items-center">
-              <span className="text-red-500 mr-3">16.</span> Lực bất khả kháng
+          <section className="bg-zinc-900/50 backdrop-blur-sm rounded-lg p-6 mb-6 border border-zinc-800">
+            <h2 className="text-2xl font-semibold text-white mb-4">
+              16. Lực bất khả kháng
             </h2>
             <p>
               MOVIE4YOU không chịu trách nhiệm cho chậm trễ/không thực hiện do sự kiện ngoài tầm kiểm 
@@ -306,9 +299,9 @@ export default function TermsOfService() {
           </section>
 
           {/* Section 17 */}
-          <section className="bg-gray-800/30 rounded-lg p-6 border border-gray-700">
-            <h2 className="text-2xl font-semibold text-white mb-4 flex items-center">
-              <span className="text-red-500 mr-3">17.</span> Luật áp dụng & Giải quyết tranh chấp
+          <section className="bg-zinc-900/50 backdrop-blur-sm rounded-lg p-6 mb-6 border border-zinc-800">
+            <h2 className="text-2xl font-semibold text-white mb-4">
+              17. Luật áp dụng & Giải quyết tranh chấp
             </h2>
             <ul className="space-y-2">
               <li>• ToS chịu sự điều chỉnh của luật pháp quốc tế và luật địa phương áp dụng.</li>
@@ -318,9 +311,9 @@ export default function TermsOfService() {
           </section>
 
           {/* Section 18 */}
-          <section className="bg-gray-800/30 rounded-lg p-6 border border-gray-700">
-            <h2 className="text-2xl font-semibold text-white mb-4 flex items-center">
-              <span className="text-red-500 mr-3">18.</span> Tính độc lập điều khoản
+          <section className="bg-zinc-900/50 backdrop-blur-sm rounded-lg p-6 mb-6 border border-zinc-800">
+            <h2 className="text-2xl font-semibold text-white mb-4">
+              18. Tính độc lập điều khoản
             </h2>
             <p>
               Nếu một điều khoản bị coi là vô hiệu/không thể thực thi, các phần còn lại của ToS vẫn có 
@@ -329,9 +322,9 @@ export default function TermsOfService() {
           </section>
 
           {/* Section 19 */}
-          <section className="bg-gray-800/30 rounded-lg p-6 border border-gray-700">
-            <h2 className="text-2xl font-semibold text-white mb-4 flex items-center">
-              <span className="text-red-500 mr-3">19.</span> Toàn bộ thỏa thuận - Không chuyển nhượng
+          <section className="bg-zinc-900/50 backdrop-blur-sm rounded-lg p-6 mb-6 border border-zinc-800">
+            <h2 className="text-2xl font-semibold text-white mb-4">
+              19. Toàn bộ thỏa thuận - Không chuyển nhượng
             </h2>
             <ul className="space-y-2">
               <li>• ToS (cùng Chính sách Quyền riêng tư) là toàn bộ thỏa thuận giữa bạn và MOVIE4YOU về 
@@ -342,9 +335,9 @@ export default function TermsOfService() {
           </section>
 
           {/* Section 20 */}
-          <section className="bg-gray-800/30 rounded-lg p-6 border border-gray-700">
-            <h2 className="text-2xl font-semibold text-white mb-4 flex items-center">
-              <span className="text-red-500 mr-3">20.</span> Liên hệ
+          <section className="bg-zinc-900/50 backdrop-blur-sm rounded-lg p-6 mb-6 border border-zinc-800">
+            <h2 className="text-2xl font-semibold text-white mb-4">
+              20. Liên hệ
             </h2>
             <p>
               Mọi câu hỏi/khiếu nại pháp lý: 

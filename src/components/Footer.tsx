@@ -1,17 +1,18 @@
 'use client';
 
 import Link from "next/link";
+import Image from "next/image";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   const movieCategories = [
-    { name: 'Phim Bộ', href: '/phim-bo' },
-    { name: 'Phim Lẻ', href: '/phim-le' },
-    { name: 'TV Shows', href: '/tv-shows' },
-    { name: 'Hoạt Hình', href: '/hoat-hinh' },
-    { name: 'Phim Chiếu Rạp', href: '/phim-chieu-rap' },
-    { name: 'Phim Vietsub', href: '/phim-vietsub' },
+    { name: 'Phim Bộ', href: '/category/phim-bo' },
+    { name: 'Phim Lẻ', href: '/category/phim-le' },
+    { name: 'TV Shows', href: '/category/tv-shows' },
+    { name: 'Hoạt Hình', href: '/category/hoat-hinh' },
+    { name: 'Phim Chiếu Rạp', href: '/category/phim-chieu-rap' },
+    { name: 'Phim Vietsub', href: '/category/phim-vietsub' },
   ];
 
   const genres = [
@@ -32,27 +33,25 @@ const Footer = () => {
     { name: 'Phim Việt Nam', href: '/quoc-gia/viet-nam' },
   ];
 
-  const quickLinks = [
-    { name: 'Phim Mới Cập Nhật', href: '/category/phim-moi' },
-    { name: 'Phim Sắp Chiếu', href: '/category/phim-sap-chieu' },
-    { name: 'Phim Thuyết Minh', href: '/category/phim-thuyet-minh' },
-    { name: 'Phim Bộ Đang Chiếu', href: '/category/phim-bo-dang-chieu' },
-    { name: 'Phim Bộ Hoàn Thành', href: '/category/phim-bo-hoan-thanh' },
-    { name: 'Top Phim Hay', href: '/category/phim-le' },
-  ];
+  // quickLinks removed per request
 
   return (
     <footer className="bg-gradient-to-b from-gray-900 to-black text-gray-300 pt-16 pb-8 mt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Main Footer Content */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           {/* Logo and About */}
           <div className="lg:col-span-1">
             <div className="mb-6">
               <Link href="/" className="inline-block">
-                <h2 className="text-2xl font-bold bg-gradient-to-r from-red-600 to-red-400 bg-clip-text text-transparent">
-                  MOVIE4YOU
-                </h2>
+                <Image
+                  src="/logo.png"
+                  alt="MOVIE4YOU"
+                  width={210}
+                  height={48}
+                  className="h-12 w-auto"
+                  priority
+                />
               </Link>
             </div>
             <p className="text-sm text-gray-400 mb-4 leading-relaxed">
@@ -84,7 +83,7 @@ const Footer = () => {
           </div>
 
           {/* Categories */}
-          <div>
+          <div className="lg:ml-4">
             <h3 className="text-white font-semibold mb-4 text-base">Danh Mục Phim</h3>
             <ul className="space-y-2">
               {movieCategories.map((category) => (
@@ -101,7 +100,7 @@ const Footer = () => {
           </div>
 
           {/* Genres */}
-          <div>
+          <div className="lg:ml-4">
             <h3 className="text-white font-semibold mb-4 text-base">Thể Loại</h3>
             <ul className="space-y-2">
               {genres.map((genre) => (
@@ -118,7 +117,7 @@ const Footer = () => {
           </div>
 
           {/* Countries */}
-          <div>
+          <div className="lg:ml-4">
             <h3 className="text-white font-semibold mb-4 text-base">Quốc Gia</h3>
             <ul className="space-y-2">
               {countries.map((country) => (
@@ -134,22 +133,7 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Quick Links */}
-          <div>
-            <h3 className="text-white font-semibold mb-4 text-base">Liên Kết Nhanh</h3>
-            <ul className="space-y-2">
-              {quickLinks.map((link) => (
-                <li key={link.href}>
-                  <Link 
-                    href={link.href} 
-                    className="text-sm text-gray-400 hover:text-red-400 transition-colors duration-200"
-                  >
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          
         </div>
 
         {/* SEO Text */}
