@@ -140,13 +140,14 @@ export default function Header() {
       <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between text-sm text-netflix-text-gray">
           {/* Logo */}
-          <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
+          <Link href="/" className="flex items-center hover:opacity-80 transition-opacity min-w-0" aria-label="Trang chủ MOVIE4YOU">
             <Image
               src="/logo.png"
               alt="MOVIE4YOU"
-              width={120}
-              height={40}
-              className="h-8 w-auto"
+              width={210}
+              height={48}
+              className="h-auto w-24 sm:w-28 md:w-32 lg:w-40 xl:w-48"
+              sizes="(max-width: 640px) 96px, (max-width: 768px) 112px, (max-width: 1024px) 128px, (max-width: 1280px) 160px, 192px"
               priority
             />
           </Link>
