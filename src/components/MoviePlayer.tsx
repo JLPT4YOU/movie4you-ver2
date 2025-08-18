@@ -113,20 +113,20 @@ export default function MoviePlayer({ movie }: MoviePlayerProps) {
       {/* Video Player Popup */}
       {showPlayer && (movie?.episodes?.[0]?.server_data?.[0]?.link_embed || currentEpisode?.link_embed || movie?.trailer_url) && (
         <div
-          className="fixed inset-0 bg-black/95 backdrop-blur-md z-50 flex items-center justify-center p-4 sm:p-6"
+          className="fixed inset-0 bg-black/95 backdrop-blur-md z-50 flex items-center justify-center p-[2vw]"
           onClick={closePlayer}
         >
           <div
-            className="relative w-full max-w-5xl bg-netflix-black rounded-lg overflow-hidden shadow-2xl border border-gray-800"
+            className="relative w-[90vw] max-w-[1200px] bg-netflix-black rounded-lg overflow-hidden shadow-2xl border border-gray-800"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close Button */}
             <button
               onClick={closePlayer}
-              className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 bg-black/70 hover:bg-black/90 text-white rounded-full p-2 transition-all duration-200 hover:scale-110"
+              className="absolute top-[1vw] right-[1vw] z-10 bg-black/70 hover:bg-black/90 text-white rounded-full p-[0.5vw] min-w-[30px] min-h-[30px] flex items-center justify-center transition-all duration-200 hover:scale-110"
               aria-label="Đóng trình phát video"
             >
-              <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-[1.5vw] h-[1.5vw] min-w-[20px] min-h-[20px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
@@ -190,15 +190,15 @@ export default function MoviePlayer({ movie }: MoviePlayerProps) {
             {/* Episode Selection */}
             {!isWatchingTrailer && movie.episodes && movie.episodes.length > 0 && movie.type !== 'single' &&
              movie.episodes[0]?.server_data && movie.episodes[0].server_data.length > 1 && (
-              <div className="p-4 sm:p-5 border-t border-gray-800 bg-netflix-black">
-                <div className="mb-3">
-                  <h3 className="text-white font-semibold text-sm sm:text-base">Chọn tập phim</h3>
+              <div className="p-[1.5vw] border-t border-gray-800 bg-netflix-black">
+                <div className="mb-[0.8vw]">
+                  <h3 className="text-white font-semibold text-[1.2vw] min-text-[14px]">Chọn tập phim</h3>
                 </div>
 
                 {/* Server Selection */}
                 {movie.episodes.length > 1 && (
-                  <div className="mb-3">
-                    <div className="flex gap-2 flex-wrap">
+                  <div className="mb-[0.8vw]">
+                    <div className="flex gap-[0.5vw] flex-wrap">
                       {movie.episodes.map((server, index) => (
                         <button
                           key={index}
@@ -206,7 +206,7 @@ export default function MoviePlayer({ movie }: MoviePlayerProps) {
                             setSelectedServer(index);
                             setSelectedEpisode(0);
                           }}
-                          className={`px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all duration-200 ${
+                          className={`px-[0.8vw] py-[0.4vw] rounded-md text-[1vw] min-text-[12px] font-medium transition-all duration-200 ${
                             selectedServer === index
                               ? 'bg-netflix-red text-white shadow-lg'
                               : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
@@ -220,8 +220,8 @@ export default function MoviePlayer({ movie }: MoviePlayerProps) {
                 )}
 
                 {/* Episode Grid */}
-                <div className="max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
-                  <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-2 pr-2">
+                <div className="max-h-[10vw] min-h-[100px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
+                  <div className="grid grid-cols-8 sm:grid-cols-10 md:grid-cols-12 gap-[0.5vw] pr-[0.5vw]">
                     {movie.episodes[selectedServer]?.server_data.map((episode, index) => {
                       const progress = movie ? WatchHistoryManager.getProgress(movie._id, index, selectedServer) : null;
                       const hasProgress = progress && progress.progress > 5;
@@ -245,7 +245,7 @@ export default function MoviePlayer({ movie }: MoviePlayerProps) {
                             }
                             setSelectedEpisode(index);
                           }}
-                          className={`relative h-9 px-2 rounded-md text-xs sm:text-sm font-medium transition-all duration-200 hover:scale-105 overflow-hidden ${
+                          className={`relative h-[2.5vw] min-h-[30px] px-[0.5vw] rounded-md text-[1vw] min-text-[11px] font-medium transition-all duration-200 hover:scale-105 overflow-hidden ${
                             selectedEpisode === index
                               ? 'bg-netflix-red text-white shadow-lg ring-2 ring-netflix-red ring-opacity-50'
                               : 'bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white'
@@ -253,13 +253,13 @@ export default function MoviePlayer({ movie }: MoviePlayerProps) {
                         >
                           {hasProgress && (
                             <div
-                              className="absolute bottom-0 left-0 h-0.5 bg-yellow-400 transition-all duration-300"
+                              className="absolute bottom-0 left-0 h-[0.15vw] min-h-[2px] bg-yellow-400 transition-all duration-300"
                               style={{ width: `${progress.progress}%` }}
                             />
                           )}
                           <span className="relative z-10">{episode.name}</span>
                           {progress && progress.progress > 90 && (
-                            <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-green-400 rounded-full"></div>
+                            <div className="absolute top-[0.2vw] right-[0.2vw] w-[0.4vw] h-[0.4vw] min-w-[4px] min-h-[4px] bg-green-400 rounded-full"></div>
                           )}
                         </button>
                       );
