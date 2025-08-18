@@ -1,0 +1,86 @@
+# Robots.txt for MOVIE4YOU
+# Allow all crawlers
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /_next/
+Disallow: /admin/
+
+# Sitemaps
+Sitemap: https://movie4you.com/sitemap.xml
+Sitemap: https://movie4you.com/sitemap-movies.xml
+
+# Crawl-delay for specific bots
+User-agent: AhrefsBot
+Crawl-delay: 10
+
+User-agent: SemrushBot
+Crawl-delay: 10
+
+User-agent: DotBot
+Crawl-delay: 10
+
+User-agent: MJ12bot
+Disallow: /
+
+# Google Image
+User-agent: Googlebot-Image
+Allow: /
+
+# Google AdSense
+User-agent: Mediapartners-Google
+Allow: /
+
+# Common crawlers
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Slurp
+Allow: /
+Crawl-delay: 1
+
+User-agent: DuckDuckBot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Baiduspider
+Allow: /
+Crawl-delay: 1
+
+User-agent: YandexBot
+Allow: /
+Crawl-delay: 2
+
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: LinkedInBot
+Allow: /
+
+User-agent: WhatsApp
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+# Block bad bots
+User-agent: SiteAuditBot
+Disallow: /
+
+User-agent: ia_archiver
+Disallow: /
+
+User-agent: Yandex
+Disallow: /
+
+User-agent: Riddler
+Disallow: /

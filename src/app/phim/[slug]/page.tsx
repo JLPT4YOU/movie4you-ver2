@@ -5,55 +5,99 @@ import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { MovieDetailResponse, MovieDetail } from '@/types/movie';
-import Header from '@/components/Header';
-import { WatchHistoryManager } from '@/utils/watchHistory';
 import { resolveImageUrl } from '@/utils/ophim';
+import { WatchHistoryManager } from '@/utils/watchHistory';
 import { getYouTubeVideoId } from '@/utils/media';
 import { IconVideo } from '@/components/icons';
+import Header from '@/components/Header';
+import { generateMovieSchema, generateBreadcrumbSchema } from '@/utils/seo';
 
 export default function MovieDetailPage() {
   const params = useParams();
-  const slug = params.slug as string;
-  
   const [movie, setMovie] = useState<MovieDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [showTrailer, setShowTrailer] = useState(false);
   const [selectedServer, setSelectedServer] = useState(0);
   const [selectedEpisode, setSelectedEpisode] = useState(0);
-  const [showTrailerPopup, setShowTrailerPopup] = useState(false);
-  const [isWatchingTrailer, setIsWatchingTrailer] = useState(false); // true = trailer, false = episode
+  const [showPlayer, setShowPlayer] = useState(false);
+  const [isWatchingTrailer, setIsWatchingTrailer] = useState(false);
 
+  useEffect(() => {
+    const fetchMovie = async () => {
+      try {
+        const response = await fetch(`/api/ophim/v1/api/phim/${params.slug}`);
+        const data: MovieDetailResponse = await response.json();
+        
+        if (data.status === 'success' && data.data?.item) {
+          setMovie(data.data.item);
+          
+          // Inject structured data into head
+          const url = `${window.location.origin}/phim/${params.slug}`;
+          const movieSchema = generateMovieSchema(data.data.item, url);
+          const breadcrumbSchema = generateBreadcrumbSchema([
+            { name: 'Trang chủ', url: window.location.origin },
+            { name: data.data.item.type === 'series' ? 'Phim bộ' : 'Phim lẻ', url: `${window.location.origin}/danh-sach/${data.data.item.type}` },
+            { name: data.data.item.name, url: url }
+          ]);
+          
+          // Add structured data scripts
+          const movieScript = document.createElement('script');
+          movieScript.type = 'application/ld+json';
+          movieScript.innerHTML = JSON.stringify(movieSchema);
+          document.head.appendChild(movieScript);
+          
+          const breadcrumbScript = document.createElement('script');
+          breadcrumbScript.type = 'application/ld+json';
+          breadcrumbScript.innerHTML = JSON.stringify(breadcrumbSchema);
+          document.head.appendChild(breadcrumbScript);
+        }
+      } catch (error) {
+        console.error('Error fetching movie:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
+    fetchMovie();
+  }, [params.slug]);
 
-  // Function to handle trailer popup - chỉ hiển thị trailer
-  const handleTrailerClick = () => {
-    if (movie?.trailer_url) {
-      setIsWatchingTrailer(true); // Đánh dấu đang xem trailer
-      setShowTrailerPopup(true);
+  useEffect(() => {
+    // Load watch history
+    if (movie) {
+      const latestEpisode = WatchHistoryManager.getLatestEpisode(movie._id);
+      if (latestEpisode) {
+        setSelectedServer(latestEpisode.serverIndex);
+        setSelectedEpisode(latestEpisode.episodeIndex);
+      }
     }
-  };
+  }, [movie]);
 
-  // Function to handle watch now - chỉ hiển thị episode/phim
+  const currentEpisode = movie?.episodes?.[selectedServer]?.server_data?.[selectedEpisode];
+
   const handleWatchNowClick = () => {
-    // Ưu tiên episode nếu có
     if (movie && movie.episodes && movie.episodes.length > 0) {
       const firstEpisode = movie.episodes[0]?.server_data?.[0];
       if (firstEpisode?.link_embed) {
-        setIsWatchingTrailer(false); // Đánh dấu đang xem phim
-        setShowTrailerPopup(true);
+        setIsWatchingTrailer(false);
+        setShowPlayer(true);
         return;
       }
     }
 
-    // Fallback to trailer if no episodes available
     if (movie?.trailer_url) {
-      setIsWatchingTrailer(true); // Fallback vẫn là trailer
-      setShowTrailerPopup(true);
+      setIsWatchingTrailer(true);
+      setShowPlayer(true);
     }
   };
 
-  const closeTrailerPopup = () => {
-    // Save to watch history when closing (simple view tracking)
+  const handleTrailerClick = () => {
+    if (movie?.trailer_url) {
+      setIsWatchingTrailer(true);
+      setShowPlayer(true);
+    }
+  };
+
+  const closePlayer = () => {
     if (movie && currentEpisode && !isWatchingTrailer) {
       WatchHistoryManager.saveProgress({
         movieId: movie._id,
@@ -63,92 +107,43 @@ export default function MovieDetailPage() {
         episodeIndex: selectedEpisode,
         episodeName: currentEpisode.name,
         serverIndex: selectedServer,
-        currentTime: 50, // Default 50% progress for any watched video
+        currentTime: 50,
         duration: 100
       });
     }
-
-    setShowTrailerPopup(false);
+    setShowPlayer(false);
   };
 
-
-  // Handle ESC key to close popup
   useEffect(() => {
     const handleEscKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        closeTrailerPopup();
+        closePlayer();
       }
     };
 
-    if (showTrailerPopup) {
+    if (showPlayer) {
       document.addEventListener('keydown', handleEscKey);
-      document.body.style.overflow = 'hidden'; // Prevent background scroll
+      document.body.style.overflow = 'hidden';
     }
 
     return () => {
       document.removeEventListener('keydown', handleEscKey);
       document.body.style.overflow = 'unset';
     };
-  }, [showTrailerPopup]);
-
-  useEffect(() => {
-    const fetchMovieDetail = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(`/api/ophim/v1/api/phim/${slug}`);
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch movie details');
-        }
-
-        const data: MovieDetailResponse = await response.json();
-        
-        if (data.status === 'success' && data.data?.item) {
-          setMovie(data.data.item);
-
-          // Load watch history để set episode/server mặc định
-          const latestEpisode = WatchHistoryManager.getLatestEpisode(data.data.item._id);
-          if (latestEpisode) {
-            setSelectedServer(latestEpisode.serverIndex);
-            setSelectedEpisode(latestEpisode.episodeIndex);
-          }
-        } else {
-          throw new Error('Movie not found');
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (slug) {
-      fetchMovieDetail();
-    }
-  }, [slug]);
-
-  const currentEpisode = movie?.episodes?.[selectedServer]?.server_data?.[selectedEpisode];
+  }, [showPlayer, closePlayer]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-netflix-black">
-        <Header />
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-white text-xl">Đang tải...</div>
-        </div>
+      <div className="min-h-screen bg-netflix-black flex items-center justify-center">
+        <div className="text-white">Loading...</div>
       </div>
     );
   }
 
-  if (error || !movie) {
+  if (!movie) {
     return (
-      <div className="min-h-screen bg-netflix-black">
-        <Header />
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-white text-xl">
-            {error || 'Không tìm thấy phim'}
-          </div>
-        </div>
+      <div className="min-h-screen bg-netflix-black flex items-center justify-center">
+        <div className="text-white">Movie not found</div>
       </div>
     );
   }
@@ -190,7 +185,22 @@ export default function MovieDetailPage() {
 
                   {/* Play Button Overlay */}
                   <button
-                    onClick={handleWatchNowClick}
+                    onClick={() => {
+                      // Save to watch history when closing (simple view tracking)
+                      if (movie) {
+                        WatchHistoryManager.saveProgress({
+                          movieId: movie._id,
+                          movieName: movie.name,
+                          movieSlug: movie.slug,
+                          posterUrl: movie.thumb_url,
+                          episodeIndex: 0,
+                          episodeName: '',
+                          serverIndex: 0,
+                          currentTime: 50, // Default 50% progress for any watched video
+                          duration: 100
+                        });
+                      }
+                    }}
                     className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                   >
                     <div className="bg-netflix-red rounded-full p-4 shadow-lg">
@@ -248,7 +258,7 @@ export default function MovieDetailPage() {
 
                 {/* Tags */}
                 <div className="flex flex-wrap gap-3 mb-8 justify-center lg:justify-start">
-                  {movie.category && movie.category.map((cat) => (
+                  {movie.category?.map((cat: any) => (
                     <Link
                       key={cat.id}
                       href={`/the-loai/${cat.slug}`}
@@ -314,7 +324,7 @@ export default function MovieDetailPage() {
                   {movie.director && movie.director.length > 0 && (
                     <div className="mb-4">
                       <span className="text-gray-400 text-sm">Đạo diễn: </span>
-                      <span className="text-white font-medium">{movie.director.slice(0, 2).join(', ')}</span>
+                      <span className="text-white font-medium">{movie.country.map((country: any, index: number) => country.name).slice(0, 2).join(', ')}</span>
                     </div>
                   )}
 
@@ -333,20 +343,17 @@ export default function MovieDetailPage() {
                 <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                   <button
                     onClick={handleWatchNowClick}
-                    className="bg-netflix-red hover:bg-red-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold transition-colors duration-300 flex items-center justify-center gap-3 text-base sm:text-lg shadow-lg"
-                  >
+                    className="bg-netflix-red hover:bg-red-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold transition-colors duration-300 flex items-center justify-center gap-3 text-base sm:text-lg shadow-lg">
                     <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M8 5v14l11-7z"/>
                     </svg>
                     Xem Ngay
                   </button>
 
-
                   {movie.trailer_url && (
                     <button
                       onClick={handleTrailerClick}
-                      className="bg-gray-800/80 hover:bg-gray-700 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-lg font-semibold transition-colors duration-300 flex items-center gap-2 sm:gap-3 text-sm sm:text-base border border-gray-600 hover:border-gray-500 justify-center"
-                    >
+                      className="bg-gray-800/80 hover:bg-gray-700 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-lg font-semibold transition-colors duration-300 flex items-center gap-2 sm:gap-3 text-sm sm:text-base border border-gray-600 hover:border-gray-500 justify-center">
                       <IconVideo className="w-5 h-5 sm:w-6 sm:h-6" />
                       Trailer
                     </button>
@@ -358,16 +365,11 @@ export default function MovieDetailPage() {
         </div>
       </div>
 
-      {/* Episodes Section - Hidden, only used for popup */}
-      <div className="hidden">
-        {/* This section is hidden but keeps the episode selection logic for popup */}
-      </div>
-
       {/* Video Popup */}
-      {showTrailerPopup && (movie?.episodes?.[0]?.server_data?.[0]?.link_embed || currentEpisode?.link_embed || movie?.trailer_url) && (
+      {showPlayer && (movie?.episodes?.[0]?.server_data?.[0]?.link_embed || currentEpisode?.link_embed || movie?.trailer_url) && (
         <div
           className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          onClick={closeTrailerPopup}
+          onClick={closePlayer}
         >
           <div
             className="relative w-full max-w-6xl bg-netflix-black rounded-xl overflow-hidden shadow-2xl border border-netflix-gray"
@@ -375,7 +377,7 @@ export default function MovieDetailPage() {
           >
             {/* Close Button */}
             <button
-              onClick={closeTrailerPopup}
+              onClick={closePlayer}
               className="absolute top-4 right-4 z-10 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors duration-300"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -386,7 +388,6 @@ export default function MovieDetailPage() {
             {/* Video Player */}
             <div className="aspect-video bg-netflix-black">
               {(() => {
-                // Nếu đang xem trailer, ưu tiên hiển thị trailer
                 if (isWatchingTrailer && movie?.trailer_url) {
                   const videoId = getYouTubeVideoId(movie.trailer_url);
                   if (videoId) {
@@ -411,17 +412,14 @@ export default function MovieDetailPage() {
                   }
                 }
 
-                // Nếu đang xem phim, ưu tiên episode
                 if (!isWatchingTrailer) {
                   let videoSource = null;
                   let videoTitle = '';
 
                   if (currentEpisode?.link_embed) {
-                    // For series with selected episode
                     videoSource = currentEpisode.link_embed;
                     videoTitle = `${movie.name} - Tập ${currentEpisode.name}`;
                   } else if (movie?.episodes?.[0]?.server_data?.[0]?.link_embed) {
-                    // For single movies or first episode
                     const firstEpisode = movie.episodes[0].server_data[0];
                     videoSource = firstEpisode.link_embed;
                     videoTitle = `${movie.name}${firstEpisode.name !== 'Full' ? ` - Tập ${firstEpisode.name}` : ''}`;
@@ -439,48 +437,23 @@ export default function MovieDetailPage() {
                   }
                 }
 
-                // Fallback: hiển thị trailer nếu không có episode
-                if (movie?.trailer_url) {
-                  const videoId = getYouTubeVideoId(movie.trailer_url);
-                  if (videoId) {
-                    return (
-                      <iframe
-                        src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`}
-                        className="w-full h-full"
-                        allowFullScreen
-                        allow="autoplay; encrypted-media"
-                        title={`${movie.name} - Trailer`}
-                      />
-                    );
-                  } else {
-                    return (
-                      <iframe
-                        src={movie.trailer_url}
-                        className="w-full h-full"
-                        allowFullScreen
-                        title={`${movie.name} - Trailer`}
-                      />
-                    );
-                  }
-                }
-
                 return null;
               })()}
             </div>
 
-            {/* Episode Selection - Only show when watching movie (not trailer) */}
+            {/* Episode Selection */}
             {!isWatchingTrailer && movie.episodes && movie.episodes.length > 0 && movie.type !== 'single' &&
              movie.episodes[0]?.server_data && movie.episodes[0].server_data.length > 1 && (
               <div className="p-5 border-t border-netflix-gray bg-netflix-black">
                 <div className="mb-4">
-                  <h3 className="text-white font-medium text-base">Tập phim</h3>
+                  <h3 className="text-white font-medium text-base">Chọn tập phim</h3>
                 </div>
 
                 {/* Server Selection */}
                 {movie.episodes.length > 1 && (
                   <div className="mb-4">
                     <div className="flex gap-3">
-                      {movie.episodes.map((server, index) => (
+                      {movie.episodes.map((server: any, index: number) => (
                         <button
                           key={index}
                           onClick={() => {
@@ -500,17 +473,16 @@ export default function MovieDetailPage() {
                   </div>
                 )}
 
-                {/* Episode Grid - Larger */}
+                {/* Episode Grid */}
                 <div className="flex gap-2 flex-wrap max-h-24 overflow-y-auto">
-                  {movie.episodes[selectedServer]?.server_data.map((episode, index) => {
+                  {movie.episodes[selectedServer]?.server_data.map((episode: any, index: number) => {
                     const progress = movie ? WatchHistoryManager.getProgress(movie._id, index, selectedServer) : null;
-                    const hasProgress = progress && progress.progress > 5; // Show progress if > 5%
+                    const hasProgress = progress && progress.progress > 5;
 
                     return (
                       <button
                         key={index}
                         onClick={() => {
-                          // Save progress for current episode before switching
                           if (currentEpisode && movie) {
                             WatchHistoryManager.saveProgress({
                               movieId: movie._id,
@@ -520,7 +492,7 @@ export default function MovieDetailPage() {
                               episodeIndex: index,
                               episodeName: episode.name,
                               serverIndex: selectedServer,
-                              currentTime: 15, // 15% progress when switching episodes
+                              currentTime: 15,
                               duration: 100
                             });
                           }
@@ -532,18 +504,13 @@ export default function MovieDetailPage() {
                             : 'bg-netflix-gray text-gray-300 hover:bg-netflix-light-gray hover:text-white'
                         }`}
                       >
-                        {/* Progress bar */}
                         {hasProgress && (
                           <div
                             className="absolute bottom-0 left-0 h-1 bg-yellow-400 transition-all duration-300"
                             style={{ width: `${progress.progress}%` }}
                           />
                         )}
-
-                        {/* Episode name */}
                         <span className="relative z-10">{episode.name}</span>
-
-                        {/* Watched indicator */}
                         {progress && progress.progress > 90 && (
                           <div className="absolute top-1 right-1 w-2 h-2 bg-green-400 rounded-full"></div>
                         )}
