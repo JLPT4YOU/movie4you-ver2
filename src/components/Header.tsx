@@ -202,7 +202,7 @@ export default function Header() {
                 onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
                 className="w-8 h-8 rounded overflow-hidden ring-1 ring-netflix-red/50 hover:ring-netflix-red transition-all"
               >
-                <img src="https://i.pravatar.cc/64?img=12" alt="avatar" className="w-full h-full object-cover" />
+                <Image src="https://i.pravatar.cc/64?img=12" alt="avatar" width={32} height={32} className="w-full h-full object-cover" />
               </button>
 
               {isUserDropdownOpen && (

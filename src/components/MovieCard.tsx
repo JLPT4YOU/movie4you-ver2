@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { resolveImageUrl, PLACEHOLDER_POSTER } from "@/utils/ophim";
 
 
@@ -39,12 +40,13 @@ export default function MovieCard({ movie }: MovieCardProps) {
       onMouseLeave={() => setIsHovered(false)}
     >
       <div className="relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-netflix-gray shadow-[0_10px_20px_rgba(0,0,0,0.35)]">
-        <img
+        <Image
           src={resolvedSrc}
           alt={movie.name}
-          className="absolute inset-0 w-full h-full object-cover"
-          loading="lazy"
-          decoding="async"
+          fill
+          className="object-cover"
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+          priority={false}
           onError={() => setImageError(true)}
         />
 

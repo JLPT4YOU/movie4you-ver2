@@ -1,8 +1,10 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { IconBell } from "./icons";
+import Image from "next/image";
+import { usePathname, useRouter } from "next/navigation";
+import { IconHome, IconX, IconChevronDown, IconBell, IconHistory } from "./icons";
 
 interface Country {
   _id: string;
@@ -256,7 +258,7 @@ export default function MobileMenu({
             {/* User Info */}
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded overflow-hidden ring-1 ring-netflix-red/50">
-                <img src="https://i.pravatar.cc/64?img=12" alt="avatar" className="w-full h-full object-cover" />
+                <Image src="https://i.pravatar.cc/64?img=12" alt="avatar" width={32} height={32} className="w-full h-full object-cover" />
               </div>
               <div className="flex items-center gap-4">
                 <button aria-label="Thông báo" className="p-1.5 text-netflix-text-gray hover:text-netflix-white transition-colors">
