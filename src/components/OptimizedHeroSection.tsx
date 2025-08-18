@@ -34,10 +34,28 @@ interface Movie {
   };
 }
 
+// Static movies data for instant render
+const STATIC_MOVIES = [
+  {
+    name: "Phong Thần 2: Chiến Hỏa Tây Kỳ",
+    slug: "phong-than-2-chien-hoa-tay-ky",
+    origin_name: "Creation of the Gods II",
+    poster_url: "https://img.ophim.live/uploads/movies/phong-than-2-chien-hoa-tay-ky-poster.jpg",
+    thumb_url: "https://img.ophim.live/uploads/movies/phong-than-2-chien-hoa-tay-ky-thumb.jpg",
+    year: 2025,
+    content: "Phim kể về cuộc chiến giữa các vị thần",
+    time: "135 phút",
+    categories: [{name: "Hành Động", slug: "hanh-dong"}],
+    countries: [{name: "Trung Quốc", slug: "trung-quoc"}],
+    trailer_url: "",
+    modified: { time: "" }
+  }
+];
+
 export default function OptimizedHeroSection() {
-  const [movies, setMovies] = useState<Movie[]>([]);
+  const [movies, setMovies] = useState<Movie[]>(STATIC_MOVIES);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [showTrailerPopup, setShowTrailerPopup] = useState(false);
   const [imagesLoaded, setImagesLoaded] = useState<Record<string, boolean>>({});
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -53,126 +71,47 @@ export default function OptimizedHeroSection() {
     }
   }, [movies, imagesLoaded]);
 
-  // Phase 1: Load first movie for fast LCP
+  // Load fresh data after initial render
   useEffect(() => {
-    const fetchFirstMovie = async () => {
+    const fetchMovies = async () => {
       try {
         const response = await fetch('/api/ophim/v1/api/danh-sach/phim-chieu-rap?page=1&limit=6&sort_field=modified.time&sort_type=desc');
         const data = await response.json();
         const arr = data?.data?.items ?? data?.items ?? data?.data ?? [] as Array<Record<string, unknown>>;
         
-        if (arr.length === 0) {
-          setLoading(false);
-          return;
-        }
-
-        // Store all items for later use
-        const allMovieItems = arr.slice(0, 6);
+        if (arr.length === 0) return;
         
-        // Load only the first movie initially
-        const firstMovieItem = allMovieItems[0];
-        const movie = (firstMovieItem as Record<string, any>)?.movie || firstMovieItem;
-        
-        try {
-          const detailResponse = await fetch(`/api/ophim/v1/api/phim/${(movie as Record<string, any>).slug}`);
-          const detailData = await detailResponse.json();
-          const movieDetail = detailData?.data?.item || {};
-
-          const firstMovie = {
-            name: movieDetail.name || movie.name || '',
-            slug: movieDetail.slug || movie.slug || '',
-            origin_name: movieDetail.origin_name || movie.origin_name || '',
-            thumb_url: movieDetail.thumb_url || movie.thumb_url || '',
-            poster_url: movieDetail.poster_url || movie.poster_url || '',
-            year: movieDetail.year || movie.year || 0,
-            content: movieDetail.content || '',
-            time: movieDetail.time || movie.time || '',
-            categories: movieDetail.category || movie.categories || [],
-            countries: movieDetail.country || movie.countries || [],
-            trailer_url: movieDetail.trailer_url || '',
-            modified: { time: movieDetail?.modified?.time || movie?.modified?.time || '' }
-          };
-
-          setMovies([firstMovie]);
-          setLoading(false);
-          
-          // Phase 2: Load remaining movies after initial render
-          if (allMovieItems.length > 1) {
-            setIsLoadingMore(true);
-            setTimeout(async () => {
-              const remainingMovies = await Promise.all(
-                allMovieItems.slice(1).map(async (item: Record<string, unknown>) => {
-                  const movie = (item as Record<string, any>)?.movie || item;
-                  try {
-                    const detailResponse = await fetch(`/api/ophim/v1/api/phim/${(movie as Record<string, any>).slug}`);
-                    const detailData = await detailResponse.json();
-                    const movieDetail = detailData?.data?.item || {};
-
-                    return {
-                      name: movieDetail.name || movie.name || '',
-                      slug: movieDetail.slug || movie.slug || '',
-                      origin_name: movieDetail.origin_name || movie.origin_name || '',
-                      thumb_url: movieDetail.thumb_url || movie.thumb_url || '',
-                      poster_url: movieDetail.poster_url || movie.poster_url || '',
-                      year: movieDetail.year || movie.year || 0,
-                      content: movieDetail.content || '',
-                      time: movieDetail.time || movie.time || '',
-                      categories: movieDetail.category || movie.categories || [],
-                      countries: movieDetail.country || movie.countries || [],
-                      trailer_url: movieDetail.trailer_url || '',
-                      modified: { time: movieDetail?.modified?.time || movie?.modified?.time || '' }
-                    };
-                  } catch (error) {
-                    console.error(`Error fetching detail for ${(movie as Record<string, any>).slug}:`, error);
-                    return {
-                      name: (movie as Record<string, any>).name || '',
-                      slug: (movie as Record<string, any>).slug || '',
-                      origin_name: (movie as Record<string, any>).origin_name || '',
-                      thumb_url: (movie as Record<string, any>).thumb_url || '',
-                      poster_url: (movie as Record<string, any>).poster_url || '',
-                      year: (movie as Record<string, any>).year || 0,
-                      content: '',
-                      time: (movie as Record<string, any>).time || '',
-                      categories: (movie as Record<string, any>).categories || [],
-                      countries: (movie as Record<string, any>).countries || [],
-                      trailer_url: '',
-                      modified: { time: (movie as Record<string, any>)?.modified?.time || '' }
-                    };
-                  }
-                })
-              );
-              
-              setMovies(prev => [...prev, ...remainingMovies]);
-              setIsLoadingMore(false);
-            }, 100); // Small delay to ensure first paint happens
-          }
-        } catch (error) {
-          console.error(`Error fetching first movie detail:`, error);
-          // Fallback to basic data
-          const firstMovie = {
-            name: (movie as Record<string, any>).name || '',
-            slug: (movie as Record<string, any>).slug || '',
-            origin_name: (movie as Record<string, any>).origin_name || '',
-            thumb_url: (movie as Record<string, any>).thumb_url || '',
-            poster_url: (movie as Record<string, any>).poster_url || '',
-            year: (movie as Record<string, any>).year || 0,
+        const freshMovies = arr.slice(0, 6).map((item: Record<string, unknown>) => {
+          const movie = (item as Record<string, any>)?.movie || item;
+          return {
+            name: movie.name || '',
+            slug: movie.slug || '',
+            origin_name: movie.origin_name || '',
+            thumb_url: movie.thumb_url || '',
+            poster_url: movie.poster_url || movie.thumb_url || '',
+            year: movie.year || 0,
             content: '',
-            time: (movie as Record<string, any>).time || '',
-            categories: (movie as Record<string, any>).categories || [],
-            countries: (movie as Record<string, any>).countries || [],
+            time: movie.time || '',
+            categories: movie.categories || [],
+            countries: movie.countries || [],
             trailer_url: '',
-            modified: { time: (movie as Record<string, any>)?.modified?.time || '' }
+            modified: { time: movie?.modified?.time || '' }
           };
-          setMovies([firstMovie]);
-          setLoading(false);
+        });
+        
+        // Update only if we got new data
+        if (freshMovies.length > 0) {
+          setMovies(freshMovies);
         }
       } catch (error) {
-        console.error('Error fetching cinema movies:', error);
-        setLoading(false);
+        console.error('Error fetching fresh movies:', error);
+        // Keep static data on error
       }
     };
-
-    fetchFirstMovie();
+    
+    // Delay fetch to prioritize initial render
+    const timer = setTimeout(fetchMovies, 100);
+    return () => clearTimeout(timer);
   }, []);
 
   // Preload next image when index changes
@@ -291,6 +230,7 @@ export default function OptimizedHeroSection() {
                   className="rounded-xl shadow-2xl transition-transform duration-300 group-hover:scale-105 w-[280px] h-[420px] object-cover"
                   placeholder="blur"
                   blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAb/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWEREiMxUf/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
+                  priority
                   loading="eager"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
