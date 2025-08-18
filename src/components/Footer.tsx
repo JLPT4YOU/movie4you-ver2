@@ -34,12 +34,12 @@ const Footer = () => {
   ];
 
   const quickLinks = [
-    { name: 'Phim Mới Cập Nhật', href: '/phim-moi' },
-    { name: 'Phim Sắp Chiếu', href: '/phim-sap-chieu' },
-    { name: 'Phim Thuyết Minh', href: '/phim-thuyet-minh' },
-    { name: 'Phim Bộ Đang Chiếu', href: '/phim-bo-dang-chieu' },
-    { name: 'Phim Bộ Hoàn Thành', href: '/phim-bo-hoan-thanh' },
-    { name: 'Top Phim Hay', href: '/top-phim-hay' },
+    { name: 'Phim Mới Cập Nhật', href: '/category/phim-moi' },
+    { name: 'Phim Sắp Chiếu', href: '/category/phim-sap-chieu' },
+    { name: 'Phim Thuyết Minh', href: '/category/phim-thuyet-minh' },
+    { name: 'Phim Bộ Đang Chiếu', href: '/category/phim-bo-dang-chieu' },
+    { name: 'Phim Bộ Hoàn Thành', href: '/category/phim-bo-hoan-thanh' },
+    { name: 'Top Phim Hay', href: '/category/phim-le' },
   ];
 
   return (
