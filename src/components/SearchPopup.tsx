@@ -160,7 +160,7 @@ export default function SearchPopup({ isOpen, onClose }: SearchPopupProps) {
             </div>
           ) : searchQuery.length >= 2 ? (
             <div className="text-center py-8 text-netflix-text-gray">
-              Không tìm thấy kết quả cho &quot;{searchQuery}&quot;
+              Không tìm thấy kết quả cho "{searchQuery}"
             </div>
           ) : searchQuery.length > 0 ? (
             <div className="text-center py-8 text-netflix-text-gray">

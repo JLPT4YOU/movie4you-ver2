@@ -1,19 +1,36 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import MovieCard from "@/components/MovieCard";
 import FilterBar from "@/components/FilterBar";
 import { useInfiniteOphimList } from "@/hooks/useInfiniteOphimList";
 
-export default function CategoryClient({ country }: { country: { slug: string; name: string } }) {
-  const slug = country.slug;
-  const [initialLimit] = useState(12);
-  const [loadMoreSize] = useState(6);
-  const [sort_field] = useState("modified.time");
-  const [sort_type] = useState("desc");
-  const [category] = useState("");
-  const [year] = useState("");
-  const commonParams = useMemo(() => ({ sort_field, sort_type, category, year }), [sort_field, sort_type, category, year]);
+
+
+
+
+
+
+export default function CategoryClient({
+  slug,
+  initialLimit = 12,
+  loadMoreSize = 6,
+  sort_field = "modified.time",
+  sort_type = "desc",
+  country = "",
+  category = "",
+  year = "",
+}: {
+  slug: string;
+  initialLimit?: number;
+  loadMoreSize?: number;
+  sort_field?: string;
+  sort_type?: string;
+  country?: string;
+  category?: string;
+  year?: string;
+}) {
+  const commonParams = useMemo(() => ({ sort_field, sort_type, country, category, year }), [sort_field, sort_type, country, category, year]);
   const { items, loading, error, hasMore, sentinelRef } = useInfiniteOphimList({
     kind: "quoc-gia",
     slugOrYear: slug,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, ReactNode } from "react";
+import React, { useState, useEffect, ReactNode } from 'react';
 import { normalizeMovie } from "@/utils/ophim";
 
 interface Movie {
@@ -10,14 +10,16 @@ interface Movie {
   thumb_url: string;
   poster_url: string;
   year: number;
-  type: string;
-  sub_docquyen: boolean;
-  episode_current: string;
-  quality: string;
-  lang: string;
-  time: string;
-  episode_total: string;
-  categories?: { name: string; slug: string }[];
+  type?: string;
+  sub_docquyen?: boolean;
+  episode_current?: string;
+  quality?: string;
+  lang?: string;
+  time?: string;
+  episode_time?: string;
+  episode_total?: string;
+  categories?: any[];
+  countries?: any[];
   actor?: string[];
   director?: string[];
   content?: string;
@@ -31,19 +33,26 @@ interface Movie {
 interface CinemaMoviesProviderProps {
   children: (props: {
     heroMovies: Movie[];
-    cinemaMovies: Movie[]; 
+    cinemaMovies: Movie[];
     loading: boolean;
     error: string | null;
   }) => ReactNode;
+  initialHeroMovies?: Movie[];
+  initialCinemaMovies?: Movie[];
 }
 
-export default function CinemaMoviesProvider({ children }: CinemaMoviesProviderProps) {
-  const [heroMovies, setHeroMovies] = useState<Movie[]>([]);
-  const [cinemaMovies, setCinemaMovies] = useState<Movie[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function CinemaMoviesProvider({ children, initialHeroMovies = [], initialCinemaMovies = [] }: CinemaMoviesProviderProps) {
+  const [heroMovies, setHeroMovies] = useState<Movie[]>(initialHeroMovies);
+  const [cinemaMovies, setCinemaMovies] = useState<Movie[]>(initialCinemaMovies);
+  const [loading, setLoading] = useState(initialHeroMovies.length === 0);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Skip fetching if we already have initial data from SSR
+    if (initialHeroMovies.length > 0) {
+      return;
+    }
+    
     const fetchCinemaMovies = async () => {
       try {
         // Fetch 6 movies at once

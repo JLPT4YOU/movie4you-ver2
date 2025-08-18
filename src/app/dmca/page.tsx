@@ -13,7 +13,9 @@ export default function Page() {
           <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-gray-400 text-center">
             <span>Hiệu lực từ : Ngày 18 tháng 8 năm 2025</span>
             <span className="hidden sm:inline">•</span>
-            Vui lòng gửi email thông báo tới: &quot;movie4youtv@gmail.com&quot; 
+            <a href="mailto:movie4you.owner@gmail.com" className="text-red-500 hover:text-red-400 transition-colors">
+              movie4you.owner@gmail.com
+            </a>
           </div>
         </header>
 
@@ -38,7 +40,7 @@ export default function Page() {
           </h2>
           <p>
             MOVIE4YOU tôn trọng quyền sở hữu trí tuệ. Chúng tôi triển khai cơ chế tiếp nhận thông báo vi phạm theo
-            tinh thần của DMCA và các luật tương tự trên toàn cầu. Nếu bạn là chủ sở hữu bản quyền
+            tinh thần của DMCA và các luật tương tự trên toàn cầu ("notice-and-takedown"). Nếu bạn là chủ sở hữu bản quyền
             hoặc đại diện hợp pháp, bạn có thể gửi yêu cầu gỡ bỏ nội dung bị cáo buộc vi phạm theo hướng dẫn dưới đây.
           </p>
         </section>
@@ -50,14 +52,14 @@ export default function Page() {
           <p className="mb-3">Vui lòng gửi email đến <a className="text-red-300" href="mailto:movie4you.owner@gmail.com">movie4you.owner@gmail.com</a> kèm các thông tin:</p>
           <ul className="list-disc ml-6 space-y-2 text-gray-300">
             <li>Thông tin liên hệ của bạn: họ tên, tổ chức (nếu có), địa chỉ, email, số điện thoại.</li>
-            <li>Mô tả rõ tác phẩm có bản quyền bị xâm phạm (đính kèm bằng chứng sở hữ nếu có).</li>
-            <strong>2. Mô tả chi tiết về nội dung vi phạm, bao gồm &quot;tiêu đề phim&quot;, &quot;liên kết&quot;.</strong>
-            <li>Tuyên bố thiện chí: bạn tin rằng việc sử dụng bị khiếu nại không được chủ sở hữ cho phép.</li>
-            <li>Tuyên bố chính xác: thông tin trong yêu cầu là đúng, bạn là chủ sở hữ/đại diện được ủy quyền.</li>
+            <li>Mô tả rõ tác phẩm có bản quyền bị xâm phạm (đính kèm bằng chứng sở hữu nếu có).</li>
+            <li>URL cụ thể trên MOVIE4YOU nơi nội dung vi phạm xuất hiện (1 URL mỗi dòng).</li>
+            <li>Tuyên bố thiện chí: bạn tin rằng việc sử dụng bị khiếu nại không được chủ sở hữu cho phép.</li>
+            <li>Tuyên bố chính xác: thông tin trong yêu cầu là đúng, bạn là chủ sở hữu/đại diện được ủy quyền.</li>
             <li>Chữ ký điện tử hoặc bản scan chữ ký (không bắt buộc, nhưng được khuyến nghị).</li>
           </ul>
           <div className="mt-3 p-3 bg-blue-900/20 border border-blue-800 rounded text-sm">
-            Chức năng chính của MOVIE4YOU là &quot;tra cứu&quot; và &quot;tổng hợp thông tin&quot; về phim. minh và xử lý yêu cầu.
+            <p>Lưu ý: Chúng tôi có thể yêu cầu bổ sung thông tin để xác minh và xử lý yêu cầu.</p>
           </div>
         </section>
 
@@ -80,7 +82,7 @@ export default function Page() {
           <p className="mb-3">
             Nếu bạn tin rằng nội dung bị gỡ là do nhầm lẫn hoặc được cho phép hợp pháp, bạn có thể gửi counter-notice
             đến email trên, bao gồm: thông tin liên hệ, URL đã bị gỡ, tuyên bố thiện chí về việc gỡ nhầm, và chấp nhận
-            xử lý theo quy trình &quot;thông báo và gỡ bỏ&quot; được quy định trong Đạo luật Bản quyền .
+            thẩm quyền giải quyết tranh chấp (nếu có) theo quy định pháp luật liên quan.
           </p>
           <p className="text-xs text-gray-400">Cảnh báo: Gửi thông tin sai sự thật có thể dẫn đến trách nhiệm pháp lý.</p>
         </section>

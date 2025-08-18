@@ -1,27 +1,44 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
-import { useInfiniteOphimList } from "@/hooks/useInfiniteOphimList";
+import { useCallback, useMemo } from "react";
 import MovieCard from "@/components/MovieCard";
 import FilterBar from "@/components/FilterBar";
 
-interface CategoryClientProps {
-  category: {
-    slug: string;
-    name: string;
-  };
-}
+import { useInfiniteOphimList } from "@/hooks/useInfiniteOphimList";
 
-export default function CategoryClient({ category }: CategoryClientProps) {
-  const slug = category.slug;
-  const [initialLimit] = useState(12);
-  const [loadMoreSize] = useState(6);
-  const [sort_field] = useState("modified.time");
-  const [sort_type] = useState("desc");
-  const [country] = useState("");
-  const [year] = useState("");
 
-  const commonParams = useMemo(() => ({ sort_field, sort_type, country, year }), [sort_field, sort_type, country, year]);
+
+type ListParams = {
+  page: number;
+  limit: number;
+  sort_field?: string;
+  sort_type?: string;
+  country?: string;
+  category?: string;
+  year?: string;
+};
+
+
+export default function CategoryClient({
+  slug,
+  initialLimit = 12,
+  loadMoreSize = 6,
+  sort_field = "modified.time",
+  sort_type = "desc",
+  country = "",
+  category = "",
+  year = "",
+}: {
+  slug: string;
+  initialLimit?: number;
+  loadMoreSize?: number;
+  sort_field?: string;
+  sort_type?: string;
+  country?: string;
+  category?: string;
+  year?: string;
+}) {
+  const commonParams = useMemo(() => ({ sort_field, sort_type, country, category, year }), [sort_field, sort_type, country, category, year]);
   const { items, loading, error, hasMore, sentinelRef } = useInfiniteOphimList({
     kind: "the-loai",
     slugOrYear: slug,
@@ -31,7 +48,13 @@ export default function CategoryClient({ category }: CategoryClientProps) {
     resetKey: JSON.stringify(commonParams),
   });
 
-  const handleFilterChange = useCallback(() => {
+  const handleFilterChange = useCallback((_filters: {
+    sort_field: string;
+    sort_type: string;
+    country: string;
+    category: string;
+    year: string;
+  }) => {
     // NOTE: hook hiện reset theo initial mount; filter thay đổi sẽ cập nhật qua URL và dẫn đến remount component.
     // Nếu muốn reset ngay trong hook, có thể mở rộng hook nhận "resetKey" phụ thuộc vào filters.
   }, []);

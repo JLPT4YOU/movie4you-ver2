@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import CinemaMoviesProvider from "@/components/CinemaMoviesProvider";
 import OptimizedHeroSection from "@/components/OptimizedHeroSection";
 import OptimizedMovieSection from "@/components/OptimizedMovieSection";
 
@@ -15,8 +15,10 @@ interface Movie {
   quality?: string;
   lang?: string;
   time?: string;
+  episode_time?: string;
   episode_total?: string;
-  categories?: { name: string; slug: string }[];
+  categories?: any[];
+  countries?: any[];
   actor?: string[];
   director?: string[];
   content?: string;
@@ -27,60 +29,106 @@ interface Movie {
   };
 }
 
-// Fetch cinema movies on server side
-async function getCinemaMovies() {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-  
+async function fetchCinemaMoviesData() {
   try {
-    // Fetch list of cinema movies with optimized caching
-    const listResponse = await fetch(
-      `${apiUrl}/api/ophim/v1/api/danh-sach/phim-chieu-rap?page=1&limit=6&sort_field=modified.time`,
-      { 
-        next: { revalidate: 3600 }, // Cache for 1 hour
-        cache: 'force-cache'
-      }
+    // Fetch 6 movies at once
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/ophim/v1/api/danh-sach/phim-chieu-rap?page=1&limit=6&sort_field=modified.time&sort_type=desc`,
+      { cache: 'no-store' }
     );
-    
-    if (!listResponse.ok) {
-      throw new Error('Failed to fetch cinema movies');
-    }
-    
-    const listData = await listResponse.json();
-    const movieItems = listData?.data?.items || [];
-    
+    const data = await response.json();
+    const arr = data?.data?.items ?? data?.items ?? data?.data ?? [] as Array<Record<string, unknown>>;
+    const movieItems = arr;
+
     if (movieItems.length === 0) {
       return { heroMovies: [], cinemaMovies: [] };
     }
+
+    // Process first movie details immediately for hero section
+    const firstMovieItem = movieItems[0];
+    const movie = (firstMovieItem as Record<string, any>)?.movie || firstMovieItem;
     
-    // Fetch details for first 3 movies in parallel for hero section
-    const detailPromises = movieItems.slice(0, 3).map((movie: Movie) => 
-      fetch(
-        `${apiUrl}/api/ophim/v1/api/phim/${movie.slug}`,
-        { 
-          next: { revalidate: 3600 }, // Cache for 1 hour
-          cache: 'force-cache'
+    let firstMovie: Movie;
+    try {
+      const detailResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/ophim/v1/api/phim/${(movie as Record<string, any>).slug}`,
+        { cache: 'no-store' }
+      );
+      const detailData = await detailResponse.json();
+      const movieDetail = detailData?.data?.item || {};
+
+      firstMovie = {
+        name: movieDetail.name || movie.name,
+        slug: movieDetail.slug || movie.slug,
+        origin_name: movieDetail.origin_name || movie.origin_name,
+        thumb_url: movieDetail.thumb_url || movie.thumb_url,
+        poster_url: movieDetail.poster_url || movie.poster_url,
+        year: movieDetail.year || movie.year,
+        type: movieDetail.type || movie.type || 'single',
+        sub_docquyen: movieDetail.sub_docquyen || movie.sub_docquyen || false,
+        episode_current: movieDetail.episode_current || movie.episode_current || '',
+        quality: movieDetail.quality || movie.quality || 'HD',
+        lang: movieDetail.lang || movie.lang || 'Vietsub',
+        time: movieDetail.time || movie.time || movieDetail.episode_time || movie.episode_time || '',
+        episode_total: movieDetail.episode_total || movie.episode_total || '1',
+        categories: movieDetail.category || movie.category || [],
+        actor: movieDetail.actor || movie.actor || [],
+        director: movieDetail.director || movie.director || [],
+        content: movieDetail.content || movie.content || '',
+        trailer_url: movieDetail.trailer_url || movie.trailer_url || '',
+        showtimes: movieDetail.showtimes || movie.showtimes || '',
+        modified: movieDetail.modified || movie.modified || { time: new Date().toISOString() }
+      } as Movie;
+    } catch (error) {
+      console.error('Error fetching first movie details:', error);
+      firstMovie = movie as Movie;
+    }
+
+    // Fetch remaining movies details
+    const remainingMovies = await Promise.all(
+      movieItems.slice(1, 6).map(async (item: any) => {
+        const m = (item as Record<string, any>)?.movie || item;
+        try {
+          const res = await fetch(
+            `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/ophim/v1/api/phim/${(m as Record<string, any>).slug}`,
+            { cache: 'no-store' }
+          );
+          const detailData = await res.json();
+          const detail = detailData?.data?.item || {};
+          
+          return {
+            name: detail.name || m.name,
+            slug: detail.slug || m.slug,
+            origin_name: detail.origin_name || m.origin_name,
+            thumb_url: detail.thumb_url || m.thumb_url,
+            poster_url: detail.poster_url || m.poster_url,
+            year: detail.year || m.year,
+            type: detail.type || m.type || 'single',
+            sub_docquyen: detail.sub_docquyen || m.sub_docquyen || false,
+            episode_current: detail.episode_current || m.episode_current || '',
+            quality: detail.quality || m.quality || 'HD',
+            lang: detail.lang || m.lang || 'Vietsub',
+            time: detail.time || m.time || detail.episode_time || m.episode_time || '',
+            episode_total: detail.episode_total || m.episode_total || '1',
+            categories: detail.category || m.category || [],
+            actor: detail.actor || m.actor || [],
+            director: detail.director || m.director || [],
+            content: detail.content || m.content || '',
+            trailer_url: detail.trailer_url || m.trailer_url || '',
+            showtimes: detail.showtimes || m.showtimes || '',
+            modified: detail.modified || m.modified || { time: new Date().toISOString() }
+          } as Movie;
+        } catch (error) {
+          console.error('Error fetching movie details:', error);
+          return m as Movie;
         }
-      ).then(res => res.ok ? res.json() : null)
+      })
     );
-    
-    const detailResults = await Promise.all(detailPromises);
-    
-    // Process the first 3 movies with details
-    const heroMovies = movieItems.slice(0, 3).map((movie: Movie, index: number) => {
-      const detailData = detailResults[index];
-      if (detailData?.data) {
-        return {
-          ...movie,
-          ...detailData.data.movie,
-          episodes: detailData.data.episodes || []
-        };
-      }
-      return movie;
-    });
-    
+
+    const allMovies = [firstMovie, ...remainingMovies];
     return {
-      heroMovies,
-      cinemaMovies: movieItems
+      heroMovies: allMovies,
+      cinemaMovies: allMovies
     };
   } catch (error) {
     console.error('Error fetching cinema movies:', error);
@@ -89,19 +137,12 @@ async function getCinemaMovies() {
 }
 
 export default async function Home() {
-  // Fetch data on server side
-  const { heroMovies, cinemaMovies } = await getCinemaMovies();
+  const { heroMovies, cinemaMovies } = await fetchCinemaMoviesData();
 
   return (
     <>
       <OptimizedHeroSection movies={heroMovies} loading={false} />
-      <Suspense fallback={
-        <div className="px-4 sm:px-6 lg:px-8 py-8">
-          <div className="h-96 bg-netflix-gray/10 rounded animate-pulse" />
-        </div>
-      }>
-        <OptimizedMovieSection cinemaMovies={cinemaMovies} />
-      </Suspense>
+      <OptimizedMovieSection cinemaMovies={cinemaMovies} />
     </>
   );
 }

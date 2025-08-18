@@ -40,13 +40,11 @@ interface OptimizedHeroSectionProps {
 }
 
 export default function OptimizedHeroSection({ movies: propMovies = [], loading: propLoading = false }: OptimizedHeroSectionProps) {
+  const [movies, setMovies] = useState<Movie[]>(propMovies);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [loading, setLoading] = useState(propLoading);
   const [showTrailerPopup, setShowTrailerPopup] = useState(false);
   const [imagesLoaded, setImagesLoaded] = useState<Record<string, boolean>>({});
-  
-  // Use prop values directly
-  const movies = propMovies;
-  const loading = propLoading;
 
   // Preload image function
   const preloadImage = useCallback((index: number) => {
@@ -59,12 +57,13 @@ export default function OptimizedHeroSection({ movies: propMovies = [], loading:
     }
   }, [movies, imagesLoaded]);
 
-  // Preload first image immediately when component mounts
+  // Update movies when props change
   useEffect(() => {
-    if (movies.length > 0) {
-      preloadImage(0);
+    if (propMovies.length > 0) {
+      setMovies(propMovies);
+      setLoading(false);
     }
-  }, [movies]);
+  }, [propMovies]);
 
   // Preload next image when index changes
   useEffect(() => {
@@ -137,7 +136,7 @@ export default function OptimizedHeroSection({ movies: propMovies = [], loading:
             fill
             priority={index === 0}
             sizes="100vw"
-            quality={85}
+            quality={75}
             className="object-cover"
             placeholder="blur"
             blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAb/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWEREiMxUf/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
@@ -178,11 +177,11 @@ export default function OptimizedHeroSection({ movies: propMovies = [], loading:
                   width={280}
                   height={420}
                   sizes="280px"
-                  quality={95}
+                  quality={90}
                   className="rounded-xl shadow-2xl transition-transform duration-300 group-hover:scale-105 w-[280px] h-[420px] object-cover"
-                  priority={true}
                   placeholder="blur"
                   blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAb/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWEREiMxUf/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
+                  loading="eager"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 

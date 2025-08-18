@@ -12,16 +12,17 @@ export default function Page() {
             Liên hệ MOVIE4YOU
           </h1>
           <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-gray-400 text-center">
-                Email: <a className="text-red-500 hover:text-red-400 transition-colors" href="mailto:movie4youtv@gmail.com">
-              movie4youtv@gmail.com
+            <span>Email hỗ trợ:</span>
+            <a href="mailto:movie4you.owner@gmail.com" className="text-red-500 hover:text-red-400 transition-colors">
+              movie4you.owner@gmail.com
             </a>
           </div>
         </header>
 
         {/* Purpose */}
         <section className="bg-zinc-900/50 backdrop-blur-sm rounded-lg p-6 mb-6 border border-zinc-800">
-          <h2 className="text-2xl font-semibold text-white mb-3">
-              <span className="text-red-500 mr-3">📞</span> 1. Khi nào nên liên hệ?
+          <h2 className="text-2xl font-semibold text-white mb-3 flex items-center">
+            <span className="text-red-500 mr-3">🤝</span> 1. Khi nào nên liên hệ?
           </h2>
           <ul className="list-disc ml-6 space-y-2 text-gray-300">
             <li>Phản hồi về trải nghiệm sử dụng, tính năng hoặc đề xuất cải tiến.</li>
@@ -34,10 +35,11 @@ export default function Page() {
         {/* Legal Note */}
         <section className="bg-zinc-900/50 backdrop-blur-sm rounded-lg p-6 mb-6 border border-zinc-800">
           <h2 className="text-2xl font-semibold text-white mb-3 flex items-center">
-            <span className="text-red-500 mr-3">⚖️</span> 2. Lưu ý pháp lý
+            <span className="text-red-500 mr-3">📄</span> 2. Lưu ý pháp lý
           </h2>
           <p className="text-gray-300 leading-relaxed">
-            MOVIE4YOU là nền tảng tổng hợp/tra cứu. Chúng tôi không lưu trữ nội dung phim trên máy chủ của mình. Đối với yêu cầu gỡ bỏ nội dung vi phạm bản quyền, vui lòng thực hiện theo quy trình &quot;thông báo và gỡ bỏ&quot; tại trang <Link className="text-red-500 hover:text-red-400 transition-colors" href="/dmca">DMCA</Link>. Điền thông tin vào form hoặc gửi email trực tiếp tới &quot;movie4youtv@gmail.com&quot;. Chúng tôi sẽ phản hồi trong thời gian sớm nhất.
+            MOVIE4YOU là nền tảng tổng hợp/tra cứu. Chúng tôi không lưu trữ nội dung phim trên máy chủ của mình. Đối với yêu cầu gỡ bỏ
+            nội dung vi phạm bản quyền, vui lòng thực hiện theo quy trình "thông báo và gỡ bỏ" tại trang <Link className="text-red-500 hover:text-red-400 transition-colors" href="/dmca">DMCA</Link>.
           </p>
         </section>
 

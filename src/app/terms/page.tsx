@@ -33,9 +33,9 @@ export default function TermsOfService() {
               1. Chấp thuận Điều khoản
             </h2>
             <p className="text-gray-300 leading-relaxed">
-              Bằng cách truy cập và sử dụng trang web MOVIE4YOU (&quot;Dịch vụ&quot;), bạn đồng ý tuân thủ và bị ràng buộc bởi các
-              &quot;Điều khoản Sử dụng&quot; này. Nếu không đồng ý, vui lòng không sử dụng Dịch vụ. này (&quot;ToS&quot;) và Chính sách Quyền riêng tư. 
-              - Không sử dụng bot, &quot;crawler&quot; trái phép.ỏi trang ngay.
+              Bằng việc truy cập hoặc sử dụng MOVIE4YOU tại movie4you.net ("Dịch vụ"), bạn xác nhận đã đọc, 
+              hiểu và đồng ý bị ràng buộc bởi Điều khoản Dịch vụ này ("ToS") và Chính sách Quyền riêng tư. 
+              Nếu không đồng ý, vui lòng rời khỏi trang ngay.
             </p>
           </section>
 
@@ -46,15 +46,15 @@ export default function TermsOfService() {
             </h2>
             <div className="space-y-3">
               <p>
-                <strong className="text-white">&quot;Nội dung Bên thứ ba&quot;:</strong> phim/ảnh/dữ liệu lấy qua API 
+                <strong className="text-white">"Nội dung Bên thứ ba":</strong> phim/ảnh/dữ liệu lấy qua API 
                 nguồn mở/đối tác, không thuộc sở hữu MOVIE4YOU.
               </p>
               <p>
-                <strong className="text-white">&quot;API Bên thứ ba&quot;:</strong> bất kỳ API/SDK/nguồn dữ liệu do 
+                <strong className="text-white">"API Bên thứ ba":</strong> bất kỳ API/SDK/nguồn dữ liệu do 
                 bên khác cung cấp.
               </p>
               <p>
-                <strong className="text-white">&quot;Người dùng&quot;:</strong> cá nhân/tổ chức truy cập hoặc sử dụng 
+                <strong className="text-white">"Người dùng":</strong> cá nhân/tổ chức truy cập hoặc sử dụng 
                 Dịch vụ.
               </p>
             </div>
@@ -115,7 +115,7 @@ export default function TermsOfService() {
               <li>• Nhãn hiệu, logo, giao diện, mã nguồn của MOVIE4YOU và các bên cấp quyền được pháp luật 
               bảo hộ.</li>
               <li>• Bạn không được sao chép, dịch ngược, sửa đổi, phân phối, tạo phái sinh từ Dịch vụ nếu 
-             - Không cố gắng &quot;hack&quot;, khai thác lỗ hổng bảo mật.</li>
+              không có chấp thuận bằng văn bản.</li>
             </ul>
           </section>
 
@@ -188,7 +188,7 @@ export default function TermsOfService() {
           {/* Section 9 */}
           <section className="bg-zinc-900/50 backdrop-blur-sm rounded-lg p-6 mb-6 border border-zinc-800">
             <h2 className="text-2xl font-semibold text-white mb-4">
-              9. Thủ tục vi phạm bản quyền
+              9. Thông báo & Gỡ bỏ về bản quyền
             </h2>
             <div className="space-y-3">
               <p>MOVIE4YOU thực hiện quy trình tiếp nhận thông báo vi phạm và gỡ bỏ hợp lý, phù hợp 
@@ -239,7 +239,7 @@ export default function TermsOfService() {
             </h2>
             <div className="bg-yellow-900/20 border border-yellow-800 rounded-lg p-4">
               <p className="text-yellow-400">
-            Chúng tôi cung cấp Dịch vụ theo nguyên tắc &quot;nguyên trạng&quot; (&quot;as is&quot;) và &quot;sẵn có&quot; (&quot;as available&quot;), không có 
+                Dịch vụ được cung cấp "nguyên trạng" (as-is) và "theo khả dụng" (as-available), không có 
                 bảo đảm dưới bất kỳ hình thức nào (rõ ràng hay ngụ ý), bao gồm nhưng không giới hạn ở: 
                 khả năng thương mại, phù hợp mục đích cụ thể, không vi phạm.
               </p>

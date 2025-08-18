@@ -130,7 +130,7 @@ export default function PrivacyPolicy() {
           <h2 className="text-2xl font-semibold text-white mb-4">
             6. Chia sẻ dữ liệu với bên thứ ba
           </h2>
-          <p className="mb-2">MOVIE4YOU có thể chia sẻ thông tin trong các trường hợp &quot;cần thiết&quot;:</p>
+          <p className="mb-2">Chúng tôi không bán dữ liệu cá nhân. Dữ liệu có thể được chia sẻ trong các trường hợp sau:</p>
           <ul className="list-disc ml-6 space-y-2 text-gray-300">
             <li>• Nhà cung cấp hạ tầng/đối tác xử lý theo hợp đồng bảo mật.</li>
             <li>• Cơ quan có thẩm quyền khi có yêu cầu hợp lệ theo pháp luật.</li>
@@ -255,7 +255,7 @@ export default function PrivacyPolicy() {
           <ul className="list-disc ml-6 space-y-2 text-gray-300">
             <li>• Banner cookie hiển thị khi truy cập lần đầu.</li>
             <li>• Bạn có thể chấp nhận/từ chối nhóm cookie không thiết yếu.</li>
-            <li>• Trang &quot;Cài đặt Cookie&quot; cho phép thay đổi lựa chọn bất cứ lúc nào.</li>
+            <li>• Trang "Cài đặt Cookie" cho phép thay đổi lựa chọn bất cứ lúc nào.</li>
             <li>• Chúng tôi tôn trọng tín hiệu GPC để tự động tắt cookie không thiết yếu.</li>
           </ul>
         </section>
@@ -278,7 +278,7 @@ export default function PrivacyPolicy() {
             16. Thay đổi Chính sách
           </h2>
           <p className="text-gray-300 leading-relaxed">
-            Chúng tôi có thể thu thập các loại thông tin &quot;không nhạy cảm&quot; như:ản ánh thay đổi về pháp luật hoặc dịch vụ. Khi cập nhật, ngày hiệu lực
+            Chúng tôi có thể cập nhật Chính sách này để phản ánh thay đổi về pháp luật hoặc dịch vụ. Khi cập nhật, ngày hiệu lực
             sẽ được điều chỉnh và, nếu phù hợp, chúng tôi sẽ thông báo trên trang web. Việc bạn tiếp tục sử dụng dịch vụ sau khi
             Chính sách được cập nhật đồng nghĩa bạn đã chấp nhận thay đổi.
           </p>
