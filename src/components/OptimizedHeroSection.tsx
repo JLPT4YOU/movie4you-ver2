@@ -34,31 +34,19 @@ interface Movie {
   };
 }
 
-// Static movies data for instant render
-const STATIC_MOVIES = [
-  {
-    name: "Phong Thần 2: Chiến Hỏa Tây Kỳ",
-    slug: "phong-than-2-chien-hoa-tay-ky",
-    origin_name: "Creation of the Gods II",
-    poster_url: "https://img.ophim.live/uploads/movies/phong-than-2-chien-hoa-tay-ky-poster.jpg",
-    thumb_url: "https://img.ophim.live/uploads/movies/phong-than-2-chien-hoa-tay-ky-thumb.jpg",
-    year: 2025,
-    content: "Phim kể về cuộc chiến giữa các vị thần",
-    time: "135 phút",
-    categories: [{name: "Hành Động", slug: "hanh-dong"}],
-    countries: [{name: "Trung Quốc", slug: "trung-quoc"}],
-    trailer_url: "",
-    modified: { time: "" }
-  }
-];
+interface OptimizedHeroSectionProps {
+  movies?: Movie[];
+  loading?: boolean;
+}
 
-export default function OptimizedHeroSection() {
-  const [movies, setMovies] = useState<Movie[]>(STATIC_MOVIES);
+export default function OptimizedHeroSection({ movies: propMovies = [], loading: propLoading = false }: OptimizedHeroSectionProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [loading, setLoading] = useState(false);
   const [showTrailerPopup, setShowTrailerPopup] = useState(false);
   const [imagesLoaded, setImagesLoaded] = useState<Record<string, boolean>>({});
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  
+  // Use prop values directly
+  const movies = propMovies;
+  const loading = propLoading;
 
   // Preload image function
   const preloadImage = useCallback((index: number) => {
@@ -71,48 +59,12 @@ export default function OptimizedHeroSection() {
     }
   }, [movies, imagesLoaded]);
 
-  // Load fresh data after initial render
+  // Preload first image immediately when component mounts
   useEffect(() => {
-    const fetchMovies = async () => {
-      try {
-        const response = await fetch('/api/ophim/v1/api/danh-sach/phim-chieu-rap?page=1&limit=6&sort_field=modified.time&sort_type=desc');
-        const data = await response.json();
-        const arr = data?.data?.items ?? data?.items ?? data?.data ?? [] as Array<Record<string, unknown>>;
-        
-        if (arr.length === 0) return;
-        
-        const freshMovies = arr.slice(0, 6).map((item: Record<string, unknown>) => {
-          const movie = (item as Record<string, any>)?.movie || item;
-          return {
-            name: movie.name || '',
-            slug: movie.slug || '',
-            origin_name: movie.origin_name || '',
-            thumb_url: movie.thumb_url || '',
-            poster_url: movie.poster_url || movie.thumb_url || '',
-            year: movie.year || 0,
-            content: '',
-            time: movie.time || '',
-            categories: movie.categories || [],
-            countries: movie.countries || [],
-            trailer_url: '',
-            modified: { time: movie?.modified?.time || '' }
-          };
-        });
-        
-        // Update only if we got new data
-        if (freshMovies.length > 0) {
-          setMovies(freshMovies);
-        }
-      } catch (error) {
-        console.error('Error fetching fresh movies:', error);
-        // Keep static data on error
-      }
-    };
-    
-    // Delay fetch to prioritize initial render
-    const timer = setTimeout(fetchMovies, 100);
-    return () => clearTimeout(timer);
-  }, []);
+    if (movies.length > 0) {
+      preloadImage(0);
+    }
+  }, [movies]);
 
   // Preload next image when index changes
   useEffect(() => {
@@ -185,7 +137,7 @@ export default function OptimizedHeroSection() {
             fill
             priority={index === 0}
             sizes="100vw"
-            quality={75}
+            quality={85}
             className="object-cover"
             placeholder="blur"
             blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAb/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWEREiMxUf/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
@@ -226,12 +178,11 @@ export default function OptimizedHeroSection() {
                   width={280}
                   height={420}
                   sizes="280px"
-                  quality={90}
+                  quality={95}
                   className="rounded-xl shadow-2xl transition-transform duration-300 group-hover:scale-105 w-[280px] h-[420px] object-cover"
+                  priority={true}
                   placeholder="blur"
                   blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAb/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWEREiMxUf/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
-                  priority
-                  loading="eager"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
@@ -324,14 +275,6 @@ export default function OptimizedHeroSection() {
             aria-label={`Go to slide ${index + 1}`}
           />
         ))}
-        {/* Loading indicator for remaining movies */}
-        {isLoadingMore && (
-          <div className="flex items-center gap-1 ml-2">
-            <div className="w-2 h-2 bg-netflix-white/40 rounded-full animate-pulse" />
-            <div className="w-2 h-2 bg-netflix-white/40 rounded-full animate-pulse animation-delay-200" />
-            <div className="w-2 h-2 bg-netflix-white/40 rounded-full animate-pulse animation-delay-400" />
-          </div>
-        )}
       </div>
 
       {/* Lazy loaded Trailer Popup */}

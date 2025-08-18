@@ -34,7 +34,11 @@ interface MovieCategory {
   items: Movie[];
 }
 
-export default function OptimizedMovieSection() {
+interface OptimizedMovieSectionProps {
+  cinemaMovies?: Movie[];
+}
+
+export default function OptimizedMovieSection({ cinemaMovies = [] }: OptimizedMovieSectionProps) {
   const [categories, setCategories] = useState<MovieCategory[]>([]);
   const [watchHistory, setWatchHistory] = useState<WatchHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -136,6 +140,12 @@ export default function OptimizedMovieSection() {
 
         const rows = await Promise.all(
           lists.map(async (l) => {
+            // Use provided cinema movies if available
+            if (l.slug === 'phim-chieu-rap' && cinemaMovies.length > 0) {
+              setLoadedPages(prev => ({ ...prev, [l.slug]: 1 }));
+              return { name: l.title, slug: l.slug, items: cinemaMovies } as MovieCategory;
+            }
+            
             const url = `/api/ophim/v1/api/danh-sach/${l.slug}?${query(l.params)}`;
             const res = await fetch(url, { headers: { accept: 'application/json' } });
             if (!res.ok) throw new Error(`Failed to fetch list: ${l.slug}`);
@@ -156,7 +166,7 @@ export default function OptimizedMovieSection() {
     };
 
     fetchMovies();
-  }, []);
+  }, [cinemaMovies]);
 
   if (loading) {
     return (

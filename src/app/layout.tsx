@@ -4,7 +4,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { Analytics } from "@vercel/analytics/next";
+import { Analytics } from "@vercel/analytics/react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -96,6 +96,8 @@ export default function RootLayout({
   return (
     <html lang="vi">
       <head>
+        <link rel="preconnect" href="https://img.ophim.live" />
+        <link rel="dns-prefetch" href="https://img.ophim.live" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
