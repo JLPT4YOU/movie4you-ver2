@@ -164,6 +164,9 @@ const Footer = () => {
               Xem phim HD online với đường truyền cao tốc, không giật lag. Tất cả phim đều có độ phân giải cao từ HD 720p, Full HD 1080p đến 4K. 
               Nội dung phim đa dạng: phim bộ Hàn Quốc, phim bộ Trung Quốc, phim chiếu rạp, phim hành động Mỹ, phim Ma Kinh Dị, phim Tâm Lý Tình Cảm và nhiều thể loại khác.
             </p>
+            <p className="text-xs text-gray-500 mt-2">
+              MOVIE4YOU - Website xem phim online miễn phí chất lượng cao với giao diện trực quan, tốc độ tải nhanh. Phim online Vietsub, thuyết minh chất lượng Full HD. Cập nhật phim mới mỗi ngày cùng kho phim với hơn 10.000+ bộ phim và 100.000+ tập phim. Xem phim HD online với đường truyền cao tốc, không giật lag. Tất cả phim đều có độ phân giải cao từ HD 720p, Full HD 1080p đến 4K. Nội dung phim đa dạng: phim bộ Hàn Quốc, phim bộ Trung Quốc, phim chiếu rạp, phim hành động Mỹ, phim Ma Kinh Dị, phim Tâm Lý Tình Cảm và nhiều thể loại khác.
+            </p>
           </div>
         </div>
 
