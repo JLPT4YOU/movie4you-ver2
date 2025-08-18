@@ -4,6 +4,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,8 +26,8 @@ export const metadata: Metadata = {
     default: "MOVIE4YOU - Xem Phim Online HD Vietsub Miễn Phí | Phim Mới 2024",
     template: "%s | MOVIE4YOU - Xem Phim HD Vietsub"
   },
-  description: "Xem phim online miễn phí chất lượng HD với phụ đề tiếng Việt. Kho phim bộ Hàn Quốc, phim lẻ chiếu rạp, anime Nhật Bản cập nhật nhanh nhất 2024.",
-  keywords: "xem phim online, phim hd vietsub, phim mới 2024, phim bộ hàn quốc, phim chiếu rạp, phim lẻ hay, anime vietsub, movie4you, motchill, phimmoi",
+  description: "Xem phim online miễn phí chất lượng HD với phụ đề tiếng Việt. Kho phim bộ Hàn Quốc, phim lẻ chiếu rạp, anime Nhật Bản cập nhật nhanh nhất 2025.",
+  keywords: "xem phim online, phim hd vietsub, phim mới 2025, phim bộ hàn quốc, phim chiếu rạp, phim lẻ hay, anime vietsub, movie4you, motchill, phimmoi",
   authors: [{ name: "MOVIE4YOU" }],
   creator: "MOVIE4YOU",
   publisher: "MOVIE4YOU",
@@ -124,6 +125,7 @@ export default function RootLayout({
           </main>
           <Footer />
           <SpeedInsights />
+          <Analytics />
         </div>
       </body>
     </html>

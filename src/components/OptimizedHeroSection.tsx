@@ -40,6 +40,7 @@ export default function OptimizedHeroSection() {
   const [loading, setLoading] = useState(true);
   const [showTrailerPopup, setShowTrailerPopup] = useState(false);
   const [imagesLoaded, setImagesLoaded] = useState<Record<string, boolean>>({});
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // Preload image function
   const preloadImage = useCallback((index: number) => {
@@ -52,66 +53,126 @@ export default function OptimizedHeroSection() {
     }
   }, [movies, imagesLoaded]);
 
+  // Phase 1: Load first movie for fast LCP
   useEffect(() => {
-    const fetchCinemaMovies = async () => {
+    const fetchFirstMovie = async () => {
       try {
-        const response = await fetch('/api/ophim/v1/api/danh-sach/phim-chieu-rap?page=1&limit=5&sort_field=modified.time&sort_type=desc');
+        const response = await fetch('/api/ophim/v1/api/danh-sach/phim-chieu-rap?page=1&limit=6&sort_field=modified.time&sort_type=desc');
         const data = await response.json();
         const arr = data?.data?.items ?? data?.items ?? data?.data ?? [] as Array<Record<string, unknown>>;
-        const movieItems = arr;
+        
+        if (arr.length === 0) {
+          setLoading(false);
+          return;
+        }
 
-        // Only fetch details for first 3 movies initially
-        const detailedMovies = await Promise.all(
-          movieItems.slice(0, 3).map(async (item: Record<string, unknown>) => {
-            const movie = (item as Record<string, any>)?.movie || item;
-            try {
-              const detailResponse = await fetch(`/api/ophim/v1/api/phim/${(movie as Record<string, any>).slug}`);
-              const detailData = await detailResponse.json();
-              const movieDetail = detailData?.data?.item || {};
+        // Store all items for later use
+        const allMovieItems = arr.slice(0, 6);
+        
+        // Load only the first movie initially
+        const firstMovieItem = allMovieItems[0];
+        const movie = (firstMovieItem as Record<string, any>)?.movie || firstMovieItem;
+        
+        try {
+          const detailResponse = await fetch(`/api/ophim/v1/api/phim/${(movie as Record<string, any>).slug}`);
+          const detailData = await detailResponse.json();
+          const movieDetail = detailData?.data?.item || {};
 
-              return {
-                name: movieDetail.name || movie.name || '',
-                slug: movieDetail.slug || movie.slug || '',
-                origin_name: movieDetail.origin_name || movie.origin_name || '',
-                thumb_url: movieDetail.thumb_url || movie.thumb_url || '',
-                poster_url: movieDetail.poster_url || movie.poster_url || '',
-                year: movieDetail.year || movie.year || 0,
-                content: movieDetail.content || '',
-                time: movieDetail.time || movie.time || '',
-                categories: movieDetail.category || movie.categories || [],
-                countries: movieDetail.country || movie.countries || [],
-                trailer_url: movieDetail.trailer_url || '',
-                modified: { time: movieDetail?.modified?.time || movie?.modified?.time || '' }
-              };
-            } catch (error) {
-              console.error(`Error fetching detail for ${(movie as Record<string, any>).slug}:`, error);
-              return {
-                name: (movie as Record<string, any>).name || '',
-                slug: (movie as Record<string, any>).slug || '',
-                origin_name: (movie as Record<string, any>).origin_name || '',
-                thumb_url: (movie as Record<string, any>).thumb_url || '',
-                poster_url: (movie as Record<string, any>).poster_url || '',
-                year: (movie as Record<string, any>).year || 0,
-                content: '',
-                time: (movie as Record<string, any>).time || '',
-                categories: (movie as Record<string, any>).categories || [],
-                countries: (movie as Record<string, any>).countries || [],
-                trailer_url: '',
-                modified: { time: (movie as Record<string, any>)?.modified?.time || '' }
-              };
-            }
-          })
-        );
+          const firstMovie = {
+            name: movieDetail.name || movie.name || '',
+            slug: movieDetail.slug || movie.slug || '',
+            origin_name: movieDetail.origin_name || movie.origin_name || '',
+            thumb_url: movieDetail.thumb_url || movie.thumb_url || '',
+            poster_url: movieDetail.poster_url || movie.poster_url || '',
+            year: movieDetail.year || movie.year || 0,
+            content: movieDetail.content || '',
+            time: movieDetail.time || movie.time || '',
+            categories: movieDetail.category || movie.categories || [],
+            countries: movieDetail.country || movie.countries || [],
+            trailer_url: movieDetail.trailer_url || '',
+            modified: { time: movieDetail?.modified?.time || movie?.modified?.time || '' }
+          };
 
-        setMovies(detailedMovies);
+          setMovies([firstMovie]);
+          setLoading(false);
+          
+          // Phase 2: Load remaining movies after initial render
+          if (allMovieItems.length > 1) {
+            setIsLoadingMore(true);
+            setTimeout(async () => {
+              const remainingMovies = await Promise.all(
+                allMovieItems.slice(1).map(async (item: Record<string, unknown>) => {
+                  const movie = (item as Record<string, any>)?.movie || item;
+                  try {
+                    const detailResponse = await fetch(`/api/ophim/v1/api/phim/${(movie as Record<string, any>).slug}`);
+                    const detailData = await detailResponse.json();
+                    const movieDetail = detailData?.data?.item || {};
+
+                    return {
+                      name: movieDetail.name || movie.name || '',
+                      slug: movieDetail.slug || movie.slug || '',
+                      origin_name: movieDetail.origin_name || movie.origin_name || '',
+                      thumb_url: movieDetail.thumb_url || movie.thumb_url || '',
+                      poster_url: movieDetail.poster_url || movie.poster_url || '',
+                      year: movieDetail.year || movie.year || 0,
+                      content: movieDetail.content || '',
+                      time: movieDetail.time || movie.time || '',
+                      categories: movieDetail.category || movie.categories || [],
+                      countries: movieDetail.country || movie.countries || [],
+                      trailer_url: movieDetail.trailer_url || '',
+                      modified: { time: movieDetail?.modified?.time || movie?.modified?.time || '' }
+                    };
+                  } catch (error) {
+                    console.error(`Error fetching detail for ${(movie as Record<string, any>).slug}:`, error);
+                    return {
+                      name: (movie as Record<string, any>).name || '',
+                      slug: (movie as Record<string, any>).slug || '',
+                      origin_name: (movie as Record<string, any>).origin_name || '',
+                      thumb_url: (movie as Record<string, any>).thumb_url || '',
+                      poster_url: (movie as Record<string, any>).poster_url || '',
+                      year: (movie as Record<string, any>).year || 0,
+                      content: '',
+                      time: (movie as Record<string, any>).time || '',
+                      categories: (movie as Record<string, any>).categories || [],
+                      countries: (movie as Record<string, any>).countries || [],
+                      trailer_url: '',
+                      modified: { time: (movie as Record<string, any>)?.modified?.time || '' }
+                    };
+                  }
+                })
+              );
+              
+              setMovies(prev => [...prev, ...remainingMovies]);
+              setIsLoadingMore(false);
+            }, 100); // Small delay to ensure first paint happens
+          }
+        } catch (error) {
+          console.error(`Error fetching first movie detail:`, error);
+          // Fallback to basic data
+          const firstMovie = {
+            name: (movie as Record<string, any>).name || '',
+            slug: (movie as Record<string, any>).slug || '',
+            origin_name: (movie as Record<string, any>).origin_name || '',
+            thumb_url: (movie as Record<string, any>).thumb_url || '',
+            poster_url: (movie as Record<string, any>).poster_url || '',
+            year: (movie as Record<string, any>).year || 0,
+            content: '',
+            time: (movie as Record<string, any>).time || '',
+            categories: (movie as Record<string, any>).categories || [],
+            countries: (movie as Record<string, any>).countries || [],
+            trailer_url: '',
+            modified: { time: (movie as Record<string, any>)?.modified?.time || '' }
+          };
+          setMovies([firstMovie]);
+          setLoading(false);
+        }
       } catch (error) {
         console.error('Error fetching cinema movies:', error);
-      } finally {
         setLoading(false);
       }
     };
 
-    fetchCinemaMovies();
+    fetchFirstMovie();
   }, []);
 
   // Preload next image when index changes
@@ -323,6 +384,14 @@ export default function OptimizedHeroSection() {
             aria-label={`Go to slide ${index + 1}`}
           />
         ))}
+        {/* Loading indicator for remaining movies */}
+        {isLoadingMore && (
+          <div className="flex items-center gap-1 ml-2">
+            <div className="w-2 h-2 bg-netflix-white/40 rounded-full animate-pulse" />
+            <div className="w-2 h-2 bg-netflix-white/40 rounded-full animate-pulse animation-delay-200" />
+            <div className="w-2 h-2 bg-netflix-white/40 rounded-full animate-pulse animation-delay-400" />
+          </div>
+        )}
       </div>
 
       {/* Lazy loaded Trailer Popup */}
