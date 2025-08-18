@@ -1,0 +1,75 @@
+import CategoryClient from "./CategoryClient";
+
+function slugTitle(slug: string) {
+  const map: Record<string, string> = {
+    "phim-moi": "Phim mới",
+    "phim-bo": "Phim bộ",
+    "phim-le": "Phim lẻ",
+    "tv-shows": "TV Shows",
+    "hoat-hinh": "Hoạt hình",
+    "phim-vietsub": "Phim Vietsub",
+    "phim-thuyet-minh": "Phim thuyết minh",
+    "phim-long-tien": "Phim lồng tiếng",
+    "phim-bo-dang-chieu": "Phim bộ đang chiếu",
+    "phim-bo-hoan-thanh": "Phim bộ hoàn thành",
+    "phim-sap-chieu": "Phim sắp chiếu",
+    "subteam": "Subteam",
+    "phim-chieu-rap": "Phim chiếu rạp",
+    // Thể loại
+    "hanh-dong": "Hành Động",
+    "tinh-cam": "Tình Cảm",
+    "hai-huoc": "Hài Hước",
+    "co-trang": "Cổ Trang",
+    "tam-ly": "Tâm Lý",
+    "hinh-su": "Hình Sự",
+    "chien-tranh": "Chiến Tranh",
+    "the-thao": "Thể Thao",
+    "vo-thuat": "Võ Thuật",
+    "vien-tuong": "Viễn Tưởng",
+    "phieu-luu": "Phiêu Lưu",
+    "khoa-hoc": "Khoa Học",
+    "kinh-di": "Kinh Dị",
+    "am-nhac": "Âm Nhạc",
+    "than-thoai": "Thần Thoại",
+    "tai-lieu": "Tài Liệu",
+    "gia-dinh": "Gia Đình",
+    "chinh-kich": "Chính kịch",
+    "bi-an": "Bí ẩn",
+    "hoc-duong": "Học Đường",
+    "kinh-dien": "Kinh Điển",
+    "phim-18": "Phim 18+",
+  };
+  return map[slug] || slug.replace(/-/g, " ");
+}
+export const dynamic = "force-dynamic";
+
+export default async function Page({ params, searchParams }: { params: Promise<{ slug: string }>, searchParams?: Promise<Record<string, string | string[] | undefined>> }) {
+  const { slug } = await params;
+  const searchParamsData = searchParams ? await searchParams : {};
+  const sort_field = (searchParamsData?.sort_field as string) || "modified.time";
+  const sort_type = (searchParamsData?.sort_type as string) || "desc";
+  const category = (searchParamsData?.category as string) || undefined;
+  const country = (searchParamsData?.country as string) || undefined;
+  const year = (searchParamsData?.year as string) || undefined;
+
+  const title = slugTitle(slug);
+
+  return (
+    <div className="px-4 sm:px-6 lg:px-8 pt-24 pb-8 space-y-6">
+      <div className="flex items-center">
+        <h1 className="text-2xl md:text-3xl font-bold text-white">{title}</h1>
+      </div>
+
+      <CategoryClient
+        slug={slug}
+        initialLimit={24}
+        loadMoreSize={12}
+        sort_field={sort_field}
+        sort_type={sort_type}
+        category={category}
+        country={country}
+        year={year}
+      />
+    </div>
+  );
+}
