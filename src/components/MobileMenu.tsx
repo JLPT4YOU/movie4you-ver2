@@ -134,10 +134,10 @@ export default function MobileMenu({
               <span>Thể loại</span>
             </button>
 
-            <div className={`mt-2 bg-netflix-gray/50 rounded-md border border-netflix-light-gray/30 transition-all duration-200 origin-top ${
+            <div className={`bg-netflix-gray/50 rounded-md border border-netflix-light-gray/30 transition-all duration-200 origin-top ${
               isCategoryDropdownOpen
-                ? 'opacity-100 scale-y-100 translate-y-0'
-                : 'opacity-0 scale-y-95 -translate-y-2 pointer-events-none'
+                ? 'mt-2 opacity-100 scale-y-100 max-h-48'
+                : 'mt-0 opacity-0 scale-y-0 max-h-0 overflow-hidden'
             }`}>
                 {Array.isArray(categories) && categories.length > 0 ? (
                   <div className="grid grid-cols-2 gap-1 p-2 max-h-40 overflow-y-auto">
@@ -175,10 +175,10 @@ export default function MobileMenu({
               <span>Quốc gia</span>
             </button>
 
-            <div className={`mt-2 bg-netflix-gray/50 rounded-md border border-netflix-light-gray/30 transition-all duration-200 origin-top ${
+            <div className={`bg-netflix-gray/50 rounded-md border border-netflix-light-gray/30 transition-all duration-200 origin-top ${
               isCountryDropdownOpen
-                ? 'opacity-100 scale-y-100 translate-y-0'
-                : 'opacity-0 scale-y-95 -translate-y-2 pointer-events-none'
+                ? 'mt-2 opacity-100 scale-y-100 max-h-48'
+                : 'mt-0 opacity-0 scale-y-0 max-h-0 overflow-hidden'
             }`}>
                 {Array.isArray(countries) && countries.length > 0 ? (
                   <div className="grid grid-cols-2 gap-1 p-2 max-h-40 overflow-y-auto">
@@ -219,10 +219,10 @@ export default function MobileMenu({
               <span>Năm phát hành</span>
             </button>
 
-            <div className={`mt-2 bg-netflix-gray/50 rounded-md border border-netflix-light-gray/30 transition-all duration-200 origin-top ${
+            <div className={`bg-netflix-gray/50 rounded-md border border-netflix-light-gray/30 transition-all duration-200 origin-top ${
               isYearDropdownOpen
-                ? 'opacity-100 scale-y-100 translate-y-0'
-                : 'opacity-0 scale-y-95 -translate-y-2 pointer-events-none'
+                ? 'mt-2 opacity-100 scale-y-100 max-h-48'
+                : 'mt-0 opacity-0 scale-y-0 max-h-0 overflow-hidden'
             }`}>
                 {Array.isArray(years) && years.length > 0 ? (
                   <div className="grid grid-cols-3 gap-1 p-2 max-h-40 overflow-y-auto">
