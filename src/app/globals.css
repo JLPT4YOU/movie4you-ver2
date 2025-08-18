@@ -37,36 +37,3 @@ body {
   margin: 0;
   padding: 0;
 }
-
-/* Custom Scrollbar Styles */
-.custom-scrollbar {
-  scrollbar-width: thin;
-  scrollbar-color: var(--netflix-red) var(--netflix-gray);
-}
-
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: var(--netflix-gray);
-  border-radius: 3px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: var(--netflix-red);
-  border-radius: 3px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #ff1a1a;
-}
-
-/* Mobile Landscape Optimization */
-@media (max-height: 500px) and (orientation: landscape) {
-  .aspect-video {
-    aspect-ratio: 16/9;
-    max-height: 50vh;
-  }
-}
