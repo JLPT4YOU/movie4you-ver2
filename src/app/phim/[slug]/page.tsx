@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -16,7 +16,7 @@ export default function MovieDetailPage() {
   const params = useParams();
   const [movie, setMovie] = useState<MovieDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showTrailer, setShowTrailer] = useState(false);
+  // const [showTrailer, setShowTrailer] = useState(false);
   const [selectedServer, setSelectedServer] = useState(0);
   const [selectedEpisode, setSelectedEpisode] = useState(0);
   const [showPlayer, setShowPlayer] = useState(false);
@@ -79,7 +79,7 @@ export default function MovieDetailPage() {
       const firstEpisode = movie.episodes[0]?.server_data?.[0];
       if (firstEpisode?.link_embed) {
         setIsWatchingTrailer(false);
-        setShowPlayer(true);
+        setShowPlayer(false);
         return;
       }
     }
@@ -97,7 +97,7 @@ export default function MovieDetailPage() {
     }
   };
 
-  const closePlayer = () => {
+  const closePlayer = useCallback(() => {
     if (movie && currentEpisode && !isWatchingTrailer) {
       WatchHistoryManager.saveProgress({
         movieId: movie._id,
@@ -112,7 +112,7 @@ export default function MovieDetailPage() {
       });
     }
     setShowPlayer(false);
-  };
+  }, [movie, selectedEpisode, selectedServer, isWatchingTrailer]);
 
   useEffect(() => {
     const handleEscKey = (event: KeyboardEvent) => {
@@ -258,9 +258,9 @@ export default function MovieDetailPage() {
 
                 {/* Tags */}
                 <div className="flex flex-wrap gap-3 mb-8 justify-center lg:justify-start">
-                  {movie.category?.map((cat: any) => (
+                  {movie.category.map((cat: { slug: string; name: string }) => (
                     <Link
-                      key={cat.id}
+                      key={cat.slug}
                       href={`/the-loai/${cat.slug}`}
                       className="bg-gray-800/80 hover:bg-netflix-red text-white px-4 py-2 rounded-full text-sm font-medium transition-colors duration-300 border border-gray-600 hover:border-netflix-red"
                     >
@@ -290,15 +290,14 @@ export default function MovieDetailPage() {
                   {movie.country && movie.country.length > 0 && (
                     <div className="bg-black/50 backdrop-blur-sm rounded-lg px-4 py-2 border border-gray-600">
                       <span className="text-gray-400 text-sm">
-                        {movie.country.map((country, index) => (
-                          <span key={country.id}>
+                        {movie.country.map((c: { slug: string; name: string }) => (
+                          <span key={c.slug}>
                             <Link
-                              href={`/quoc-gia/${country.slug}`}
+                              href={`/quoc-gia/${c.slug}`}
                               className="hover:text-netflix-red transition-colors"
                             >
-                              {country.name}
+                              {c.name}
                             </Link>
-                            {index < movie.country.length - 1 && ", "}
                           </span>
                         ))}
                       </span>
@@ -324,7 +323,7 @@ export default function MovieDetailPage() {
                   {movie.director && movie.director.length > 0 && (
                     <div className="mb-4">
                       <span className="text-gray-400 text-sm">Đạo diễn: </span>
-                      <span className="text-white font-medium">{movie.country.map((country: any, index: number) => country.name).slice(0, 2).join(', ')}</span>
+                      <span className="text-white font-medium">{movie.director.slice(0, 2).join(', ')}</span>
                     </div>
                   )}
 
@@ -343,7 +342,8 @@ export default function MovieDetailPage() {
                 <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                   <button
                     onClick={handleWatchNowClick}
-                    className="bg-netflix-red hover:bg-red-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold transition-colors duration-300 flex items-center justify-center gap-3 text-base sm:text-lg shadow-lg">
+                    className="bg-netflix-red hover:bg-red-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold transition-colors duration-300 flex items-center justify-center gap-3 text-base sm:text-lg shadow-lg"
+                  >
                     <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M8 5v14l11-7z"/>
                     </svg>
@@ -353,7 +353,8 @@ export default function MovieDetailPage() {
                   {movie.trailer_url && (
                     <button
                       onClick={handleTrailerClick}
-                      className="bg-gray-800/80 hover:bg-gray-700 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-lg font-semibold transition-colors duration-300 flex items-center gap-2 sm:gap-3 text-sm sm:text-base border border-gray-600 hover:border-gray-500 justify-center">
+                      className="bg-gray-800/80 hover:bg-gray-700 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-lg font-semibold transition-colors duration-300 flex items-center gap-2 sm:gap-3 text-sm sm:text-base border border-gray-600 hover:border-gray-500 justify-center"
+                    >
                       <IconVideo className="w-5 h-5 sm:w-6 sm:h-6" />
                       Trailer
                     </button>
@@ -453,7 +454,7 @@ export default function MovieDetailPage() {
                 {movie.episodes.length > 1 && (
                   <div className="mb-4">
                     <div className="flex gap-3">
-                      {movie.episodes.map((server: any, index: number) => (
+                      {movie.episodes.map((server: { server_name: string; server_data: Array<{ name: string; slug: string; filename: string; link_embed: string; link_m3u8: string }> }, index: number) => (
                         <button
                           key={index}
                           onClick={() => {
@@ -475,48 +476,50 @@ export default function MovieDetailPage() {
 
                 {/* Episode Grid */}
                 <div className="flex gap-2 flex-wrap max-h-24 overflow-y-auto">
-                  {movie.episodes[selectedServer]?.server_data.map((episode: any, index: number) => {
-                    const progress = movie ? WatchHistoryManager.getProgress(movie._id, index, selectedServer) : null;
-                    const hasProgress = progress && progress.progress > 5;
-
-                    return (
-                      <button
-                        key={index}
-                        onClick={() => {
-                          if (currentEpisode && movie) {
-                            WatchHistoryManager.saveProgress({
-                              movieId: movie._id,
-                              movieName: movie.name,
-                              movieSlug: movie.slug,
-                              posterUrl: movie.thumb_url,
-                              episodeIndex: index,
-                              episodeName: episode.name,
-                              serverIndex: selectedServer,
-                              currentTime: 15,
-                              duration: 100
-                            });
-                          }
-                          setSelectedEpisode(index);
-                        }}
-                        className={`relative min-w-[40px] h-10 px-3 rounded text-sm font-medium transition-all duration-300 hover:scale-105 overflow-hidden ${
-                          selectedEpisode === index
-                            ? 'bg-netflix-red text-white shadow-lg'
-                            : 'bg-netflix-gray text-gray-300 hover:bg-netflix-light-gray hover:text-white'
-                        }`}
-                      >
-                        {hasProgress && (
-                          <div
-                            className="absolute bottom-0 left-0 h-1 bg-yellow-400 transition-all duration-300"
-                            style={{ width: `${progress.progress}%` }}
-                          />
-                        )}
-                        <span className="relative z-10">{episode.name}</span>
-                        {progress && progress.progress > 90 && (
-                          <div className="absolute top-1 right-1 w-2 h-2 bg-green-400 rounded-full"></div>
-                        )}
-                      </button>
-                    );
-                  })}
+                  {movie.episodes[selectedServer].server_data.map((episode: { name: string; slug: string }, index: number) => (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        if (currentEpisode && movie) {
+                          WatchHistoryManager.saveProgress({
+                            movieId: movie._id,
+                            movieName: movie.name,
+                            movieSlug: movie.slug,
+                            posterUrl: movie.thumb_url,
+                            episodeIndex: index,
+                            episodeName: episode.name,
+                            serverIndex: selectedServer,
+                            currentTime: 15,
+                            duration: 100
+                          });
+                        }
+                        setSelectedEpisode(index);
+                      }}
+                      className={`relative min-w-[40px] h-10 px-3 rounded text-sm font-medium transition-all duration-300 hover:scale-105 overflow-hidden ${
+                        selectedEpisode === index
+                          ? 'bg-netflix-red text-white shadow-lg'
+                          : 'bg-netflix-gray text-gray-300 hover:bg-netflix-light-gray hover:text-white'
+                      }`}
+                    >
+                      {(() => {
+                        const progress = movie ? WatchHistoryManager.getProgress(movie._id, index, selectedServer) : null;
+                        return (
+                          <>
+                            {progress && (
+                              <div
+                                className="absolute bottom-0 left-0 h-1 bg-yellow-400 transition-all duration-300"
+                                style={{ width: `${progress.progress}%` }}
+                              />
+                            )}
+                            <span className="relative z-10">{episode.name}</span>
+                            {progress && progress.progress > 90 && (
+                              <div className="absolute top-1 right-1 w-2 h-2 bg-green-400 rounded-full"></div>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </button>
+                  ))}
                 </div>
               </div>
             )}

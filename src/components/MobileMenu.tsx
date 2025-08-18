@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { IconMenu, IconBell } from './icons';
+import { IconBell } from './icons';
 
 interface Country {
   _id: string;

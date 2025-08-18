@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 import OptimizedHeroSection from "@/components/OptimizedHeroSection";
 import OptimizedMovieSection from "@/components/OptimizedMovieSection";
-import { normalizeMovie } from "@/utils/ophim";
 
 interface Movie {
   name: string;

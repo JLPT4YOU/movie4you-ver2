@@ -102,6 +102,25 @@ export interface MovieDetail {
   };
 }
 
+export interface Movie {
+  _id: string;
+  name: string;
+  slug: string;
+  thumb_url: string;
+  poster_url: string;
+  year: number;
+  episode_current: string;
+  episode_total?: string;
+  quality: string;
+  lang: string;
+  time?: string;
+  category?: Category[];
+  country?: Country[];
+  content?: string;
+  status?: string;
+  id?: string;
+}
+
 export interface MovieDetailResponse {
   status: string;
   message: string;

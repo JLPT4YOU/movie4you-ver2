@@ -31,14 +31,8 @@ function slugTitle(slug: string) {
 
 export const dynamic = "force-dynamic";
 
-export default async function Page({ params, searchParams }: { params: Promise<{ slug: string }>, searchParams?: Promise<Record<string, string | string[] | undefined>> }) {
+export default async function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const searchParamsData = searchParams ? await searchParams : {};
-  const sort_field = (searchParamsData?.sort_field as string) || "modified.time";
-  const sort_type = (searchParamsData?.sort_type as string) || "desc";
-  const country = (searchParamsData?.country as string) || "";
-  const category = (searchParamsData?.category as string) || "";
-  const year = (searchParamsData?.year as string) || "";
 
   const title = slugTitle(slug);
 
@@ -48,16 +42,7 @@ export default async function Page({ params, searchParams }: { params: Promise<{
         <h1 className="text-2xl md:text-3xl font-bold text-white">{title}</h1>
       </div>
 
-      <CategoryClient
-        slug={slug}
-        initialLimit={24}
-        loadMoreSize={12}
-        sort_field={sort_field}
-        sort_type={sort_type}
-        country={country}
-        category={category}
-        year={year}
-      />
+      <CategoryClient category={{ slug, name: title }} />
     </div>
   );
 }

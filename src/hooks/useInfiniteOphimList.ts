@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { buildSearch, normalizeMovie } from "@/utils/ophim";
+import type { Movie } from "@/types/movie";
 
 export type FetchPathKind = "danh-sach" | "the-loai" | "quoc-gia" | "nam-phat-hanh";
 
@@ -38,7 +39,6 @@ export function useInfiniteOphimList({
   const [hasMore, setHasMore] = useState<boolean>(true);
 
   const sentinelRef = useRef<HTMLDivElement | null>(null);
-  const firstLoadRef = useRef<boolean>(false);
   const seenRef = useRef<Set<string>>(new Set());
   const loadingRef = useRef<boolean>(false);
 
@@ -69,10 +69,10 @@ export function useInfiniteOphimList({
       const rawItems = json?.data?.items || json?.items || [] as Array<Record<string, unknown>>;
       const items = rawItems.map((item: Record<string, any>) => normalizeMovie(item?.movie || item)).filter(Boolean);
 
-      setItems((prev) => [...prev, ...items] as any[]);
+      setItems((prev) => [...prev, ...items] as Movie[]);
       setHasMore((Array.isArray(rawItems) ? rawItems.length : 0) >= size);
-    } catch (e: any) {
-      setError(e?.message || "Fetch error");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Fetch error");
       setHasMore(false);
     } finally {
       setLoading(false);
