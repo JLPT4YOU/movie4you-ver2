@@ -113,26 +113,26 @@ export default function MoviePlayer({ movie }: MoviePlayerProps) {
       {/* Video Player Popup */}
       {showPlayer && (movie?.episodes?.[0]?.server_data?.[0]?.link_embed || currentEpisode?.link_embed || movie?.trailer_url) && (
         <div
-          className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-start justify-center overflow-y-auto"
           onClick={closePlayer}
         >
           <div
-            className="relative w-full max-w-6xl bg-netflix-black rounded-xl overflow-hidden shadow-2xl border border-netflix-gray"
+            className="relative w-full max-w-6xl bg-netflix-black rounded-xl overflow-hidden shadow-2xl border border-netflix-gray my-4 md:my-8 mx-2 md:mx-4 min-h-0"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close Button */}
             <button
               onClick={closePlayer}
-              className="absolute top-4 right-4 z-10 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors duration-300"
+              className="absolute top-2 right-2 md:top-4 md:right-4 z-10 bg-black/50 hover:bg-black/70 text-white rounded-full p-1.5 md:p-2 transition-colors duration-300"
               aria-label="Đóng trình phát video"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
 
             {/* Video Player */}
-            <div className="aspect-video bg-netflix-black">
+            <div className="aspect-video bg-netflix-black w-full">
               {(() => {
                 if (isWatchingTrailer && movie?.trailer_url) {
                   const videoId = getYouTubeVideoId(movie.trailer_url);
@@ -190,15 +190,15 @@ export default function MoviePlayer({ movie }: MoviePlayerProps) {
             {/* Episode Selection */}
             {!isWatchingTrailer && movie.episodes && movie.episodes.length > 0 && movie.type !== 'single' &&
              movie.episodes[0]?.server_data && movie.episodes[0].server_data.length > 1 && (
-              <div className="p-5 border-t border-netflix-gray bg-netflix-black">
-                <div className="mb-4">
-                  <h3 className="text-white font-medium text-base">Chọn tập phim</h3>
+              <div className="p-3 md:p-5 border-t border-netflix-gray bg-netflix-black">
+                <div className="mb-3 md:mb-4">
+                  <h3 className="text-white font-medium text-sm md:text-base">Chọn tập phim</h3>
                 </div>
 
                 {/* Server Selection */}
                 {movie.episodes.length > 1 && (
-                  <div className="mb-4">
-                    <div className="flex gap-3">
+                  <div className="mb-3 md:mb-4">
+                    <div className="flex gap-2 md:gap-3 flex-wrap">
                       {movie.episodes.map((server, index) => (
                         <button
                           key={index}
@@ -206,7 +206,7 @@ export default function MoviePlayer({ movie }: MoviePlayerProps) {
                             setSelectedServer(index);
                             setSelectedEpisode(0);
                           }}
-                          className={`px-4 py-2 rounded text-sm font-medium transition-all duration-300 ${
+                          className={`px-3 py-1.5 md:px-4 md:py-2 rounded text-xs md:text-sm font-medium transition-all duration-300 ${
                             selectedServer === index
                               ? 'bg-netflix-red text-white'
                               : 'bg-netflix-gray text-gray-300 hover:bg-netflix-light-gray'
@@ -220,7 +220,7 @@ export default function MoviePlayer({ movie }: MoviePlayerProps) {
                 )}
 
                 {/* Episode Grid */}
-                <div className="flex gap-2 flex-wrap max-h-24 overflow-y-auto">
+                <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-1.5 md:gap-2 max-h-[40vh] md:max-h-[30vh] overflow-y-auto pr-2 custom-scrollbar">
                   {movie.episodes[selectedServer]?.server_data.map((episode, index) => {
                     const progress = movie ? WatchHistoryManager.getProgress(movie._id, index, selectedServer) : null;
                     const hasProgress = progress && progress.progress > 5;
@@ -244,7 +244,7 @@ export default function MoviePlayer({ movie }: MoviePlayerProps) {
                           }
                           setSelectedEpisode(index);
                         }}
-                        className={`relative min-w-[40px] h-10 px-3 rounded text-sm font-medium transition-all duration-300 hover:scale-105 overflow-hidden ${
+                        className={`relative flex items-center justify-center h-9 md:h-10 rounded text-xs md:text-sm font-medium transition-all duration-300 hover:scale-105 overflow-hidden ${
                           selectedEpisode === index
                             ? 'bg-netflix-red text-white shadow-lg'
                             : 'bg-netflix-gray text-gray-300 hover:bg-netflix-light-gray hover:text-white'
