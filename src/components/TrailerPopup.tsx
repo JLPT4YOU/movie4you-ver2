@@ -30,11 +30,14 @@ export default function TrailerPopup({ trailerUrl, movieName, onClose }: Trailer
 
   return (
     <div
-      className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-6xl bg-netflix-black rounded-xl overflow-hidden shadow-2xl border border-netflix-gray"
+        role="dialog"
+        aria-modal="true"
+        className="relative bg-netflix-black rounded-xl shadow-2xl border border-netflix-gray w-full overflow-hidden flex flex-col"
+        style={{ width: 'min(calc(100vw - 2rem), calc((100dvh - 2rem) * 16 / 9))', maxHeight: 'calc(100dvh - 2rem)' }}
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -46,7 +49,7 @@ export default function TrailerPopup({ trailerUrl, movieName, onClose }: Trailer
           </svg>
         </button>
 
-        <div className="aspect-video bg-netflix-black">
+        <div className="aspect-video bg-netflix-black flex-shrink-0">
           {videoId ? (
             <iframe
               src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`}

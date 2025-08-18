@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -16,7 +16,6 @@ export default function MovieDetailPage() {
   const params = useParams();
   const [movie, setMovie] = useState<MovieDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showTrailer, setShowTrailer] = useState(false);
   const [selectedServer, setSelectedServer] = useState(0);
   const [selectedEpisode, setSelectedEpisode] = useState(0);
   const [showPlayer, setShowPlayer] = useState(false);
@@ -324,7 +323,7 @@ export default function MovieDetailPage() {
                   {movie.director && movie.director.length > 0 && (
                     <div className="mb-4">
                       <span className="text-gray-400 text-sm">Đạo diễn: </span>
-                      <span className="text-white font-medium">{movie.country.map((country: any, index: number) => country.name).slice(0, 2).join(', ')}</span>
+                      <span className="text-white font-medium">{movie.country.map((country: any) => country.name).slice(0, 2).join(', ')}</span>
                     </div>
                   )}
 
@@ -368,11 +367,14 @@ export default function MovieDetailPage() {
       {/* Video Popup */}
       {showPlayer && (movie?.episodes?.[0]?.server_data?.[0]?.link_embed || currentEpisode?.link_embed || movie?.trailer_url) && (
         <div
-          className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4"
           onClick={closePlayer}
         >
           <div
-            className="relative w-full max-w-6xl bg-netflix-black rounded-xl overflow-hidden shadow-2xl border border-netflix-gray"
+            role="dialog"
+            aria-modal="true"
+            className="relative bg-netflix-black rounded-xl shadow-2xl border border-netflix-gray w-full overflow-auto flex flex-col"
+            style={{ width: 'min(calc(100vw - 2rem), 1280px, calc((100dvh - 2rem - 140px) * 16 / 9))', maxHeight: 'calc(100dvh - 2rem)' }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close Button */}
@@ -386,7 +388,7 @@ export default function MovieDetailPage() {
             </button>
 
             {/* Video Player */}
-            <div className="aspect-video bg-netflix-black">
+            <div className="aspect-video bg-netflix-black flex-shrink-0">
               {(() => {
                 if (isWatchingTrailer && movie?.trailer_url) {
                   const videoId = getYouTubeVideoId(movie.trailer_url);
@@ -444,15 +446,15 @@ export default function MovieDetailPage() {
             {/* Episode Selection */}
             {!isWatchingTrailer && movie.episodes && movie.episodes.length > 0 && movie.type !== 'single' &&
              movie.episodes[0]?.server_data && movie.episodes[0].server_data.length > 1 && (
-              <div className="p-5 border-t border-netflix-gray bg-netflix-black">
+              <div className="p-3 sm:p-5 border-t border-netflix-gray bg-netflix-black flex-1 overflow-y-auto min-h-24">
                 <div className="mb-4">
-                  <h3 className="text-white font-medium text-base">Chọn tập phim</h3>
+                  <h3 className="text-white font-medium text-sm sm:text-base">Chọn tập phim</h3>
                 </div>
 
                 {/* Server Selection */}
                 {movie.episodes.length > 1 && (
                   <div className="mb-4">
-                    <div className="flex gap-3">
+                    <div className="flex flex-wrap gap-2 sm:gap-3">
                       {movie.episodes.map((server: any, index: number) => (
                         <button
                           key={index}
@@ -460,7 +462,7 @@ export default function MovieDetailPage() {
                             setSelectedServer(index);
                             setSelectedEpisode(0);
                           }}
-                          className={`px-4 py-2 rounded text-sm font-medium transition-all duration-300 ${
+                          className={`px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm rounded font-medium transition-all duration-300 ${
                             selectedServer === index
                               ? 'bg-netflix-red text-white'
                               : 'bg-netflix-gray text-gray-300 hover:bg-netflix-light-gray'
@@ -498,7 +500,7 @@ export default function MovieDetailPage() {
                           }
                           setSelectedEpisode(index);
                         }}
-                        className={`relative min-w-[40px] h-10 px-3 rounded text-sm font-medium transition-all duration-300 hover:scale-105 overflow-hidden ${
+                        className={`relative min-w-[32px] h-8 px-2 text-xs sm:min-w-[40px] sm:h-10 sm:px-3 sm:text-sm rounded font-medium transition-all duration-300 hover:scale-105 overflow-hidden ${
                           selectedEpisode === index
                             ? 'bg-netflix-red text-white shadow-lg'
                             : 'bg-netflix-gray text-gray-300 hover:bg-netflix-light-gray hover:text-white'
