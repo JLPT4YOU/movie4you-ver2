@@ -1,7 +1,6 @@
 'use client';
 
-import Link from 'next/link';
-import Image from 'next/image';
+import Link from "next/link";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -187,7 +186,7 @@ const Footer = () => {
               <Link href="/terms" className="text-gray-400 hover:text-white transition-colors">
                 Điều khoản dịch vụ
               </Link>
-              {/* <Link href="/privacy" className="text-gray-400 hover:text-white transition-colors">
+              <Link href="/privacy" className="text-gray-400 hover:text-white transition-colors">
                 Chính sách bảo mật
               </Link>
               <Link href="/dmca" className="text-gray-400 hover:text-white transition-colors">
@@ -195,7 +194,7 @@ const Footer = () => {
               </Link>
               <Link href="/contact" className="text-gray-400 hover:text-white transition-colors">
                 Liên hệ
-              </Link> */}
+              </Link>
               <Link href="/sitemap.xml" className="text-gray-400 hover:text-white transition-colors">
                 Sitemap
               </Link>

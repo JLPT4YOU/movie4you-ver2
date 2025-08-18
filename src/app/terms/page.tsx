@@ -163,7 +163,7 @@ export default function TermsOfService() {
                 <li className="flex items-start">
                   <span className="text-red-500 mr-2">❌</span>
                   <span>Vi phạm điều khoản của API Bên thứ ba hoặc pháp luật (bao gồm luật bản quyền 
-                  Nhật Bản và nơi cư trú của bạn).</span>
+                  quốc tế và nơi cư trú của bạn).</span>
                 </li>
               </ul>
             </div>
@@ -199,7 +199,7 @@ export default function TermsOfService() {
             </h2>
             <div className="space-y-3">
               <p>MOVIE4YOU thực hiện quy trình tiếp nhận thông báo vi phạm và gỡ bỏ hợp lý, phù hợp 
-              pháp luật Nhật Bản.</p>
+              với các quy định pháp luật quốc tế về bản quyền.</p>
               <p>Chủ sở hữu quyền gửi thông báo tới <strong className="text-white">movie4you.owner@gmail.com</strong> gồm:</p>
               <ul className="list-disc list-inside ml-4 space-y-1">
                 <li>(i) thông tin người thông báo</li>
@@ -311,9 +311,9 @@ export default function TermsOfService() {
               <span className="text-red-500 mr-3">17.</span> Luật áp dụng & Giải quyết tranh chấp
             </h2>
             <ul className="space-y-2">
-              <li>• ToS chịu sự điều chỉnh của Luật Nhật Bản, không xét đến xung đột pháp luật.</li>
-              <li>• Thẩm quyền riêng biệt: Tòa án Quận Tokyo (Tokyo District Court).</li>
-              <li>• Các bên không tham gia kiện tập thể trong phạm vi luật cho phép.</li>
+              <li>• ToS chịu sự điều chỉnh của luật pháp quốc tế và luật địa phương áp dụng.</li>
+              <li>• Tranh chấp sẽ được giải quyết thông qua hòa giải trước khi đưa ra tòa án có thẩm quyền.</li>
+              <li>• Các bên ưu tiên giải quyết tranh chấp một cách thiện chí và hợp tác.</li>
             </ul>
           </section>
 

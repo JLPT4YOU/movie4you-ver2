@@ -49,7 +49,6 @@ export default function Header() {
         // Fetch countries
         const countriesRes = await fetch('/api/ophim/v1/api/quoc-gia');
         const countriesData = await countriesRes.json();
-        const countries = countriesData?.data?.items ?? countriesData?.items ?? countriesData?.countries ?? [] as Array<{name: string, slug: string}>;
         if (countriesData.status && countriesData.data) {
           let countriesArray: Country[] = [];
           if (Array.isArray(countriesData.data)) {
@@ -92,7 +91,6 @@ export default function Header() {
         // Fetch years
         const yearsRes = await fetch('/api/ophim/v1/api/nam-phat-hanh');
         const yearsData = await yearsRes.json();
-        const genres = yearsData?.data?.items ?? yearsData?.items ?? yearsData?.genres ?? [] as Array<{name: string, slug: string}>;
         if (yearsData.status && yearsData.data && yearsData.data.items && Array.isArray(yearsData.data.items)) {
           const yearsArray: Year[] = yearsData.data.items.filter((item: Record<string, any>) =>
             item && typeof item === 'object' && typeof item.year === 'number' && item.year >= 2010

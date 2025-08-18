@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
-import { IconHome, IconX, IconChevronDown, IconBell, IconHistory } from "./icons";
+import React from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { IconMenu, IconBell } from './icons';
 
 interface Country {
   _id: string;

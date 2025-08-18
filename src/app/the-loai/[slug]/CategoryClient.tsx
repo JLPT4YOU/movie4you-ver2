@@ -48,7 +48,7 @@ export default function CategoryClient({
     resetKey: JSON.stringify(commonParams),
   });
 
-  const handleFilterChange = useCallback((filters: {
+  const handleFilterChange = useCallback((_filters: {
     sort_field: string;
     sort_type: string;
     country: string;
