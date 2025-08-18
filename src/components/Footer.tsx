@@ -185,9 +185,9 @@ const Footer = () => {
             </div>
             <div className="flex flex-wrap justify-center gap-6 text-sm">
               <Link href="/terms" className="text-gray-400 hover:text-white transition-colors">
-                Điều khoản sử dụng
+                Điều khoản dịch vụ
               </Link>
-              <Link href="/privacy" className="text-gray-400 hover:text-white transition-colors">
+              {/* <Link href="/privacy" className="text-gray-400 hover:text-white transition-colors">
                 Chính sách bảo mật
               </Link>
               <Link href="/dmca" className="text-gray-400 hover:text-white transition-colors">
@@ -195,12 +195,9 @@ const Footer = () => {
               </Link>
               <Link href="/contact" className="text-gray-400 hover:text-white transition-colors">
                 Liên hệ
-              </Link>
+              </Link> */}
               <Link href="/sitemap.xml" className="text-gray-400 hover:text-white transition-colors">
                 Sitemap
-              </Link>
-              <Link href="/terms" className="text-gray-400 hover:text-white transition-colors">
-                Điều khoản dịch vụ
               </Link>
             </div>
           </div>
