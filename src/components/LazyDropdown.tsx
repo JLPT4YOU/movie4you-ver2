@@ -38,6 +38,7 @@ export default function LazyDropdown({
     try {
       const response = await fetch(apiEndpoint, {
         headers: { accept: 'application/json' },
+        cache: 'force-cache',
         next: { revalidate: 3600 } // Cache 1 hour
       });
       

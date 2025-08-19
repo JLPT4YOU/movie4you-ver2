@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import PreloadResources from "@/components/PreloadResources";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
 
@@ -97,11 +96,9 @@ export default function RootLayout({
   return (
     <html lang="vi">
       <head>
-        {/* Resource hints for performance */}
-        <link rel="preconnect" href="https://img.ophim.live" crossOrigin="anonymous" />
+        {/* Only preconnect for img.ophim.live - actually used */}
+        <link rel="preconnect" href="https://img.ophim.live" />
         <link rel="dns-prefetch" href="https://img.ophim.live" />
-        <link rel="dns-prefetch" href="https://phimapi.com" />
-        <link rel="dns-prefetch" href="https://phim.nguonc.com" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -124,7 +121,6 @@ export default function RootLayout({
         />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <PreloadResources />
         <div className="bg-netflix-black min-h-screen text-netflix-white flex flex-col">
           <Header />
           <main className="flex-grow">

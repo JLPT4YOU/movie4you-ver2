@@ -1,5 +1,6 @@
 import OptimizedHeroSection from "@/components/OptimizedHeroSection";
 import LazyMovieSection from "@/components/LazyMovieSection";
+import SmartResourceHints from "@/components/SmartResourceHints";
 
 interface Movie {
   name: string;
@@ -178,6 +179,9 @@ export default async function Home() {
 
   return (
     <>
+      {/* Smart resource hints - only load when needed */}
+      <SmartResourceHints enableImagePreconnect={true} enableAPIPreload={true} />
+
       <OptimizedHeroSection movies={heroMovies} loading={false} />
 
       {/* Lazy load movie sections - chỉ load khi scroll tới */}

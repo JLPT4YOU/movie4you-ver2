@@ -29,35 +29,8 @@ export default function PreloadResources({ heroImageUrl, criticalImages = [] }: 
       document.head.appendChild(link);
     });
 
-    // Preload critical API endpoints
-    const criticalEndpoints = [
-      '/api/ophim/v1/api/the-loai',
-      '/api/ophim/v1/api/quoc-gia',
-      '/api/ophim/v1/api/nam-phat-hanh'
-    ];
-
-    criticalEndpoints.forEach(endpoint => {
-      fetch(endpoint, { 
-        method: 'GET',
-        priority: 'low' as RequestPriority
-      }).catch(() => {
-        // Ignore errors for preload
-      });
-    });
-
-    // DNS prefetch for external domains
-    const externalDomains = [
-      'img.ophim.live',
-      'phimapi.com',
-      'phim.nguonc.com'
-    ];
-
-    externalDomains.forEach(domain => {
-      const link = document.createElement('link');
-      link.rel = 'dns-prefetch';
-      link.href = `https://${domain}`;
-      document.head.appendChild(link);
-    });
+    // Only preload API endpoints that are actually used immediately
+    // Remove unused API preloads to avoid warnings
 
   }, [heroImageUrl, criticalImages]);
 
