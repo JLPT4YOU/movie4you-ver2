@@ -103,13 +103,14 @@ export default function OptimizedMovieSection({ cinemaMovies = [] }: OptimizedMo
   useEffect(() => {
     const loadHistory = () => {
       const history = WatchHistoryManager.getWatchedMovies();
-      const unfinished = history.filter(item => item.progress < 90);
-      setWatchHistory(unfinished);
+      // Show all movies in history, not just unfinished ones
+      // Since we can't track actual progress with iframe
+      setWatchHistory(history.slice(0, 12)); // Show latest 12 movies
     };
 
     loadHistory();
-    const interval = setInterval(loadHistory, 30000);
-    return () => clearInterval(interval);
+    // No need for interval - component remounts on navigation anyway
+    return () => {};
   }, []);
 
   useEffect(() => {

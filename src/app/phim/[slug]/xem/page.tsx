@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { MovieDetail } from '@/types/movie';
 import Header from '@/components/Header';
+import { WatchHistoryManager } from '@/utils/watchHistory';
 
 // Future use
 /* interface ServerData {
@@ -34,6 +35,8 @@ export default function WatchPage() {
   const [alternativeSources, setAlternativeSources] = useState<any>({});
   const [selectedSource, setSelectedSource] = useState<'ophim' | 'phimapi' | 'nguonc'>('ophim');
   // const [ophimData, setOphimData] = useState<MovieDetail | null>(null); // Future use
+  const videoRef = useRef<HTMLIFrameElement>(null);
+  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const fetchMovieData = async () => {
@@ -67,6 +70,67 @@ export default function WatchPage() {
 
     fetchMovieData();
   }, [params.slug]);
+
+  // Save watch history when episode changes or video plays
+  useEffect(() => {
+    if (!movie || !params.slug) return;
+
+    // Get current episode info based on selected source
+    let episodes: any[] = [];
+    if (selectedSource === 'ophim' && movie?.episodes?.[selectedServer]) {
+      episodes = movie.episodes[selectedServer].server_data || [];
+    } else if (selectedSource === 'phimapi' && alternativeSources.phimapi?.episodes?.[selectedServer]) {
+      episodes = alternativeSources.phimapi.episodes[selectedServer].server_data || [];
+    } else if (selectedSource === 'nguonc' && alternativeSources.nguonc?.movie?.episodes?.[selectedServer]) {
+      episodes = alternativeSources.nguonc.movie.episodes[selectedServer].items || [];
+    }
+
+    const episode = episodes[selectedEpisode];
+    if (!episode) return;
+
+    // Save to watch history
+    const saveHistory = () => {
+      // Get poster URL from movie data
+      let posterUrl = '';
+      if (movie.thumb_url) {
+        posterUrl = movie.thumb_url.replace('https://img.ophim.live/uploads/movies/', '');
+      } else if (movie.poster_url) {
+        posterUrl = movie.poster_url.replace('https://img.ophim.live/uploads/movies/', '');
+      }
+
+      WatchHistoryManager.saveProgress({
+        movieId: movie._id,
+        movieName: movie.name,
+        movieSlug: movie.slug,
+        posterUrl: posterUrl,
+        episodeIndex: selectedEpisode,
+        episodeName: episode.name || `Tập ${selectedEpisode + 1}`,
+        serverIndex: selectedServer,
+        currentTime: 0, // Start at 0 for iframe (can't access actual time)
+        duration: 1, // Set to 1 to avoid division by zero
+      });
+
+      // Removed console.log for production
+    };
+
+    // Save immediately when episode is selected
+    saveHistory();
+
+    // Also save periodically while watching (every 30 seconds)
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current);
+    }
+
+    progressIntervalRef.current = setInterval(() => {
+      saveHistory();
+    }, 30000); // Save every 30 seconds
+
+    return () => {
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
+    };
+  }, [movie, selectedEpisode, selectedServer, selectedSource, alternativeSources, params.slug]);
 
   const getCurrentVideoSource = () => {
     let videoSource = null;
@@ -202,6 +266,7 @@ export default function WatchPage() {
             <div className="aspect-video bg-black rounded-lg overflow-hidden">
               {videoSource ? (
                 <iframe
+                  ref={videoRef}
                   src={videoSource}
                   className="w-full h-full"
                   allowFullScreen
