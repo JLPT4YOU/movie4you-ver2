@@ -1,5 +1,5 @@
 import OptimizedHeroSection from "@/components/OptimizedHeroSection";
-import LazyMovieSection from "@/components/LazyMovieSection";
+import InfiniteLazyMovieSection from "@/components/InfiniteLazyMovieSection";
 import SmartResourceHints from "@/components/SmartResourceHints";
 import ContinueWatching from "@/components/ContinueWatching";
 
@@ -191,39 +191,39 @@ export default async function Home() {
       {/* Continue Watching Section */}
       <ContinueWatching />
 
-      {/* Lazy load movie sections - chỉ load khi scroll tới */}
-      <LazyMovieSection
+      {/* Lazy load movie sections with infinite scroll */}
+      <InfiniteLazyMovieSection
         title="Phim chiếu rạp"
         slug="phim-chieu-rap"
         viewAllUrl="/category/phim-chieu-rap"
         priority={true} // Load ngay lập tức
       />
 
-      <LazyMovieSection
+      <InfiniteLazyMovieSection
         title="Phim mới"
         slug="phim-moi"
         viewAllUrl="/category/phim-moi"
       />
 
-      <LazyMovieSection
+      <InfiniteLazyMovieSection
         title="Phim lẻ"
         slug="phim-le"
         viewAllUrl="/category/phim-le"
       />
 
-      <LazyMovieSection
+      <InfiniteLazyMovieSection
         title="Phim bộ"
         slug="phim-bo"
         viewAllUrl="/category/phim-bo"
       />
 
-      <LazyMovieSection
+      <InfiniteLazyMovieSection
         title="TV Shows"
         slug="tv-shows"
         viewAllUrl="/category/tv-shows"
       />
 
-      <LazyMovieSection
+      <InfiniteLazyMovieSection
         title="Hoạt hình"
         slug="hoat-hinh"
         viewAllUrl="/category/hoat-hinh"
