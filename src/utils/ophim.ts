@@ -11,7 +11,7 @@ export type NormalizedMovie = {
   [key: string]: any;
 };
 
-export const OPHIM_IMG_BASE = "https://img.ophim.live";
+export const OPHIM_IMG_BASE = process.env.OPHIM_IMG_BASE || "https://img.ophim.live";
 export const PLACEHOLDER_POSTER = "/placeholder-movie.jpg";
 
 /**
