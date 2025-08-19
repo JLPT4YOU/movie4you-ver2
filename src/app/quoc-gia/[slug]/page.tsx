@@ -56,9 +56,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function CountryPage({ params, searchParams }: PageProps) {
+export default async function CountryPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const resolvedSearchParams = searchParams ? await searchParams : {};
+  // Future use: const resolvedSearchParams = searchParams ? await searchParams : {};
   
   // Map country slugs to Vietnamese names
   const countryNames: { [key: string]: string } = {
@@ -101,19 +101,9 @@ export default async function CountryPage({ params, searchParams }: PageProps) {
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 pt-24 pb-8 space-y-6">
-      <div className="flex items-center">
-        <h1 className="text-2xl md:text-3xl font-bold text-white">Phim {countryName}</h1>
-      </div>
-
       <CategoryClient
         slug={slug}
-        initialLimit={24}
-        loadMoreSize={12}
-        sort_field={(resolvedSearchParams?.sort_field as string) || "modified.time"}
-        sort_type={(resolvedSearchParams?.sort_type as string) || "desc"}
-        country={(resolvedSearchParams?.country as string) || ""}
-        category={(resolvedSearchParams?.category as string) || ""}
-        year={(resolvedSearchParams?.year as string) || ""}
+        title={`Phim ${countryName}`}
       />
     </div>
   );

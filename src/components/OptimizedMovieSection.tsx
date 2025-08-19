@@ -8,7 +8,7 @@ import { normalizeMovie, buildSearch } from "@/utils/ophim";
 import { WatchHistoryManager, WatchHistoryItem } from "@/utils/watchHistory";
 
 // Dynamic import với loading state
-const LazyMovieCard = dynamic(() => import("./LazyMovieCard"), {
+const MovieCard = dynamic(() => import("./MovieCard"), {
   loading: () => (
     <div className="aspect-[2/3] bg-netflix-gray rounded-md animate-pulse" />
   ),
@@ -260,7 +260,7 @@ export default function OptimizedMovieSection({ cinemaMovies = [] }: OptimizedMo
             >
               {(category.items ?? []).map((movie) => (
                 <div key={movie.slug} className="flex-none w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5 xl:w-1/6 min-w-[160px]">
-                  <LazyMovieCard movie={movie} />
+                  <MovieCard movie={movie} />
                 </div>
               ))}
             </div>

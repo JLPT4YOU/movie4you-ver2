@@ -46,11 +46,14 @@ export default function OptimizedHeroSection({ movies: propMovies = [], loading:
   const [showTrailerPopup, setShowTrailerPopup] = useState(false);
   const [imagesLoaded, setImagesLoaded] = useState<Record<string, boolean>>({});
 
-  // Preload image function
-  const preloadImage = useCallback((index: number) => {
+  // Preload image function with priority for first image
+  const preloadImage = useCallback((index: number, priority = false) => {
     if (movies[index] && !imagesLoaded[index]) {
       const img = new window.Image();
       img.src = resolveImageUrl(movies[index].poster_url || movies[index].thumb_url);
+      if (priority) {
+        img.fetchPriority = 'high';
+      }
       img.onload = () => {
         setImagesLoaded(prev => ({ ...prev, [index]: true }));
       };
@@ -62,8 +65,10 @@ export default function OptimizedHeroSection({ movies: propMovies = [], loading:
     if (propMovies.length > 0) {
       setMovies(propMovies);
       setLoading(false);
+      // Preload first image with high priority
+      preloadImage(0, true);
     }
-  }, [propMovies]);
+  }, [propMovies, preloadImage]);
 
   // Preload next image when index changes
   useEffect(() => {
@@ -176,12 +181,12 @@ export default function OptimizedHeroSection({ movies: propMovies = [], loading:
                   alt={currentMovie.name}
                   width={280}
                   height={420}
-                  sizes="280px"
-                  quality={90}
+                  sizes="(max-width: 768px) 200px, 280px"
+                  quality={85}
+                  priority={currentIndex === 0}
                   className="rounded-xl shadow-2xl transition-transform duration-300 group-hover:scale-105 w-[280px] h-[420px] object-cover"
                   placeholder="blur"
                   blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAb/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWEREiMxUf/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
-                  loading="eager"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 

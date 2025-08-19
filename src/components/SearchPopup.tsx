@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { IconSearch } from "./icons";
 
 interface SearchMovie {
@@ -132,9 +133,11 @@ export default function SearchPopup({ isOpen, onClose }: SearchPopupProps) {
                   className="flex items-center gap-4 p-4 hover:bg-netflix-gray/30 transition-colors"
                 >
                   <div className="w-16 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-netflix-gray">
-                    <img
+                    <Image
                       src={`https://img.ophim.live/uploads/movies/${movie.thumb_url || movie.poster_url}`}
                       alt={movie.name}
+                      width={64}
+                      height={96}
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
@@ -160,7 +163,7 @@ export default function SearchPopup({ isOpen, onClose }: SearchPopupProps) {
             </div>
           ) : searchQuery.length >= 2 ? (
             <div className="text-center py-8 text-netflix-text-gray">
-              Không tìm thấy kết quả cho "{searchQuery}"
+              Không tìm thấy kết quả cho &ldquo;{searchQuery}&rdquo;
             </div>
           ) : searchQuery.length > 0 ? (
             <div className="text-center py-8 text-netflix-text-gray">

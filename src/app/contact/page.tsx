@@ -27,7 +27,7 @@ export default function Page() {
           <ul className="list-disc ml-6 space-y-2 text-gray-300">
             <li>Phản hồi về trải nghiệm sử dụng, tính năng hoặc đề xuất cải tiến.</li>
             <li>Báo lỗi kỹ thuật trong quá trình truy cập hoặc xem nội dung.</li>
-            <li>Vấn đề bản quyền/DMCA: vui lòng xem hướng dẫn tại <Link className="text-red-500 hover:text-red-400 transition-colors" href="/dmca">trang DMCA</Link>.</li>
+            <li>Vấn đề bản quyền: vui lòng gửi email trực tiếp cho chúng tôi với thông tin chi tiết.</li>
             <li>Câu hỏi liên quan tới quyền riêng tư: xem <Link className="text-red-500 hover:text-red-400 transition-colors" href="/privacy">Chính sách bảo mật</Link> hoặc gửi email cho chúng tôi.</li>
           </ul>
         </section>
@@ -39,7 +39,7 @@ export default function Page() {
           </h2>
           <p className="text-gray-300 leading-relaxed">
             MOVIE4YOU là nền tảng tổng hợp/tra cứu. Chúng tôi không lưu trữ nội dung phim trên máy chủ của mình. Đối với yêu cầu gỡ bỏ
-            nội dung vi phạm bản quyền, vui lòng thực hiện theo quy trình "thông báo và gỡ bỏ" tại trang <Link className="text-red-500 hover:text-red-400 transition-colors" href="/dmca">DMCA</Link>.
+            nội dung vi phạm bản quyền, vui lòng liên hệ trực tiếp với chúng tôi qua email.
           </p>
         </section>
 
@@ -50,7 +50,7 @@ export default function Page() {
           </h2>
           <ul className="list-disc ml-6 space-y-2 text-gray-300">
             <li>Email hỗ trợ chung: trong vòng 1–3 ngày làm việc.</li>
-            <li>Yêu cầu DMCA/bản quyền hợp lệ: ưu tiên xử lý sớm nhất có thể.</li>
+            <li>Yêu cầu bản quyền hợp lệ: ưu tiên xử lý sớm nhất có thể.</li>
             <li>Yêu cầu quyền riêng tư (truy cập/xóa dữ liệu...): tối đa 30 ngày làm việc.</li>
           </ul>
         </section>
@@ -63,7 +63,7 @@ export default function Page() {
           <div className="text-gray-300 space-y-2">
             <p>Email: <a className="text-red-500 hover:text-red-400 transition-colors" href="mailto:movie4you.owner@gmail.com">movie4you.owner@gmail.com</a></p>
             <p>Chính sách bảo mật: <Link className="text-red-500 hover:text-red-400 transition-colors" href="/privacy">/privacy</Link></p>
-            <p>DMCA: <Link className="text-red-500 hover:text-red-400 transition-colors" href="/dmca">/dmca</Link></p>
+            <p>Điều khoản sử dụng: <Link className="text-red-500 hover:text-red-400 transition-colors" href="/terms">/terms</Link></p>
           </div>
         </section>
       </div>

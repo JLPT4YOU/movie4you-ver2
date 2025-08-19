@@ -1,72 +1,163 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { IconMenu, IconBell } from './icons';
+import { IconBell } from './icons';
 
-interface Country {
+interface DropdownItem {
   _id: string;
   name: string;
   slug: string;
-}
-
-interface Category {
-  _id: string;
-  name: string;
-  slug: string;
-}
-
-interface Year {
-  year: number;
+  year?: number;
 }
 
 interface MobileMenuProps {
   isOpen: boolean;
   onClose: () => void;
-  
-  countries: Country[];
-  selectedCountry: Country | null;
-  setSelectedCountry: (country: Country) => void;
-  isCountryDropdownOpen: boolean;
-  setIsCountryDropdownOpen: (open: boolean) => void;
-  
-  categories: Category[];
-  isCategoryDropdownOpen: boolean;
-  setIsCategoryDropdownOpen: (open: boolean) => void;
-  
-  years: Year[];
-  selectedYear: Year | null;
-  setSelectedYear: (year: Year) => void;
-  isYearDropdownOpen: boolean;
-  setIsYearDropdownOpen: (open: boolean) => void;
 }
 
 export default function MobileMenu({
   isOpen,
   onClose,
-  countries,
-  selectedCountry,
-  setSelectedCountry,
-  isCountryDropdownOpen,
-  setIsCountryDropdownOpen,
-  categories,
-  isCategoryDropdownOpen,
-  setIsCategoryDropdownOpen,
-  years,
-  selectedYear,
-  setSelectedYear,
-  isYearDropdownOpen,
-  setIsYearDropdownOpen,
 }: MobileMenuProps) {
-  const router = useRouter();
+  // Dropdown states
+  const [dropdownStates, setDropdownStates] = useState({
+    categories: false,
+    countries: false,
+    years: false
+  });
 
-  // Helper function to close all dropdowns except the specified one
-  const closeOtherDropdowns = (keepOpen: 'category' | 'country' | 'year') => {
-    if (keepOpen !== 'category') setIsCategoryDropdownOpen(false);
-    if (keepOpen !== 'country') setIsCountryDropdownOpen(false);
-    if (keepOpen !== 'year') setIsYearDropdownOpen(false);
+  // Data states
+  const [categories, setCategories] = useState<DropdownItem[]>([]);
+  const [countries, setCountries] = useState<DropdownItem[]>([]);
+  const [years, setYears] = useState<DropdownItem[]>([]);
+
+  // Loading states
+  const [loading, setLoading] = useState({
+    categories: false,
+    countries: false,
+    years: false
+  });
+
+  // Fetch functions
+  const fetchCategories = async () => {
+    if (categories.length > 0 || loading.categories) return;
+
+    setLoading(prev => ({ ...prev, categories: true }));
+    try {
+      const response = await fetch('/api/ophim/v1/api/the-loai');
+      if (response.ok) {
+        const data = await response.json();
+        let itemsArray: DropdownItem[] = [];
+
+        if (data.status && data.data) {
+          if (Array.isArray(data.data)) {
+            itemsArray = data.data;
+          } else if (data.data.items && Array.isArray(data.data.items)) {
+            itemsArray = data.data.items;
+          } else if (typeof data.data === 'object') {
+            itemsArray = Object.values(data.data).filter((item: any) =>
+              item && typeof item === 'object' && item._id && item.name && item.slug
+            ) as DropdownItem[];
+          }
+        }
+
+        setCategories(itemsArray);
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    } finally {
+      setLoading(prev => ({ ...prev, categories: false }));
+    }
+  };
+
+  const fetchCountries = async () => {
+    if (countries.length > 0 || loading.countries) return;
+
+    setLoading(prev => ({ ...prev, countries: true }));
+    try {
+      const response = await fetch('/api/ophim/v1/api/quoc-gia');
+      if (response.ok) {
+        const data = await response.json();
+        let itemsArray: DropdownItem[] = [];
+
+        if (data.status && data.data) {
+          if (Array.isArray(data.data)) {
+            itemsArray = data.data;
+          } else if (data.data.items && Array.isArray(data.data.items)) {
+            itemsArray = data.data.items;
+          } else if (typeof data.data === 'object') {
+            itemsArray = Object.values(data.data).filter((item: any) =>
+              item && typeof item === 'object' && item._id && item.name && item.slug
+            ) as DropdownItem[];
+          }
+        }
+
+        setCountries(itemsArray);
+      }
+    } catch (error) {
+      console.error('Error fetching countries:', error);
+    } finally {
+      setLoading(prev => ({ ...prev, countries: false }));
+    }
+  };
+
+  const fetchYears = async () => {
+    if (years.length > 0 || loading.years) return;
+
+    setLoading(prev => ({ ...prev, years: true }));
+    try {
+      const response = await fetch('/api/ophim/v1/api/nam-phat-hanh');
+      if (response.ok) {
+        const data = await response.json();
+        let itemsArray: DropdownItem[] = [];
+
+        if (data.status && data.data && data.data.items && Array.isArray(data.data.items)) {
+          itemsArray = data.data.items.filter((item: any) =>
+            item && typeof item === 'object' && typeof item.year === 'number' && item.year >= 2010
+          ).map((item: any) => ({
+            _id: item.year.toString(),
+            name: item.year.toString(),
+            slug: item.year.toString(),
+            year: item.year
+          }));
+        }
+
+        setYears(itemsArray);
+      }
+    } catch (error) {
+      console.error('Error fetching years:', error);
+    } finally {
+      setLoading(prev => ({ ...prev, years: false }));
+    }
+  };
+
+  // Toggle dropdown and fetch data if needed
+  const toggleDropdown = (type: 'categories' | 'countries' | 'years') => {
+    const newState = !dropdownStates[type];
+
+    // Close other dropdowns
+    setDropdownStates({
+      categories: type === 'categories' ? newState : false,
+      countries: type === 'countries' ? newState : false,
+      years: type === 'years' ? newState : false
+    });
+
+    // Fetch data if opening dropdown
+    if (newState) {
+      switch (type) {
+        case 'categories':
+          fetchCategories();
+          break;
+        case 'countries':
+          fetchCountries();
+          break;
+        case 'years':
+          fetchYears();
+          break;
+      }
+    }
   };
 
   if (!isOpen) return null;
@@ -120,180 +211,167 @@ export default function MobileMenu({
           </Link>
         </div>
 
-        {/* Mobile Filter Sections with Dropdowns */}
+        {/* Filter Dropdowns */}
         <div className="border-t border-netflix-gray px-4 py-3 space-y-3">
           {/* Categories Dropdown */}
-          <div className="relative category-dropdown">
+          <div>
             <button
-              onClick={() => {
-                closeOtherDropdowns('category');
-                setIsCategoryDropdownOpen(!isCategoryDropdownOpen);
-              }}
-              className="w-full py-2 text-sm font-medium text-netflix-white hover:text-netflix-red transition-colors text-left"
+              onClick={() => toggleDropdown('categories')}
+              className="flex items-center justify-between w-full py-2 text-netflix-text-gray hover:text-netflix-white transition-colors font-medium"
             >
               <span>Thể loại</span>
+              <svg
+                className={`w-4 h-4 transition-transform ${dropdownStates.categories ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
             </button>
 
-            <div className={`bg-netflix-gray/50 rounded-md border border-netflix-light-gray/30 transition-all duration-200 origin-top ${
-              isCategoryDropdownOpen
-                ? 'mt-2 opacity-100 scale-y-100 max-h-48'
-                : 'mt-0 opacity-0 scale-y-0 max-h-0 overflow-hidden'
-            }`}>
-                {Array.isArray(categories) && categories.length > 0 ? (
-                  <div className="grid grid-cols-2 gap-1 p-2 max-h-40 overflow-y-auto">
+            {dropdownStates.categories && (
+              <div className="mt-2 pl-4 space-y-1 max-h-48 overflow-y-auto">
+                {loading.categories ? (
+                  <div className="animate-pulse space-y-2">
+                    {[...Array(6)].map((_, i) => (
+                      <div key={i} className="h-4 bg-netflix-gray rounded"></div>
+                    ))}
+                  </div>
+                ) : categories.length > 0 ? (
+                  <div className="grid grid-cols-2 gap-1">
                     {categories.map((category) => (
-                      <button
+                      <Link
                         key={category._id}
-                        onClick={() => {
-                          setIsCategoryDropdownOpen(false);
-                          onClose();
-                          router.push(`/the-loai/${category.slug}`);
-                        }}
-                        className="text-left px-2 py-1.5 text-xs rounded hover:bg-netflix-red/20 transition-colors text-netflix-text-gray hover:text-netflix-white"
+                        href={`/the-loai/${category.slug}`}
+                        className="block py-1 px-2 text-sm text-netflix-text-gray hover:text-netflix-red hover:bg-netflix-gray/30 rounded transition-colors"
+                        onClick={onClose}
                       >
                         {category.name}
-                      </button>
+                      </Link>
                     ))}
                   </div>
                 ) : (
-                  <div className="px-3 py-2 text-xs text-netflix-text-gray">
-                    Đang tải...
-                  </div>
+                  <div className="text-sm text-netflix-text-gray">Không có dữ liệu</div>
                 )}
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Countries Dropdown */}
-          <div className="relative country-dropdown">
+          <div>
             <button
-              onClick={() => {
-                closeOtherDropdowns('country');
-                setIsCountryDropdownOpen(!isCountryDropdownOpen);
-              }}
-              className="w-full py-2 text-sm font-medium text-netflix-white hover:text-netflix-red transition-colors text-left"
+              onClick={() => toggleDropdown('countries')}
+              className="flex items-center justify-between w-full py-2 text-netflix-text-gray hover:text-netflix-white transition-colors font-medium"
             >
               <span>Quốc gia</span>
+              <svg
+                className={`w-4 h-4 transition-transform ${dropdownStates.countries ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
             </button>
 
-            <div className={`bg-netflix-gray/50 rounded-md border border-netflix-light-gray/30 transition-all duration-200 origin-top ${
-              isCountryDropdownOpen
-                ? 'mt-2 opacity-100 scale-y-100 max-h-48'
-                : 'mt-0 opacity-0 scale-y-0 max-h-0 overflow-hidden'
-            }`}>
-                {Array.isArray(countries) && countries.length > 0 ? (
-                  <div className="grid grid-cols-2 gap-1 p-2 max-h-40 overflow-y-auto">
+            {dropdownStates.countries && (
+              <div className="mt-2 pl-4 space-y-1 max-h-48 overflow-y-auto">
+                {loading.countries ? (
+                  <div className="animate-pulse space-y-2">
+                    {[...Array(6)].map((_, i) => (
+                      <div key={i} className="h-4 bg-netflix-gray rounded"></div>
+                    ))}
+                  </div>
+                ) : countries.length > 0 ? (
+                  <div className="grid grid-cols-2 gap-1">
                     {countries.map((country) => (
-                      <button
+                      <Link
                         key={country._id}
-                        onClick={() => {
-                          setSelectedCountry(country);
-                          setIsCountryDropdownOpen(false);
-                          onClose();
-                          router.push(`/quoc-gia/${country.slug}`);
-                        }}
-                        className={`text-left px-2 py-1.5 text-xs rounded hover:bg-netflix-red/20 transition-colors ${
-                          selectedCountry?._id === country._id ? 'bg-netflix-red/20 text-netflix-white' : 'text-netflix-text-gray hover:text-netflix-white'
-                        }`}
+                        href={`/quoc-gia/${country.slug}`}
+                        className="block py-1 px-2 text-sm text-netflix-text-gray hover:text-netflix-red hover:bg-netflix-gray/30 rounded transition-colors"
+                        onClick={onClose}
                       >
                         {country.name}
-                      </button>
+                      </Link>
                     ))}
                   </div>
                 ) : (
-                  <div className="px-3 py-2 text-xs text-netflix-text-gray">
-                    Đang tải...
-                  </div>
+                  <div className="text-sm text-netflix-text-gray">Không có dữ liệu</div>
                 )}
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Years Dropdown */}
-          <div className="relative year-dropdown">
+          <div>
             <button
-              onClick={() => {
-                closeOtherDropdowns('year');
-                setIsYearDropdownOpen(!isYearDropdownOpen);
-              }}
-              className="w-full py-2 text-sm font-medium text-netflix-white hover:text-netflix-red transition-colors text-left"
+              onClick={() => toggleDropdown('years')}
+              className="flex items-center justify-between w-full py-2 text-netflix-text-gray hover:text-netflix-white transition-colors font-medium"
             >
               <span>Năm phát hành</span>
+              <svg
+                className={`w-4 h-4 transition-transform ${dropdownStates.years ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
             </button>
 
-            <div className={`bg-netflix-gray/50 rounded-md border border-netflix-light-gray/30 transition-all duration-200 origin-top ${
-              isYearDropdownOpen
-                ? 'mt-2 opacity-100 scale-y-100 max-h-48'
-                : 'mt-0 opacity-0 scale-y-0 max-h-0 overflow-hidden'
-            }`}>
-                {Array.isArray(years) && years.length > 0 ? (
-                  <div className="grid grid-cols-3 gap-1 p-2 max-h-40 overflow-y-auto">
+            {dropdownStates.years && (
+              <div className="mt-2 pl-4 space-y-1 max-h-48 overflow-y-auto">
+                {loading.years ? (
+                  <div className="animate-pulse space-y-2">
+                    {[...Array(6)].map((_, i) => (
+                      <div key={i} className="h-4 bg-netflix-gray rounded"></div>
+                    ))}
+                  </div>
+                ) : years.length > 0 ? (
+                  <div className="grid grid-cols-3 gap-1">
                     {years.map((year) => (
-                      <button
-                        key={year.year}
-                        onClick={() => {
-                          setSelectedYear(year);
-                          setIsYearDropdownOpen(false);
-                          onClose();
-                          router.push(`/nam-phat-hanh/${year.year}`);
-                        }}
-                        className={`text-left px-2 py-1.5 text-xs rounded hover:bg-netflix-red/20 transition-colors ${
-                          selectedYear?.year === year.year ? 'bg-netflix-red/20 text-netflix-white' : 'text-netflix-text-gray hover:text-netflix-white'
-                        }`}
+                      <Link
+                        key={year._id}
+                        href={`/nam-phat-hanh/${year.slug}`}
+                        className="block py-1 px-2 text-sm text-netflix-text-gray hover:text-netflix-red hover:bg-netflix-gray/30 rounded transition-colors text-center"
+                        onClick={onClose}
                       >
-                        {year.year}
-                      </button>
+                        {year.name}
+                      </Link>
                     ))}
                   </div>
                 ) : (
-                  <div className="px-3 py-2 text-xs text-netflix-text-gray">
-                    Đang tải...
-                  </div>
+                  <div className="text-sm text-netflix-text-gray">Không có dữ liệu</div>
                 )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Mobile User Section */}
+        {/* User Section */}
         <div className="border-t border-netflix-gray px-4 py-3">
-          <div className="space-y-3">
-            {/* User Info */}
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded overflow-hidden ring-1 ring-netflix-red/50">
-                <Image src="https://i.pravatar.cc/64?img=12" alt="avatar" width={32} height={32} className="w-full h-full object-cover" />
-              </div>
-              <div className="flex items-center gap-4">
-                <button aria-label="Thông báo" className="p-1.5 text-netflix-text-gray hover:text-netflix-white transition-colors">
-                  <IconBell className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-
-            {/* User Menu Items */}
-            <div className="space-y-1">
-              <Link
-                href="/lich-su"
-                onClick={onClose}
-                className="flex items-center gap-3 py-2 text-sm text-netflix-text-gray hover:text-netflix-white transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Lịch sử xem
-              </Link>
-              <button className="flex items-center gap-3 py-2 text-sm text-netflix-text-gray hover:text-netflix-white transition-colors w-full text-left">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                Cài đặt
-              </button>
-              <button className="flex items-center gap-3 py-2 text-sm text-netflix-text-gray hover:text-netflix-white transition-colors w-full text-left">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-                Đăng xuất
-              </button>
-            </div>
+          <div className="flex items-center gap-3 mb-3">
+            <Image
+              src="https://i.pravatar.cc/64?img=12"
+              alt="avatar"
+              width={32}
+              height={32}
+              className="w-8 h-8 rounded-full ring-1 ring-netflix-red/50"
+            />
+            <span className="text-netflix-white font-medium">Người dùng</span>
           </div>
+
+          <Link
+            href="/lich-su"
+            className="flex items-center gap-3 py-2 text-netflix-text-gray hover:text-netflix-white transition-colors"
+            onClick={onClose}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Lịch sử xem
+          </Link>
         </div>
       </div>
     </div>

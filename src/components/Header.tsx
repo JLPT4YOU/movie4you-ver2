@@ -5,34 +5,15 @@ import Link from "next/link";
 import Image from "next/image";
 import { IconSearch, IconBell, IconMenu, IconX } from "./icons";
 import SearchPopup from "./SearchPopup";
-import DropdownFilters from "./DropdownFilters";
+import LazyDropdown from "./LazyDropdown";
 import MobileMenu from "./MobileMenu";
 
-interface Country {
-  _id: string;
-  name: string;
-  slug: string;
-}
-
-interface Category {
-  _id: string;
-  name: string;
-  slug: string;
-}
-
-interface Year {
-  year: number;
-}
+// Interfaces moved to LazyDropdown component
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   
-  // Data states
-  const [countries, setCountries] = useState<Country[]>([]);
-  const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [years, setYears] = useState<Year[]>([]);
-  const [selectedYear, setSelectedYear] = useState<Year | null>(null);
+  // Data states - removed, now handled by LazyDropdown
   
   // UI states
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
@@ -42,70 +23,7 @@ export default function Header() {
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
-  // Fetch data
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Fetch countries
-        const countriesRes = await fetch('/api/ophim/v1/api/quoc-gia');
-        const countriesData = await countriesRes.json();
-        if (countriesData.status && countriesData.data) {
-          let countriesArray: Country[] = [];
-          if (Array.isArray(countriesData.data)) {
-            countriesArray = countriesData.data;
-          } else if (countriesData.data.items && Array.isArray(countriesData.data.items)) {
-            countriesArray = countriesData.data.items;
-          } else if (typeof countriesData.data === 'object') {
-            countriesArray = Object.values(countriesData.data).filter((item) => {
-              const country = item as Record<string, any>;
-              return country && typeof country === 'object' && country._id && country.name && country.slug;
-            }) as Country[];
-          }
-          if (countriesArray.length > 0) {
-            setCountries(countriesArray);
-            const vietnam = countriesArray.find((country: Country) => country.slug === 'viet-nam');
-            if (vietnam) setSelectedCountry(vietnam);
-          }
-        }
-
-        // Fetch categories
-        const categoriesRes = await fetch('/api/ophim/v1/api/the-loai');
-        const categoriesData = await categoriesRes.json();
-        if (categoriesData.status && categoriesData.data) {
-          let categoriesArray: Category[] = [];
-          if (Array.isArray(categoriesData.data)) {
-            categoriesArray = categoriesData.data;
-          } else if (categoriesData.data.items && Array.isArray(categoriesData.data.items)) {
-            categoriesArray = categoriesData.data.items;
-          } else if (typeof categoriesData.data === 'object') {
-            categoriesArray = Object.values(categoriesData.data).filter((item) => {
-              const category = item as Record<string, any>;
-              return category && typeof category === 'object' && category._id && category.name && category.slug;
-            }) as Category[];
-          }
-          if (categoriesArray.length > 0) {
-            setCategories(categoriesArray);
-          }
-        }
-
-        // Fetch years
-        const yearsRes = await fetch('/api/ophim/v1/api/nam-phat-hanh');
-        const yearsData = await yearsRes.json();
-        if (yearsData.status && yearsData.data && yearsData.data.items && Array.isArray(yearsData.data.items)) {
-          const yearsArray: Year[] = yearsData.data.items.filter((item: Record<string, any>) =>
-            item && typeof item === 'object' && typeof item.year === 'number' && item.year >= 2010
-          );
-          if (yearsArray.length > 0) {
-            setYears(yearsArray);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
-
-    fetchData();
-  }, []);
+  // Data fetching removed - now handled by LazyDropdown components
 
   // Scroll effect
   useEffect(() => {
@@ -164,21 +82,29 @@ export default function Header() {
             {/* Separator */}
             <div className="w-px h-4 bg-netflix-light-gray/30 mx-3"></div>
             
-            {/* Filter Dropdowns */}
-            <DropdownFilters
-              countries={countries}
-              selectedCountry={selectedCountry}
-              setSelectedCountry={setSelectedCountry}
-              isCountryDropdownOpen={isCountryDropdownOpen}
-              setIsCountryDropdownOpen={setIsCountryDropdownOpen}
-              categories={categories}
-              isCategoryDropdownOpen={isCategoryDropdownOpen}
-              setIsCategoryDropdownOpen={setIsCategoryDropdownOpen}
-              years={years}
-              selectedYear={selectedYear}
-              setSelectedYear={setSelectedYear}
-              isYearDropdownOpen={isYearDropdownOpen}
-              setIsYearDropdownOpen={setIsYearDropdownOpen}
+            {/* Lazy Filter Dropdowns - chỉ load khi click */}
+            <LazyDropdown
+              title="Thể loại"
+              apiEndpoint="/api/ophim/v1/api/the-loai"
+              urlPrefix="/the-loai"
+              isOpen={isCategoryDropdownOpen}
+              onToggle={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+            />
+
+            <LazyDropdown
+              title="Quốc gia"
+              apiEndpoint="/api/ophim/v1/api/quoc-gia"
+              urlPrefix="/quoc-gia"
+              isOpen={isCountryDropdownOpen}
+              onToggle={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)}
+            />
+
+            <LazyDropdown
+              title="Năm phát hành"
+              apiEndpoint="/api/ophim/v1/api/nam-phat-hanh"
+              urlPrefix="/nam-phat-hanh"
+              isOpen={isYearDropdownOpen}
+              onToggle={() => setIsYearDropdownOpen(!isYearDropdownOpen)}
             />
           </nav>
 
@@ -257,23 +183,10 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile Menu - simplified props */}
         <MobileMenu
           isOpen={isMobileMenuOpen}
           onClose={() => setIsMobileMenuOpen(false)}
-          countries={countries}
-          selectedCountry={selectedCountry}
-          setSelectedCountry={setSelectedCountry}
-          isCountryDropdownOpen={isCountryDropdownOpen}
-          setIsCountryDropdownOpen={setIsCountryDropdownOpen}
-          categories={categories}
-          isCategoryDropdownOpen={isCategoryDropdownOpen}
-          setIsCategoryDropdownOpen={setIsCategoryDropdownOpen}
-          years={years}
-          selectedYear={selectedYear}
-          setSelectedYear={setSelectedYear}
-          isYearDropdownOpen={isYearDropdownOpen}
-          setIsYearDropdownOpen={setIsYearDropdownOpen}
         />
 
         {/* Search Popup */}

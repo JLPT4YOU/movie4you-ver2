@@ -43,32 +43,23 @@ function slugTitle(slug: string) {
 }
 export const dynamic = "force-dynamic";
 
-export default async function Page({ params, searchParams }: { params: Promise<{ slug: string }>, searchParams?: Promise<Record<string, string | string[] | undefined>> }) {
+export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const searchParamsData = searchParams ? await searchParams : {};
-  const sort_field = (searchParamsData?.sort_field as string) || "modified.time";
-  const sort_type = (searchParamsData?.sort_type as string) || "desc";
-  const category = (searchParamsData?.category as string) || undefined;
-  const country = (searchParamsData?.country as string) || undefined;
-  const year = (searchParamsData?.year as string) || undefined;
+  // Future use: search parameters for filtering
+  // const searchParamsData = searchParams ? await searchParams : {};
+  // const sort_field = (searchParamsData?.sort_field as string) || "modified.time";
+  // const sort_type = (searchParamsData?.sort_type as string) || "desc";
+  // const category = (searchParamsData?.category as string) || undefined;
+  // const country = (searchParamsData?.country as string) || undefined;
+  // const year = (searchParamsData?.year as string) || undefined;
 
   const title = slugTitle(slug);
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 pt-24 pb-8 space-y-6">
-      <div className="flex items-center">
-        <h1 className="text-2xl md:text-3xl font-bold text-white">{title}</h1>
-      </div>
-
       <CategoryClient
         slug={slug}
-        initialLimit={24}
-        loadMoreSize={12}
-        sort_field={sort_field}
-        sort_type={sort_type}
-        category={category}
-        country={country}
-        year={year}
+        title={title}
       />
     </div>
   );

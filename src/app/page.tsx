@@ -1,6 +1,5 @@
-import CinemaMoviesProvider from "@/components/CinemaMoviesProvider";
 import OptimizedHeroSection from "@/components/OptimizedHeroSection";
-import OptimizedMovieSection from "@/components/OptimizedMovieSection";
+import LazyMovieSection from "@/components/LazyMovieSection";
 
 interface Movie {
   name: string;
@@ -38,10 +37,13 @@ async function fetchCinemaMoviesData() {
     
     console.log('Fetching from URL:', baseUrl);
     
-    // Fetch 6 movies at once instead of duplicating calls
+    // Fetch 6 movies at once with ISR caching
     const response = await fetch(
       `${baseUrl}/api/ophim/v1/api/danh-sach/phim-chieu-rap?page=1&limit=6&sort_field=modified.time&sort_type=desc`,
-      { cache: 'no-store' }
+      {
+        next: { revalidate: 300 }, // Revalidate every 5 minutes
+        cache: 'force-cache'
+      }
     );
     
     if (!response.ok) {
@@ -172,12 +174,49 @@ async function fetchCinemaMoviesData() {
 }
 
 export default async function Home() {
-  const { heroMovies, cinemaMovies } = await fetchCinemaMoviesData();
+  const { heroMovies } = await fetchCinemaMoviesData();
 
   return (
     <>
       <OptimizedHeroSection movies={heroMovies} loading={false} />
-      <OptimizedMovieSection cinemaMovies={cinemaMovies} />
+
+      {/* Lazy load movie sections - chỉ load khi scroll tới */}
+      <LazyMovieSection
+        title="Phim chiếu rạp"
+        slug="phim-chieu-rap"
+        viewAllUrl="/category/phim-chieu-rap"
+        priority={true} // Load ngay lập tức
+      />
+
+      <LazyMovieSection
+        title="Phim mới"
+        slug="phim-moi"
+        viewAllUrl="/category/phim-moi"
+      />
+
+      <LazyMovieSection
+        title="Phim lẻ"
+        slug="phim-le"
+        viewAllUrl="/category/phim-le"
+      />
+
+      <LazyMovieSection
+        title="Phim bộ"
+        slug="phim-bo"
+        viewAllUrl="/category/phim-bo"
+      />
+
+      <LazyMovieSection
+        title="TV Shows"
+        slug="tv-shows"
+        viewAllUrl="/category/tv-shows"
+      />
+
+      <LazyMovieSection
+        title="Hoạt hình"
+        slug="hoat-hinh"
+        viewAllUrl="/category/hoat-hinh"
+      />
     </>
   );
 }

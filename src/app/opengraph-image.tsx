@@ -2,7 +2,7 @@ import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
 
-export const alt = 'MOVIE4YOU - Xem Phim Online HD Vietsub Miễn Phí';
+export const alt = 'MOVIE4YOU - Xem Phim Online HD Vietsub Thuyết Minh Miễn Phí';
 export const size = {
   width: 1200,
   height: 630,
@@ -47,7 +47,7 @@ export default async function Image() {
             lineHeight: 1.4,
           }}
         >
-          Xem Phim Online HD Vietsub Miễn Phí
+          Xem Phim Online HD Vietsub Thuyết Minh Miễn Phí
         </div>
         <div
           style={{
@@ -56,7 +56,7 @@ export default async function Image() {
             marginTop: 20,
           }}
         >
-          Phim Mới Cập Nhật 2024
+          Phim Mới Cập Nhật 2025
         </div>
       </div>
     ),

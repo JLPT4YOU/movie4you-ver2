@@ -15,6 +15,11 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "img.ophim.live",
       },
+      // Dynamic hostname from environment variable
+      ...(process.env.ADDITIONAL_IMAGE_HOSTNAME ? [{
+        protocol: "https" as const,
+        hostname: process.env.ADDITIONAL_IMAGE_HOSTNAME,
+      }] : []),
     ],
     formats: ["image/avif", "image/webp"],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
@@ -22,20 +27,26 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 60,
   },
   
+  // Environment-based configuration
+  env: {
+    CUSTOM_APP_NAME: process.env.CUSTOM_APP_NAME || "Movie4You",
+    CUSTOM_VERSION: process.env.CUSTOM_VERSION || "1.0.0",
+  },
+
   // Tối ưu bundle
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",
   },
-  
-  // Compression
-  compress: true,
-  
+
+  // Compression - có thể điều khiển bằng env
+  compress: process.env.DISABLE_COMPRESSION !== "true",
+
   // PoweredByHeader false để giảm kích thước header
   poweredByHeader: false,
-  
+
   // Tối ưu CSS
   experimental: {
-    optimizeCss: true,
+    optimizeCss: process.env.DISABLE_CSS_OPTIMIZATION !== "true",
   },
 };
 
