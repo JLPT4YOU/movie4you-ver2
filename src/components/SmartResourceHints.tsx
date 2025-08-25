@@ -18,7 +18,7 @@ export default function SmartResourceHints({
       // Add preconnect for img.ophim.live only when images are about to load
       const link = document.createElement('link');
       link.rel = 'preconnect';
-      link.href = 'https://img.ophim.live';
+      link.href = 'https://wsrv.nl';
       document.head.appendChild(link);
     }
 
