@@ -38,14 +38,13 @@ async function fetchCinemaMoviesData() {
         ? 'https://movie4you-ver2.vercel.app'
         : 'http://localhost:3000');
     
-    console.log('Fetching from URL:', baseUrl);
+
     
     // Fetch 6 movies at once with ISR caching
     const response = await fetch(
       `${baseUrl}/api/ophim/v1/api/danh-sach/phim-chieu-rap?page=1&limit=6&sort_field=modified.time&sort_type=desc`,
       {
-        next: { revalidate: 300 }, // Revalidate every 5 minutes
-        cache: 'force-cache'
+        cache: 'no-store' // Always fetch fresh data for the hero section
       }
     );
     

@@ -57,7 +57,7 @@ export default function InfiniteLazyMovieSection({
         `/api/ophim/v1/api/danh-sach/${slug}?page=${pageNum}&limit=12&sort_field=modified.time&sort_type=desc`,
         { 
           headers: { accept: 'application/json' },
-          next: { revalidate: 300 }
+          cache: 'no-store' // Fetch fresh data on each request
         }
       );
       

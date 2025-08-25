@@ -15,6 +15,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "img.ophim.live",
       },
+      {
+        protocol: "https",
+        hostname: "wsrv.nl",
+      },
       // Dynamic hostname from environment variable
       ...(process.env.ADDITIONAL_IMAGE_HOSTNAME ? [{
         protocol: "https" as const,

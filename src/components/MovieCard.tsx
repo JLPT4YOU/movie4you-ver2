@@ -53,7 +53,7 @@ export default function MovieCard({ movie, lazy = true }: MovieCardProps) {
   }, [lazy]);
 
   const placeholder = PLACEHOLDER_POSTER;
-  const resolvedSrc = imageError ? placeholder : resolveImageUrl(movie.thumb_url);
+  const resolvedSrc = imageError ? placeholder : resolveImageUrl(movie.thumb_url, 400, 80);
   const duration = movie.time || movie.episode_time || "";
 
   return (

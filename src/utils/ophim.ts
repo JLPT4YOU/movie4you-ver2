@@ -59,11 +59,27 @@ export function buildSearch(params: Record<string, any>): string {
  * Chuẩn hóa URL ảnh từ OPHIM. Nếu là đường dẫn tương đối sẽ nối vào OPHIM_IMG_BASE.
  * Trả về placeholder khi chuỗi trống.
  */
-export function resolveImageUrl(src?: string): string {
+export function resolveImageUrl(src?: string, width?: number, quality?: number): string {
   const s = (src || "").trim();
   if (!s) return PLACEHOLDER_POSTER;
-  if (s.startsWith("http")) return s;
-  const path = s.startsWith("/") ? s : `/uploads/movies/${s}`;
-  return `${OPHIM_IMG_BASE}${path}`;
+
+  let imageUrl: string;
+  if (s.startsWith("http")) {
+    imageUrl = s;
+  } else {
+    const path = s.startsWith("/") ? s : `/uploads/movies/${s}`;
+    imageUrl = `${OPHIM_IMG_BASE}${path}`;
+  }
+
+  // Optimize with wsrv.nl
+  const wsrvUrl = new URL("https://wsrv.nl");
+  wsrvUrl.searchParams.set("url", imageUrl);
+  wsrvUrl.searchParams.set("w", String(width || 400)); // Default width 400px
+  wsrvUrl.searchParams.set("q", String(quality || 80)); // Default quality 80
+  wsrvUrl.searchParams.set("output", "webp"); // Output as WebP for better compression
+  wsrvUrl.searchParams.set("fit", "cover"); // Crop to fit dimensions
+  wsrvUrl.searchParams.set("a", "attention"); // Smart cropping
+
+  return wsrvUrl.toString();
 }
 
