@@ -7,34 +7,18 @@ import { MovieDetail } from '@/types/movie';
 import Header from '@/components/Header';
 import { WatchHistoryManager } from '@/utils/watchHistory';
 
-// Future use
-/* interface ServerData {
-  server_name: string;
-  server_data?: Array<{
-    name: string;
-    slug: string;
-    link_embed?: string;
-    link_m3u8?: string;
-    filename?: string;
-  }>;
-  items?: Array<{
-    name: string;
-    slug: string;
-    embed?: string;
-    m3u8?: string;
-  }>;
-} */
+
 
 export default function WatchPage() {
   const params = useParams();
-  // const router = useRouter(); // Future use
+
   const [movie, setMovie] = useState<MovieDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedServer, setSelectedServer] = useState(0);
   const [selectedEpisode, setSelectedEpisode] = useState(0);
   const [alternativeSources, setAlternativeSources] = useState<any>({});
-  const [selectedSource, setSelectedSource] = useState<'ophim' | 'phimapi' | 'nguonc'>('ophim');
-  // const [ophimData, setOphimData] = useState<MovieDetail | null>(null); // Future use
+  const [selectedSource, setSelectedSource] = useState<'ophim' | 'phimapi' | 'nguonc' | 'mappletv' | 'videasy' | 'vidlink'>('ophim');
+
   const videoRef = useRef<HTMLIFrameElement>(null);
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -50,7 +34,7 @@ export default function WatchPage() {
         // Ophim API only - no fallback needed
         
         if (ophimData.status === 'success' && ophimData.data?.item) {
-          // setOphimData(ophimData.data.item); // Commented out
+
           setMovie(ophimData.data.item);
         }
         
@@ -83,10 +67,12 @@ export default function WatchPage() {
       episodes = alternativeSources.phimapi.episodes[selectedServer].server_data || [];
     } else if (selectedSource === 'nguonc' && alternativeSources.nguonc?.movie?.episodes?.[selectedServer]) {
       episodes = alternativeSources.nguonc.movie.episodes[selectedServer].items || [];
+    } else if (selectedSource === 'mappletv') {
+      episodes = [{ name: 'Full', slug: 'full' }];
     }
 
     const episode = episodes[selectedEpisode];
-    if (!episode) return;
+    if (!episode && selectedSource !== 'mappletv') return;
 
     // Save to watch history
     const saveHistory = () => {
@@ -104,13 +90,13 @@ export default function WatchPage() {
         movieSlug: movie.slug,
         posterUrl: posterUrl,
         episodeIndex: selectedEpisode,
-        episodeName: episode.name || `Tập ${selectedEpisode + 1}`,
+        episodeName: selectedSource === 'mappletv' ? 'MappleTV' : (episode?.name || `Tập ${selectedEpisode + 1}`),
         serverIndex: selectedServer,
         currentTime: 0, // Start at 0 for iframe (can't access actual time)
         duration: 1, // Set to 1 to avoid division by zero
       });
 
-      // Removed console.log for production
+
     };
 
     // Save immediately when episode is selected
@@ -160,6 +146,43 @@ export default function WatchPage() {
           videoTitle = `${movie?.name} - Tập ${episode.name}`;
         }
       }
+    } else if (selectedSource === 'mappletv' && movie?.tmdb?.id) {
+      const tmdbType = movie.tmdb.type === 'movie' ? 'movie' : 'tv';
+      const queryParams = "nextEpisode=true&autoplayNextEpisode=true&episodeSelector=true&overlay=true";
+      if (tmdbType === 'movie') {
+        videoSource = `https://mappletv.uk/watch/movie/${movie.tmdb.id}?${queryParams}`;
+        videoTitle = `${movie.name} - MappleTV`;
+      } else {
+        // For TV shows, we need season and episode
+        const season = movie.tmdb.season || 1; // Default to season 1 if not provided
+        const episodeNumber = selectedEpisode + 1;
+        videoSource = `https://mappletv.uk/watch/tv/${movie.tmdb.id}-${season}-${episodeNumber}?${queryParams}`;
+        videoTitle = `${movie.name} - MappleTV - Tập ${episodeNumber}`;
+      }
+    } else if (selectedSource === 'videasy' && movie?.tmdb?.id) {
+      const tmdbType = movie.tmdb.type === 'movie' ? 'movie' : 'tv';
+      if (tmdbType === 'movie') {
+        videoSource = `https://player.videasy.net/movie/${movie.tmdb.id}`;
+        videoTitle = `${movie.name} - Videasy`;
+      } else {
+        // For TV shows, we need season and episode
+        const season = movie.tmdb.season || 1; // Default to season 1 if not provided
+        const episodeNumber = selectedEpisode + 1;
+        videoSource = `https://player.videasy.net/tv/${movie.tmdb.id}/${season}/${episodeNumber}`;
+        videoTitle = `${movie.name} - Videasy - Tập ${episodeNumber}`;
+      }
+    } else if (selectedSource === 'vidlink' && movie?.tmdb?.id) {
+      const tmdbType = movie.tmdb.type === 'movie' ? 'movie' : 'tv';
+      if (tmdbType === 'movie') {
+        videoSource = `https://vidlink.pro/movie/${movie.tmdb.id}`;
+        videoTitle = `${movie.name} - VidLink`;
+      } else {
+        // For TV shows, we need season and episode
+        const season = movie.tmdb.season || 1; // Default to season 1 if not provided
+        const episodeNumber = selectedEpisode + 1;
+        videoSource = `https://vidlink.pro/tv/${movie.tmdb.id}/${season}/${episodeNumber}`;
+        videoTitle = `${movie.name} - VidLink - Tập ${episodeNumber}`;
+      }
     }
 
     return { videoSource, videoTitle };
@@ -168,7 +191,7 @@ export default function WatchPage() {
   const getServerList = () => {
     const servers: { name: string; source: string; index: number }[] = [];
     let serverCounter = 0;
-    
+
     // Main source servers
     if (movie?.episodes) {
       movie.episodes.forEach((ep, idx) => {
@@ -177,7 +200,7 @@ export default function WatchPage() {
         servers.push({ name: displayName, source: 'ophim', index: idx });
       });
     }
-    
+
     // PhimAPI servers
     if (alternativeSources.phimapi?.episodes) {
       alternativeSources.phimapi.episodes.forEach((ep: any, idx: number) => {
@@ -186,7 +209,7 @@ export default function WatchPage() {
         servers.push({ name: displayName, source: 'phimapi', index: idx });
       });
     }
-    
+
     // NguonC servers
     if (alternativeSources.nguonc?.movie?.episodes) {
       alternativeSources.nguonc.movie.episodes.forEach((ep: any, idx: number) => {
@@ -195,7 +218,22 @@ export default function WatchPage() {
         servers.push({ name: displayName, source: 'nguonc', index: idx });
       });
     }
-    
+
+    // MappleTV server (only if TMDB ID is available)
+    if (movie?.tmdb?.id) {
+      servers.push({ name: 'MappleTV', source: 'mappletv', index: 0 });
+    }
+
+    // Videasy server (only if TMDB ID is available)
+    if (movie?.tmdb?.id) {
+      servers.push({ name: 'Videasy', source: 'videasy', index: 0 });
+    }
+
+    // VidLink server (only if TMDB ID is available)
+    if (movie?.tmdb?.id) {
+      servers.push({ name: 'VidLink', source: 'vidlink', index: 0 });
+    }
+
     return servers;
   };
 
@@ -206,6 +244,15 @@ export default function WatchPage() {
       return alternativeSources.phimapi.episodes[selectedServer].server_data || [];
     } else if (selectedSource === 'nguonc' && alternativeSources.nguonc?.movie?.episodes?.[selectedServer]) {
       return alternativeSources.nguonc.movie.episodes[selectedServer].items || [];
+    } else if (selectedSource === 'mappletv' || selectedSource === 'videasy' || selectedSource === 'vidlink') {
+      if (movie?.tmdb?.type === 'tv') {
+        // For TV shows, use the episode list from the primary source (ophim)
+        // to allow episode selection. We assume the first server has the most complete list.
+        return movie?.episodes?.[0]?.server_data || [];
+      } else {
+        // For movies, it's a single player
+        return [{ name: 'Full', slug: 'full' }];
+      }
     }
     return [];
   };
@@ -295,7 +342,7 @@ export default function WatchPage() {
                 <button
                   key={`${server.source}-${server.index}`}
                   onClick={() => {
-                    setSelectedSource(server.source as 'ophim' | 'phimapi' | 'nguonc');
+                    setSelectedSource(server.source as 'ophim' | 'phimapi' | 'nguonc' | 'mappletv' | 'videasy' | 'vidlink');
                     setSelectedServer(server.index);
                     setSelectedEpisode(0);
                   }}

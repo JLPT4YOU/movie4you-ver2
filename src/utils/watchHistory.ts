@@ -9,7 +9,7 @@ export interface WatchHistoryItem {
   currentTime: number; // Thời gian hiện tại (giây)
   duration: number; // Tổng thời lượng (giây)
   watchedAt: string; // ISO timestamp
-  progress: number; // Phần trăm đã xem (0-100)
+
 }
 
 export class WatchHistoryManager {
@@ -30,17 +30,14 @@ export class WatchHistoryManager {
   }
 
   // Lưu/cập nhật progress xem phim
-  static saveProgress(item: Omit<WatchHistoryItem, 'watchedAt' | 'progress'>) {
+    static saveProgress(item: Omit<WatchHistoryItem, 'watchedAt'>) {
     if (typeof window === 'undefined') return;
 
     try {
       const history = this.getHistory();
-      const progress = item.duration > 0 ? Math.round((item.currentTime / item.duration) * 100) : 0;
-      
       const newItem: WatchHistoryItem = {
         ...item,
-        watchedAt: new Date().toISOString(),
-        progress
+        watchedAt: new Date().toISOString()
       };
 
       // Tìm item cũ (cùng phim + tập)

@@ -222,9 +222,6 @@ export default function MoviePlayer({ movie }: MoviePlayerProps) {
                 {/* Episode Grid */}
                 <div className="flex gap-2 flex-wrap max-h-24 overflow-y-auto">
                   {movie.episodes[selectedServer]?.server_data.map((episode, index) => {
-                    const progress = movie ? WatchHistoryManager.getProgress(movie._id, index, selectedServer) : null;
-                    const hasProgress = progress && progress.progress > 5;
-
                     return (
                       <button
                         key={index}
@@ -250,16 +247,7 @@ export default function MoviePlayer({ movie }: MoviePlayerProps) {
                             : 'bg-netflix-gray text-gray-300 hover:bg-netflix-light-gray hover:text-white'
                         }`}
                       >
-                        {hasProgress && (
-                          <div
-                            className="absolute bottom-0 left-0 h-1 bg-yellow-400 transition-all duration-300"
-                            style={{ width: `${progress.progress}%` }}
-                          />
-                        )}
                         <span className="relative z-10">{episode.name}</span>
-                        {progress && progress.progress > 90 && (
-                          <div className="absolute top-1 right-1 w-2 h-2 bg-green-400 rounded-full"></div>
-                        )}
                       </button>
                     );
                   })}

@@ -38,7 +38,7 @@ export function useInfiniteOphimList({
   const [hasMore, setHasMore] = useState<boolean>(true);
 
   const sentinelRef = useRef<HTMLDivElement | null>(null);
-  // const firstLoadRef = useRef<boolean>(false); // Future use
+
   const seenRef = useRef<Set<string>>(new Set());
   const loadingRef = useRef<boolean>(false);
 

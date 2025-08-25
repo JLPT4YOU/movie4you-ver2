@@ -43,8 +43,7 @@ export default function WatchHistoryPage() {
     );
   }
 
-  // Filter to show only movies that are not completed (progress < 90%)
-  const unfinishedMovies = history.filter(item => item.progress < 90);
+
 
   return (
     <div className="min-h-screen bg-netflix-black">
@@ -56,7 +55,7 @@ export default function WatchHistoryPage() {
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
             <h1 className="text-3xl font-bold text-white">Tiếp tục xem</h1>
-            {unfinishedMovies.length > 0 && (
+            {history.length > 0 && (
               <button
                 onClick={handleClearAll}
                 className="bg-netflix-gray hover:bg-netflix-light-gray text-white px-4 py-2 rounded-lg text-sm transition-colors"
@@ -67,7 +66,7 @@ export default function WatchHistoryPage() {
           </div>
 
           {/* Content */}
-          {unfinishedMovies.length === 0 ? (
+          {history.length === 0 ? (
             <div className="text-center py-16">
               <div className="text-gray-400 text-lg mb-4">Chưa có phim để tiếp tục xem</div>
               <Link
@@ -79,7 +78,7 @@ export default function WatchHistoryPage() {
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-              {unfinishedMovies.map((item) => (
+              {history.map((item) => (
                 <div key={`${item.movieId}-${item.episodeIndex}`} className="group relative">
                   <Link href={`/phim/${item.movieSlug}`}>
                     <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-netflix-gray">
