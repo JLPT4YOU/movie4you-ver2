@@ -98,10 +98,12 @@ export default function MovieDetailPage() {
         {/* Background Image */}
         <div className="absolute inset-0">
           <Image
-            src={resolveImageUrl(movie.poster_url)}
+            src={resolveImageUrl(movie.poster_url, 1920, 90)}
             alt={movie.name}
             fill
+            sizes="100vw"
             className="object-cover"
+            quality={90}
             priority
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/70 to-black/40" />
@@ -116,10 +118,11 @@ export default function MovieDetailPage() {
               <div className="flex-shrink-0 mx-auto lg:mx-0">
                 <div className="relative group">
                   <Image
-                    src={resolveImageUrl(movie.thumb_url)}
+                    src={resolveImageUrl(movie.thumb_url, 400, 90)}
                     alt={movie.name}
                     width={280}
                     height={420}
+                    quality={90}
                     className="rounded-xl shadow-2xl transition-transform duration-300 group-hover:scale-105 w-[280px] h-[420px] object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />

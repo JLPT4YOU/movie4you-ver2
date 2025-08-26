@@ -53,7 +53,7 @@ export default function MovieCard({ movie, lazy = true }: MovieCardProps) {
   }, [lazy]);
 
   const placeholder = PLACEHOLDER_POSTER;
-  const resolvedSrc = imageError ? placeholder : resolveImageUrl(movie.thumb_url, 400, 80);
+  const resolvedSrc = imageError ? placeholder : resolveImageUrl(movie.thumb_url, 400, 90);
   const duration = movie.time || movie.episode_time || "";
 
   return (
@@ -74,7 +74,7 @@ export default function MovieCard({ movie, lazy = true }: MovieCardProps) {
               className="object-cover transition-transform duration-300 hover:scale-105"
               loading={lazy ? "lazy" : "eager"}
               priority={!lazy}
-              quality={80}
+              quality={90}
               placeholder="blur"
               blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAb/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWEREiMxUf/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
               onError={() => setImageError(true)}
