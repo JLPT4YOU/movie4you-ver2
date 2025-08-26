@@ -1,5 +1,5 @@
 import OptimizedHeroSection from "@/components/OptimizedHeroSection";
-import InfiniteLazyMovieSection from "@/components/InfiniteLazyMovieSection";
+import LazyMovieSection from "@/components/LazyMovieSection";
 import SmartResourceHints from "@/components/SmartResourceHints";
 import ContinueWatching from "@/components/ContinueWatching";
 
@@ -38,13 +38,14 @@ async function fetchCinemaMoviesData() {
         ? 'https://movie4you-ver2.vercel.app'
         : 'http://localhost:3000');
     
-
+    console.log('Fetching from URL:', baseUrl);
     
     // Fetch 6 movies at once with ISR caching
     const response = await fetch(
       `${baseUrl}/api/ophim/v1/api/danh-sach/phim-chieu-rap?page=1&limit=6&sort_field=modified.time&sort_type=desc`,
       {
-        cache: 'no-store' // Always fetch fresh data for the hero section
+        next: { revalidate: 300 }, // Revalidate every 5 minutes
+        cache: 'force-cache'
       }
     );
     
@@ -190,39 +191,39 @@ export default async function Home() {
       {/* Continue Watching Section */}
       <ContinueWatching />
 
-      {/* Lazy load movie sections with infinite scroll */}
-      <InfiniteLazyMovieSection
+      {/* Lazy load movie sections - chỉ load khi scroll tới */}
+      <LazyMovieSection
         title="Phim chiếu rạp"
         slug="phim-chieu-rap"
         viewAllUrl="/category/phim-chieu-rap"
         priority={true} // Load ngay lập tức
       />
 
-      <InfiniteLazyMovieSection
+      <LazyMovieSection
         title="Phim mới"
         slug="phim-moi"
         viewAllUrl="/category/phim-moi"
       />
 
-      <InfiniteLazyMovieSection
+      <LazyMovieSection
         title="Phim lẻ"
         slug="phim-le"
         viewAllUrl="/category/phim-le"
       />
 
-      <InfiniteLazyMovieSection
+      <LazyMovieSection
         title="Phim bộ"
         slug="phim-bo"
         viewAllUrl="/category/phim-bo"
       />
 
-      <InfiniteLazyMovieSection
+      <LazyMovieSection
         title="TV Shows"
         slug="tv-shows"
         viewAllUrl="/category/tv-shows"
       />
 
-      <InfiniteLazyMovieSection
+      <LazyMovieSection
         title="Hoạt hình"
         slug="hoat-hinh"
         viewAllUrl="/category/hoat-hinh"

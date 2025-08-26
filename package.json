@@ -12,15 +12,12 @@
     "test:watch": "vitest --watch"
   },
   "dependencies": {
-    "@next/bundle-analyzer": "^15.4.6",
     "@tailwindcss/line-clamp": "^0.4.4",
     "@types/video.js": "^7.3.58",
     "@vercel/analytics": "^1.5.0",
     "@vercel/speed-insights": "^1.2.0",
     "@videojs/themes": "^1.0.1",
     "artplayer": "^5.2.5",
-    "compression": "^1.8.1",
-    "critters": "^0.0.23",
     "hls.js": "^1.6.10",
     "next": "15.4.6",
     "react": "19.1.0",
@@ -32,6 +29,8 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@next/bundle-analyzer": "^15.4.6",
+    "critters": "^0.0.23",
     "@tailwindcss/postcss": "^4",
     "@testing-library/dom": "^10.0.0",
     "@testing-library/jest-dom": "^6.5.0",
