@@ -111,16 +111,18 @@ export default function LazyMovieSection({ title, slug, viewAllUrl, priority = f
   if (!hasLoaded) {
     return (
       <section ref={containerRef} className="mb-8">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold">{title}</h2>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="animate-pulse">
-              <div className="bg-gray-800 rounded-lg aspect-[2/3]"></div>
-              <div className="mt-2 h-4 bg-gray-800 rounded w-3/4"></div>
-            </div>
-          ))}
+        <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold">{title}</h2>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <div className="bg-gray-800 rounded-lg aspect-[2/3]"></div>
+                <div className="mt-2 h-4 bg-gray-800 rounded w-3/4"></div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
     );
@@ -128,36 +130,38 @@ export default function LazyMovieSection({ title, slug, viewAllUrl, priority = f
 
   return (
     <section className="mb-8">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">{title}</h2>
-        <Link 
-          href={viewAllUrl}
-          className="text-blue-500 hover:text-blue-400 transition-colors"
-        >
-          Xem tất cả →
-        </Link>
-      </div>
-      
-      <div className="relative">
-        <div 
-          ref={scrollContainerRef}
-          className="flex gap-4 overflow-x-auto scrollbar-hide pb-2"
-          style={{ scrollBehavior: 'smooth' }}
-        >
-          {movies.map((movie) => (
-            <div key={movie.slug} className="flex-shrink-0 w-[calc(50%-8px)] sm:w-[calc(33.333%-10.67px)] md:w-[calc(25%-12px)] lg:w-[calc(16.667%-13.33px)]">
-              <MovieCard movie={movie} />
-            </div>
-          ))}
-          
-          {isFetching && (
-            <div className="flex-shrink-0 w-[calc(50%-8px)] sm:w-[calc(33.333%-10.67px)] md:w-[calc(25%-12px)] lg:w-[calc(16.667%-13.33px)]">
-              <div className="animate-pulse">
-                <div className="bg-gray-800 rounded-lg aspect-[2/3]"></div>
-                <div className="mt-2 h-4 bg-gray-800 rounded w-3/4"></div>
+      <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold">{title}</h2>
+          <Link 
+            href={viewAllUrl}
+            className="text-blue-500 hover:text-blue-400 transition-colors"
+          >
+            Xem tất cả →
+          </Link>
+        </div>
+        
+        <div className="relative">
+          <div 
+            ref={scrollContainerRef}
+            className="flex gap-4 overflow-x-auto scrollbar-hide pb-2"
+            style={{ scrollBehavior: 'smooth' }}
+          >
+            {movies.map((movie) => (
+              <div key={movie.slug} className="flex-shrink-0 w-[calc(50%-8px)] sm:w-[calc(33.333%-10.67px)] md:w-[calc(25%-12px)] lg:w-[calc(16.667%-13.33px)]">
+                <MovieCard movie={movie} />
               </div>
-            </div>
-          )}
+            ))}
+            
+            {isFetching && (
+              <div className="flex-shrink-0 w-[calc(50%-8px)] sm:w-[calc(33.333%-10.67px)] md:w-[calc(25%-12px)] lg:w-[calc(16.667%-13.33px)]">
+                <div className="animate-pulse">
+                  <div className="bg-gray-800 rounded-lg aspect-[2/3]"></div>
+                  <div className="mt-2 h-4 bg-gray-800 rounded w-3/4"></div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </section>

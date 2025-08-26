@@ -35,8 +35,9 @@ export default function ContinueWatching() {
   }
 
   return (
-    <section className="px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-4 flex items-center justify-between">
+    <section className="py-8">
+      <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
+        <div className="mb-4 flex items-center justify-between">
         <h2 className="text-xl md:text-2xl font-bold text-white">Tiếp tục xem</h2>
         <Link 
           href="/lich-su" 
@@ -44,7 +45,7 @@ export default function ContinueWatching() {
         >
           Xem tất cả
         </Link>
-      </div>
+        </div>
 
       <div className="relative">
         <div
@@ -104,6 +105,7 @@ export default function ContinueWatching() {
             </div>
           ))}
         </div>
+      </div>
       </div>
     </section>
   );
