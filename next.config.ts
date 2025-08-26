@@ -50,7 +50,9 @@ const nextConfig: NextConfig = {
 
   // Tối ưu CSS
   experimental: {
-    optimizeCss: process.env.DISABLE_CSS_OPTIMIZATION !== "true",
+    // Critters was removed from devDependencies; only enable CSS optimization when explicitly requested
+    // via environment variable to avoid requiring the optional dependency at build time.
+    optimizeCss: process.env.ENABLE_CSS_OPTIMIZATION === "true",
   },
 };
 
