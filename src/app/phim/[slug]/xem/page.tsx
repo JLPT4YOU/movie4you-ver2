@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { MovieDetail } from '@/types/movie';
@@ -62,11 +62,55 @@ export default function WatchPage() {
   const [selectedServer, setSelectedServer] = useState(0);
   const [selectedEpisode, setSelectedEpisode] = useState(0);
   const [alternativeSources, setAlternativeSources] = useState<any>({});
-  const [selectedSource, setSelectedSource] = useState<'ophim' | 'phimapi' | 'nguonc' | 'mappletv' | 'videasy' | 'vidlink'>('ophim');
+  const [selectedSource, setSelectedSource] = useState<'ophim' | 'phimapi' | 'nguonc' | 'mappletv' | 'videasy' | 'vidlink' | 'vidfast'>('ophim');
   const [showAdNotification, setShowAdNotification] = useState(false);
 
   const videoRef = useRef<HTMLIFrameElement>(null);
-  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const saveHistory = useCallback((overrides?: {
+    source?: 'ophim' | 'phimapi' | 'nguonc' | 'mappletv' | 'videasy' | 'vidlink' | 'vidfast';
+    serverIndex?: number;
+    episodeIndex?: number;
+  }) => {
+    if (!movie) return;
+
+    const source = overrides?.source ?? selectedSource;
+    const serverIndex = overrides?.serverIndex ?? selectedServer;
+    const episodeIndex = overrides?.episodeIndex ?? selectedEpisode;
+
+    let episodes: any[] = [];
+    if (source === 'ophim' && movie?.episodes?.[serverIndex]) {
+      episodes = movie.episodes[serverIndex].server_data || [];
+    } else if (source === 'phimapi' && alternativeSources.phimapi?.episodes?.[serverIndex]) {
+      episodes = alternativeSources.phimapi.episodes[serverIndex].server_data || [];
+    } else if (source === 'nguonc' && alternativeSources.nguonc?.movie?.episodes?.[serverIndex]) {
+      episodes = alternativeSources.nguonc.movie.episodes[serverIndex].items || [];
+    } else if (source === 'mappletv' || source === 'videasy' || source === 'vidlink' || source === 'vidfast') {
+      episodes = [{ name: 'Full', slug: 'full' }];
+    }
+
+    const episode = episodes[episodeIndex];
+    if (!episode && source !== 'mappletv' && source !== 'videasy' && source !== 'vidlink' && source !== 'vidfast') return;
+
+    let posterUrl = '';
+    if (movie.thumb_url) {
+      posterUrl = movie.thumb_url.replace('https://img.ophim.live/uploads/movies/', '');
+    } else if (movie.poster_url) {
+      posterUrl = movie.poster_url.replace('https://img.ophim.live/uploads/movies/', '');
+    }
+
+    WatchHistoryManager.saveProgress({
+      movieId: movie._id,
+      movieName: movie.name,
+      movieSlug: movie.slug,
+      posterUrl: posterUrl,
+      episodeIndex: episodeIndex,
+      episodeName: source === 'mappletv' ? 'MappleTV' : (episode?.name || `Tập ${episodeIndex + 1}`),
+      serverIndex: serverIndex,
+      currentTime: 0,
+      duration: 1,
+    });
+  }, [movie, selectedSource, selectedServer, selectedEpisode, alternativeSources]);
 
   useEffect(() => {
     const fetchMovieData = async () => {
@@ -101,68 +145,27 @@ export default function WatchPage() {
     fetchMovieData();
   }, [params.slug]);
 
-  // Save watch history when episode changes or video plays
+  // Save on page/tab exit
   useEffect(() => {
-    if (!movie || !params.slug) return;
-
-    // Get current episode info based on selected source
-    let episodes: any[] = [];
-    if (selectedSource === 'ophim' && movie?.episodes?.[selectedServer]) {
-      episodes = movie.episodes[selectedServer].server_data || [];
-    } else if (selectedSource === 'phimapi' && alternativeSources.phimapi?.episodes?.[selectedServer]) {
-      episodes = alternativeSources.phimapi.episodes[selectedServer].server_data || [];
-    } else if (selectedSource === 'nguonc' && alternativeSources.nguonc?.movie?.episodes?.[selectedServer]) {
-      episodes = alternativeSources.nguonc.movie.episodes[selectedServer].items || [];
-    } else if (selectedSource === 'mappletv') {
-      episodes = [{ name: 'Full', slug: 'full' }];
-    }
-
-    const episode = episodes[selectedEpisode];
-    if (!episode && selectedSource !== 'mappletv') return;
-
-    // Save to watch history
-    const saveHistory = () => {
-      // Get poster URL from movie data
-      let posterUrl = '';
-      if (movie.thumb_url) {
-        posterUrl = movie.thumb_url.replace('https://img.ophim.live/uploads/movies/', '');
-      } else if (movie.poster_url) {
-        posterUrl = movie.poster_url.replace('https://img.ophim.live/uploads/movies/', '');
-      }
-
-      WatchHistoryManager.saveProgress({
-        movieId: movie._id,
-        movieName: movie.name,
-        movieSlug: movie.slug,
-        posterUrl: posterUrl,
-        episodeIndex: selectedEpisode,
-        episodeName: selectedSource === 'mappletv' ? 'MappleTV' : (episode?.name || `Tập ${selectedEpisode + 1}`),
-        serverIndex: selectedServer,
-        currentTime: 0, // Start at 0 for iframe (can't access actual time)
-        duration: 1, // Set to 1 to avoid division by zero
-      });
-
-
-    };
-
-    // Save immediately when episode is selected
-    saveHistory();
-
-    // Also save periodically while watching (every 30 seconds)
-    if (progressIntervalRef.current) {
-      clearInterval(progressIntervalRef.current);
-    }
-
-    progressIntervalRef.current = setInterval(() => {
+    const onUnloadOrHide = () => {
       saveHistory();
-    }, 30000); // Save every 30 seconds
-
-    return () => {
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-      }
     };
-  }, [movie, selectedEpisode, selectedServer, selectedSource, alternativeSources, params.slug]);
+    window.addEventListener('beforeunload', onUnloadOrHide);
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') onUnloadOrHide();
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      window.removeEventListener('beforeunload', onUnloadOrHide);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, [saveHistory]);
+
+  // Save once when movie and initial selections are ready
+  useEffect(() => {
+    if (!movie) return;
+    saveHistory();
+  }, [movie, saveHistory]);
 
   const getCurrentVideoSource = () => {
     let videoSource = null;
@@ -229,6 +232,17 @@ export default function WatchPage() {
         videoSource = `https://vidlink.pro/tv/${movie.tmdb.id}/${season}/${episodeNumber}`;
         videoTitle = `${movie.name} - VidLink - Tập ${episodeNumber}`;
       }
+    } else if (selectedSource === 'vidfast' && movie?.tmdb?.id) {
+      const tmdbType = movie.tmdb.type === 'movie' ? 'movie' : 'tv';
+      if (tmdbType === 'movie') {
+        videoSource = `https://vidfast.to/embed/movie/${movie.tmdb.id}`;
+        videoTitle = `${movie.name} - VidFast`;
+      } else {
+        const season = movie.tmdb.season || 1;
+        const episodeNumber = selectedEpisode + 1;
+        videoSource = `https://vidfast.to/embed/tv/${movie.tmdb.id}/${season}/${episodeNumber}`;
+        videoTitle = `${movie.name} - VidFast - Tập ${episodeNumber}`;
+      }
     }
 
     return { videoSource, videoTitle };
@@ -278,6 +292,10 @@ export default function WatchPage() {
       servers.push({ name: 'Ad #3', source: 'vidlink', index: 0 });
     }
 
+    if (movie?.tmdb?.id) {
+      servers.push({ name: 'Ad #4', source: 'vidfast', index: 0 });
+    }
+
     return servers;
   };
 
@@ -288,7 +306,7 @@ export default function WatchPage() {
       return alternativeSources.phimapi.episodes[selectedServer].server_data || [];
     } else if (selectedSource === 'nguonc' && alternativeSources.nguonc?.movie?.episodes?.[selectedServer]) {
       return alternativeSources.nguonc.movie.episodes[selectedServer].items || [];
-    } else if (selectedSource === 'mappletv' || selectedSource === 'videasy' || selectedSource === 'vidlink') {
+    } else if (selectedSource === 'mappletv' || selectedSource === 'videasy' || selectedSource === 'vidlink' || selectedSource === 'vidfast') {
       if (movie?.tmdb?.type === 'tv') {
         // For TV shows, use the episode list from the primary source (ophim)
         // to allow episode selection. We assume the first server has the most complete list.
@@ -383,7 +401,7 @@ export default function WatchPage() {
             <div className="flex flex-wrap gap-2">
               {/* Display all servers */}
               {servers.map((server) => {
-                const isAdServer = ['mappletv', 'videasy', 'vidlink'].includes(server.source);
+                const isAdServer = ['mappletv', 'videasy', 'vidlink', 'vidfast'].includes(server.source);
                 
                 return (
                   <button
@@ -392,8 +410,12 @@ export default function WatchPage() {
                       if (isAdServer) {
                         setShowAdNotification(true);
                       }
-                      setSelectedSource(server.source as 'ophim' | 'phimapi' | 'nguonc' | 'mappletv' | 'videasy' | 'vidlink');
-                      setSelectedServer(server.index);
+                      const nextSource = server.source as 'ophim' | 'phimapi' | 'nguonc' | 'mappletv' | 'videasy' | 'vidlink' | 'vidfast';
+                      const nextServer = server.index;
+                      // save immediately for this selection
+                      saveHistory({ source: nextSource, serverIndex: nextServer, episodeIndex: 0 });
+                      setSelectedSource(nextSource);
+                      setSelectedServer(nextServer);
                       setSelectedEpisode(0);
                     }}
                     className={`px-4 py-2 rounded-lg font-medium transition-colors ${
@@ -417,7 +439,10 @@ export default function WatchPage() {
                 {episodes.map((episode: any, idx: number) => (
                   <button
                     key={idx}
-                    onClick={() => setSelectedEpisode(idx)}
+                    onClick={() => {
+                      saveHistory({ episodeIndex: idx });
+                      setSelectedEpisode(idx);
+                    }}
                     className={`px-3 py-2 rounded-lg font-medium transition-colors ${
                       selectedEpisode === idx
                         ? 'bg-netflix-red text-white' 
