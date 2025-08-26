@@ -7,6 +7,51 @@ import { MovieDetail } from '@/types/movie';
 import Header from '@/components/Header';
 import { WatchHistoryManager } from '@/utils/watchHistory';
 
+// Ad Blocker Notification Component
+const AdBlockerNotification = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-900 rounded-lg p-6 max-w-md w-full border border-gray-700">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-white">Ad Server Notice</h3>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white transition-colors"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div className="text-gray-300 mb-4">
+          <p className="mb-3">
+            This server contains advertisements. Please install an ad blocker for the best experience.
+          </p>
+          <p className="mb-3">
+            Visit: <a href="https://adguard-dns.io/en/public-dns.html" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">https://adguard-dns.io/en/public-dns.html</a>
+          </p>
+          <p>
+            Choose option 2 and follow the instructions for your device.
+          </p>
+          <p className="mt-3 text-sm text-gray-400">
+            Thank you!
+          </p>
+        </div>
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 
 
 export default function WatchPage() {
@@ -18,6 +63,7 @@ export default function WatchPage() {
   const [selectedEpisode, setSelectedEpisode] = useState(0);
   const [alternativeSources, setAlternativeSources] = useState<any>({});
   const [selectedSource, setSelectedSource] = useState<'ophim' | 'phimapi' | 'nguonc' | 'mappletv' | 'videasy' | 'vidlink'>('ophim');
+  const [showAdNotification, setShowAdNotification] = useState(false);
 
   const videoRef = useRef<HTMLIFrameElement>(null);
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -219,19 +265,17 @@ export default function WatchPage() {
       });
     }
 
-    // MappleTV server (only if TMDB ID is available)
+    // Ad servers (only if TMDB ID is available)
     if (movie?.tmdb?.id) {
-      servers.push({ name: 'MappleTV', source: 'mappletv', index: 0 });
+      servers.push({ name: 'Ad #1', source: 'mappletv', index: 0 });
     }
 
-    // Videasy server (only if TMDB ID is available)
     if (movie?.tmdb?.id) {
-      servers.push({ name: 'Videasy', source: 'videasy', index: 0 });
+      servers.push({ name: 'Ad #2', source: 'videasy', index: 0 });
     }
 
-    // VidLink server (only if TMDB ID is available)
     if (movie?.tmdb?.id) {
-      servers.push({ name: 'VidLink', source: 'vidlink', index: 0 });
+      servers.push({ name: 'Ad #3', source: 'vidlink', index: 0 });
     }
 
     return servers;
@@ -338,23 +382,30 @@ export default function WatchPage() {
             <h2 className="text-lg font-semibold text-white mb-3">Chọn Server:</h2>
             <div className="flex flex-wrap gap-2">
               {/* Display all servers */}
-              {servers.map((server) => (
-                <button
-                  key={`${server.source}-${server.index}`}
-                  onClick={() => {
-                    setSelectedSource(server.source as 'ophim' | 'phimapi' | 'nguonc' | 'mappletv' | 'videasy' | 'vidlink');
-                    setSelectedServer(server.index);
-                    setSelectedEpisode(0);
-                  }}
-                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                    selectedSource === server.source && selectedServer === server.index
-                      ? 'bg-netflix-red text-white'
-                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                  }`}
-                >
-                  {server.name}
-                </button>
-              ))}
+              {servers.map((server) => {
+                const isAdServer = ['mappletv', 'videasy', 'vidlink'].includes(server.source);
+                
+                return (
+                  <button
+                    key={`${server.source}-${server.index}`}
+                    onClick={() => {
+                      if (isAdServer) {
+                        setShowAdNotification(true);
+                      }
+                      setSelectedSource(server.source as 'ophim' | 'phimapi' | 'nguonc' | 'mappletv' | 'videasy' | 'vidlink');
+                      setSelectedServer(server.index);
+                      setSelectedEpisode(0);
+                    }}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                      selectedSource === server.source && selectedServer === server.index
+                        ? 'bg-netflix-red text-white'
+                        : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                    }`}
+                  >
+                    {server.name}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -380,6 +431,12 @@ export default function WatchPage() {
           )}
         </div>
       </div>
+      
+      {/* Ad Blocker Notification */}
+      <AdBlockerNotification 
+        isOpen={showAdNotification} 
+        onClose={() => setShowAdNotification(false)} 
+      />
     </div>
   );
 }
