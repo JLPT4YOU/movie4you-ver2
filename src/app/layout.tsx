@@ -5,6 +5,8 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
+import { TrailerProvider } from '@/contexts/TrailerContext';
+import GlobalTrailer from '@/components/GlobalTrailer';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -122,11 +124,14 @@ export default function RootLayout({
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <div className="bg-netflix-black min-h-screen text-netflix-white flex flex-col">
-          <Header />
-          <main className="flex-grow">
-            {children}
-          </main>
-          <Footer />
+          <TrailerProvider>
+            <Header />
+            <main className="flex-grow">
+              {children}
+            </main>
+            <Footer />
+            <GlobalTrailer />
+          </TrailerProvider>
           <SpeedInsights />
           <Analytics />
         </div>

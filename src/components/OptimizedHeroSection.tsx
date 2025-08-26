@@ -3,18 +3,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect, useCallback } from "react";
-import dynamic from "next/dynamic";
 import { resolveImageUrl } from "@/utils/ophim";
 import { IconChevronLeft, IconChevronRight, IconVideo } from "@/components/icons";
-
-// Lazy load trailer popup
-const TrailerPopup = dynamic(
-  () => import('./TrailerPopup'),
-  { 
-    ssr: false,
-    loading: () => null
-  }
-) as React.ComponentType<{ trailerUrl: string; movieName: string; onClose: () => void }>;
+import { useTrailer } from "@/contexts/TrailerContext";
 
 interface Movie {
   name: string;
@@ -43,8 +34,8 @@ export default function OptimizedHeroSection({ movies: propMovies = [], loading:
   const [movies, setMovies] = useState<Movie[]>(propMovies);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(propLoading);
-  const [showTrailerPopup, setShowTrailerPopup] = useState(false);
   const [imagesLoaded, setImagesLoaded] = useState<Record<string, boolean>>({});
+  const { showTrailer } = useTrailer();
 
   // Preload image function with priority for first image
   const preloadImage = useCallback((index: number, priority = false) => {
@@ -99,7 +90,7 @@ export default function OptimizedHeroSection({ movies: propMovies = [], loading:
 
   const handleTrailerClick = () => {
     if (currentMovie?.trailer_url) {
-      setShowTrailerPopup(true);
+      showTrailer(currentMovie.trailer_url, currentMovie.name);
     }
   };
 
@@ -281,14 +272,7 @@ export default function OptimizedHeroSection({ movies: propMovies = [], loading:
         ))}
       </div>
 
-      {/* Lazy loaded Trailer Popup */}
-      {showTrailerPopup && currentMovie?.trailer_url && (
-        <TrailerPopup
-          trailerUrl={currentMovie.trailer_url}
-          movieName={currentMovie.name}
-          onClose={() => setShowTrailerPopup(false)}
-        />
-      )}
+
     </section>
   );
 }
