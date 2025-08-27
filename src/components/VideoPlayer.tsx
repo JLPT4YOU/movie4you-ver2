@@ -89,7 +89,6 @@ export default function VideoPlayer({
       
       <DefaultVideoLayout
         icons={defaultLayoutIcons}
-        smallLayoutWhen={() => false}
         translations={{
           'Play': 'Phát',
           'Pause': 'Tạm dừng',
