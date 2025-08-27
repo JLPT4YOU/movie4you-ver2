@@ -5,6 +5,7 @@ import '@vidstack/react/player/styles/default/layouts/video.css';
 
 import { MediaPlayer, MediaProvider, Poster, type MediaPlayerInstance } from '@vidstack/react';
 import Image from 'next/image';
+import { resolveOriginalImageUrl } from '@/utils/ophim';
 import {
   DefaultVideoLayout,
   defaultLayoutIcons,
@@ -31,6 +32,7 @@ export default function VideoPlayer({
   logoSrc = '/logo.png',
 }: VideoPlayerProps) {
   const playerRef = useRef<MediaPlayerInstance>(null);
+  const posterUrl = poster ? resolveOriginalImageUrl(poster) : undefined;
 
   useEffect(() => {
     if (!playerRef.current || startTime <= 0) return;
@@ -76,10 +78,10 @@ export default function VideoPlayer({
         </div>
       )}
       <MediaProvider>
-        {poster && (
+        {posterUrl && (
           <Poster
             className="vds-poster"
-            src={poster}
+            src={posterUrl}
             alt={title}
           />
         )}
