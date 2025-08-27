@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { buildSearch, normalizeMovie } from "@/utils/ophim";
+import { buildSearch, normalizeMovie, type NormalizedMovie } from "@/utils/ophim";
 
 export type FetchPathKind = "danh-sach" | "the-loai" | "quoc-gia" | "nam-phat-hanh";
 
@@ -12,7 +12,7 @@ export interface InfiniteListOptions {
   resetKey?: string | number; // thay đổi để reset danh sách (khi filter đổi)
 }
 
-export interface InfiniteListState<T = any> {
+export interface InfiniteListState<T = NormalizedMovie> {
   items: T[];
   loading: boolean;
   error: string | null;
@@ -31,7 +31,7 @@ export function useInfiniteOphimList({
   loadMoreSize = 6,
   commonParams = {},
 }: InfiniteListOptions): InfiniteListState {
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState<NormalizedMovie[]>([]);
   const [page, setPage] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -66,13 +66,15 @@ export function useInfiniteOphimList({
       const res = await fetch(`${basePath}?${qs}`, { headers: { accept: "application/json" }, cache: "no-store" });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
-      const rawItems = json?.data?.items || json?.items || [] as Array<Record<string, unknown>>;
-      const items = rawItems.map((item: Record<string, any>) => normalizeMovie(item?.movie || item)).filter(Boolean);
+      const rawItems = (json?.data?.items || json?.items || []) as Array<Record<string, unknown>>;
+      const normalized = rawItems
+        .map((item) => normalizeMovie((item as { movie?: Record<string, unknown> })?.movie || item))
+        .filter(Boolean) as NormalizedMovie[];
 
-      setItems((prev) => [...prev, ...items] as any[]);
+      setItems((prev) => [...prev, ...normalized]);
       setHasMore((Array.isArray(rawItems) ? rawItems.length : 0) >= size);
-    } catch (e: any) {
-      setError(e?.message || "Fetch error");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Fetch error");
       setHasMore(false);
     } finally {
       setLoading(false);

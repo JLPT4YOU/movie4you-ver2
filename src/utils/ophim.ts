@@ -8,7 +8,7 @@ export type NormalizedMovie = {
   year: number;
   modified: { time: string };
   // Allow additional fields without strict typing to ease integration
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
 export const OPHIM_IMG_BASE = process.env.OPHIM_IMG_BASE || "https://img.ophim.live";
@@ -31,26 +31,53 @@ export function slugify(s: string): string {
  * Chuẩn hóa một item phim từ OPHIM (bao gồm cả trường hợp m.item.movie).
  * Đảm bảo trả về cấu trúc thống nhất: id, name, slug, thumb/poster, year, modified.
  */
-export function normalizeMovie(item: Record<string, any>): NormalizedMovie | null {
-  const m = item?.movie ?? item;
-  if (!m) return null;
-  const id: string = String(m._id || m.id || m.slug || "") + "-" + String(m?.modified?.time || m?.modified_time || "");
-  const name = m.name || m.title || m.origin_name || "";
-  const slug = m.slug || slugify(name);
-  const thumb_url = m.thumb_url || m.poster_url || m.thumb || "";
-  const poster_url = m.poster_url || m.thumb_url || m.poster || "";
-  const year = Number(m.year || m.release_year || 0) || 0;
-  const modified = { time: m?.modified?.time || m?.modified_time || "" } as { time: string };
-  return { id, name, slug, origin_name: m.origin_name || name, thumb_url, poster_url, year, modified } as NormalizedMovie;
+export function normalizeMovie(item: Record<string, unknown>): NormalizedMovie | null {
+  const source = (item as { movie?: Record<string, unknown> }).movie ?? item;
+  if (!source || typeof source !== "object") return null;
+
+  type LooseMovie = {
+    _id?: unknown;
+    id?: unknown;
+    slug?: unknown;
+    name?: unknown;
+    title?: unknown;
+    origin_name?: unknown;
+    thumb_url?: unknown;
+    poster_url?: unknown;
+    thumb?: unknown;
+    poster?: unknown;
+    year?: unknown;
+    release_year?: unknown;
+    modified?: { time?: unknown };
+    modified_time?: unknown;
+  };
+
+  const m = source as LooseMovie;
+
+  const getString = (v: unknown, fallback = ""): string => (typeof v === "string" ? v : v == null ? fallback : String(v));
+  const getNumber = (v: unknown, fallback = 0): number => {
+    const n = typeof v === "number" ? v : Number(v);
+    return Number.isFinite(n) ? n : fallback;
+  };
+
+  const id = `${getString(m._id || m.id || m.slug)}-${getString(m?.modified?.time || m?.modified_time)}`.replace(/-$/, "");
+  const name = getString(m.name || m.title || m.origin_name);
+  const slug = getString(m.slug) || slugify(name);
+  const thumb_url = getString(m.thumb_url || m.poster_url || m.thumb);
+  const poster_url = getString(m.poster_url || m.thumb_url || m.poster);
+  const year = getNumber(m.year || m.release_year);
+  const modified = { time: getString(m?.modified?.time || m?.modified_time) } as { time: string };
+
+  return { id, name, slug, origin_name: getString(m.origin_name) || name, thumb_url, poster_url, year, modified };
 }
 
 /**
  * Tạo query string an toàn từ object params, bỏ qua giá trị rỗng/undefined.
  */
-export function buildSearch(params: Record<string, any>): string {
+export function buildSearch(params: Record<string, string | number | boolean | undefined | null>): string {
   const sp = new URLSearchParams();
   Object.entries(params).forEach(([k, v]) => {
-    if (v !== undefined && v !== "") sp.set(k, String(v));
+    if (v !== undefined && v !== null && v !== "") sp.set(k, String(v));
   });
   return sp.toString();
 }

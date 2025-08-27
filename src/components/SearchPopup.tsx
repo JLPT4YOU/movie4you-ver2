@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { IconSearch } from "./icons";
@@ -25,6 +25,12 @@ export default function SearchPopup({ isOpen, onClose }: SearchPopupProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchMovie[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+
+  const handleClose = useCallback(() => {
+    onClose();
+    setSearchQuery('');
+    setSearchResults([]);
+  }, [onClose]);
 
   // Search function
   const searchMovies = async (keyword: string) => {
@@ -83,13 +89,7 @@ export default function SearchPopup({ isOpen, onClose }: SearchPopupProps) {
       document.removeEventListener('keydown', handleEscKey);
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen]);
-
-  const handleClose = () => {
-    onClose();
-    setSearchQuery('');
-    setSearchResults([]);
-  };
+  }, [isOpen, handleClose]);
 
   if (!isOpen) return null;
 

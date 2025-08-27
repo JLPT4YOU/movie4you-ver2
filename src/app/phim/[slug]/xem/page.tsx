@@ -6,6 +6,17 @@ import Link from 'next/link';
 import { MovieDetail } from '@/types/movie';
 import Header from '@/components/Header';
 import { WatchHistoryManager } from '@/utils/watchHistory';
+import dynamic from 'next/dynamic';
+
+// Dynamic import to avoid SSR issues with Vidstack
+const VideoPlayer = dynamic(() => import('@/components/VideoPlayer'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full aspect-video bg-black rounded-lg flex items-center justify-center">
+      <div className="text-gray-400">Đang tải player...</div>
+    </div>
+  ),
+});
 
 // Ad Blocker Notification Component
 const AdBlockerNotification = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
@@ -61,9 +72,17 @@ export default function WatchPage() {
   const [loading, setLoading] = useState(true);
   const [selectedServer, setSelectedServer] = useState(0);
   const [selectedEpisode, setSelectedEpisode] = useState(0);
-  const [alternativeSources, setAlternativeSources] = useState<any>({});
+  type PhimApiEpisode = { name?: string; link_embed?: string; link_m3u8?: string };
+  type PhimApiData = { episodes?: Array<{ server_name?: string; server_data?: PhimApiEpisode[] }> } | null;
+  type NguonCEpisode = { name?: string; embed?: string };
+  type NguonCData = { movie?: { episodes?: Array<{ server_name?: string; items?: NguonCEpisode[] }> } } | null;
+  const [alternativeSources, setAlternativeSources] = useState<{ phimapi: PhimApiData; nguonc: NguonCData }>({ phimapi: null, nguonc: null });
   const [selectedSource, setSelectedSource] = useState<'ophim' | 'phimapi' | 'nguonc' | 'mappletv' | 'videasy' | 'vidlink' | 'vidfast'>('ophim');
   const [showAdNotification, setShowAdNotification] = useState(false);
+  const [playerKey, setPlayerKey] = useState(0); // Force re-render of player
+  const [currentPlaybackTime, setCurrentPlaybackTime] = useState(0);
+  const [videoDuration, setVideoDuration] = useState(0);
+  const [savedStartTime, setSavedStartTime] = useState(0);
 
   const videoRef = useRef<HTMLIFrameElement>(null);
 
@@ -71,6 +90,8 @@ export default function WatchPage() {
     source?: 'ophim' | 'phimapi' | 'nguonc' | 'mappletv' | 'videasy' | 'vidlink' | 'vidfast';
     serverIndex?: number;
     episodeIndex?: number;
+    currentTime?: number;
+    duration?: number;
   }) => {
     if (!movie) return;
 
@@ -78,7 +99,7 @@ export default function WatchPage() {
     const serverIndex = overrides?.serverIndex ?? selectedServer;
     const episodeIndex = overrides?.episodeIndex ?? selectedEpisode;
 
-    let episodes: any[] = [];
+    let episodes: Array<PhimApiEpisode | NguonCEpisode> = [];
     if (source === 'ophim' && movie?.episodes?.[serverIndex]) {
       episodes = movie.episodes[serverIndex].server_data || [];
     } else if (source === 'phimapi' && alternativeSources.phimapi?.episodes?.[serverIndex]) {
@@ -86,7 +107,7 @@ export default function WatchPage() {
     } else if (source === 'nguonc' && alternativeSources.nguonc?.movie?.episodes?.[serverIndex]) {
       episodes = alternativeSources.nguonc.movie.episodes[serverIndex].items || [];
     } else if (source === 'mappletv' || source === 'videasy' || source === 'vidlink' || source === 'vidfast') {
-      episodes = [{ name: 'Full', slug: 'full' }];
+      episodes = [{ name: 'Full' }];
     }
 
     const episode = episodes[episodeIndex];
@@ -107,10 +128,10 @@ export default function WatchPage() {
       episodeIndex: episodeIndex,
       episodeName: source === 'mappletv' ? 'MappleTV' : (episode?.name || `Tập ${episodeIndex + 1}`),
       serverIndex: serverIndex,
-      currentTime: 0,
-      duration: 1,
+      currentTime: overrides?.currentTime ?? currentPlaybackTime,
+      duration: overrides?.duration ?? (videoDuration || 1),
     });
-  }, [movie, selectedSource, selectedServer, selectedEpisode, alternativeSources]);
+  }, [movie, selectedSource, selectedServer, selectedEpisode, alternativeSources, currentPlaybackTime, videoDuration]);
 
   useEffect(() => {
     const fetchMovieData = async () => {
@@ -124,8 +145,11 @@ export default function WatchPage() {
         // Ophim API only - no fallback needed
         
         if (ophimData.status === 'success' && ophimData.data?.item) {
-
+        
           setMovie(ophimData.data.item);
+          
+          // Load saved playback progress for current episode
+          // Will be loaded when episode/server changes
         }
         
         // Fetch from alternative sources
@@ -145,10 +169,13 @@ export default function WatchPage() {
     fetchMovieData();
   }, [params.slug]);
 
-  // Save on page/tab exit
+  // Save on page/tab exit with current playback time
   useEffect(() => {
     const onUnloadOrHide = () => {
-      saveHistory();
+      saveHistory({
+        currentTime: currentPlaybackTime,
+        duration: videoDuration
+      });
     };
     window.addEventListener('beforeunload', onUnloadOrHide);
     const onVisibilityChange = () => {
@@ -159,22 +186,47 @@ export default function WatchPage() {
       window.removeEventListener('beforeunload', onUnloadOrHide);
       document.removeEventListener('visibilitychange', onVisibilityChange);
     };
-  }, [saveHistory]);
+  }, [saveHistory, currentPlaybackTime, videoDuration]);
 
-  // Save once when movie and initial selections are ready
+  // Load saved progress when movie and initial selections are ready
   useEffect(() => {
     if (!movie) return;
-    saveHistory();
-  }, [movie, saveHistory]);
+    
+    // Load saved progress for initial episode/server
+    const savedProgress = WatchHistoryManager.getProgress(
+      movie._id,
+      selectedEpisode,
+      selectedServer
+    );
+    
+    if (savedProgress && savedProgress.currentTime > 0) {
+      setSavedStartTime(savedProgress.currentTime);
+      setCurrentPlaybackTime(savedProgress.currentTime);
+      setVideoDuration(savedProgress.duration);
+    }
+    // Note: saveHistory removed from deps to avoid infinite loop
+  }, [movie, selectedEpisode, selectedServer]);
 
   const getCurrentVideoSource = () => {
     let videoSource = null;
     let videoTitle = '';
+    let isM3u8 = false;
+    let embedSource = null;
 
+    // IMPORTANT: Only ophim and phimapi use Vidstack Player with m3u8
+    // nguonc and all ad servers (mappletv, videasy, vidlink, vidfast) MUST use iframe
+    // NOTE: nguonc m3u8 is broken, only embed works properly
+    
     if (selectedSource === 'ophim' && movie) {
       const episode = movie.episodes?.[selectedServer]?.server_data?.[selectedEpisode];
       if (episode) {
-        videoSource = episode.link_embed;
+        // Prefer m3u8 for Vidstack, fallback to embed
+        if (episode.link_m3u8) {
+          videoSource = episode.link_m3u8;
+          isM3u8 = true;
+        } else {
+          embedSource = episode.link_embed;
+        }
         videoTitle = `${movie.name} - ${episode.name}`;
       }
     } else if (selectedSource === 'phimapi' && alternativeSources.phimapi) {
@@ -182,7 +234,13 @@ export default function WatchPage() {
       if (episodes?.[selectedServer]) {
         const episode = episodes[selectedServer].server_data?.[selectedEpisode];
         if (episode) {
-          videoSource = episode.link_embed || episode.link_m3u8;
+          // Prefer m3u8 for Vidstack, fallback to embed
+          if (episode.link_m3u8) {
+            videoSource = episode.link_m3u8;
+            isM3u8 = true;
+          } else {
+            embedSource = episode.link_embed;
+          }
           videoTitle = `${movie?.name} - Tập ${episode.name}`;
         }
       }
@@ -191,61 +249,66 @@ export default function WatchPage() {
       if (episodes?.[selectedServer]) {
         const episode = episodes[selectedServer].items?.[selectedEpisode];
         if (episode) {
-          videoSource = episode.embed || episode.m3u8;
+          // NguonC: MUST use embed (m3u8 is broken)
+          embedSource = episode.embed;
           videoTitle = `${movie?.name} - Tập ${episode.name}`;
         }
       }
     } else if (selectedSource === 'mappletv' && movie?.tmdb?.id) {
+      // Ad Server: ALWAYS use iframe
       const tmdbType = movie.tmdb.type === 'movie' ? 'movie' : 'tv';
       const queryParams = "nextEpisode=true&autoplayNextEpisode=true&episodeSelector=true&overlay=true";
       if (tmdbType === 'movie') {
-        videoSource = `https://mappletv.uk/watch/movie/${movie.tmdb.id}?${queryParams}`;
+        embedSource = `https://mappletv.uk/watch/movie/${movie.tmdb.id}?${queryParams}`;
         videoTitle = `${movie.name} - MappleTV`;
       } else {
         // For TV shows, we need season and episode
         const season = movie.tmdb.season || 1; // Default to season 1 if not provided
         const episodeNumber = selectedEpisode + 1;
-        videoSource = `https://mappletv.uk/watch/tv/${movie.tmdb.id}-${season}-${episodeNumber}?${queryParams}`;
+        embedSource = `https://mappletv.uk/watch/tv/${movie.tmdb.id}-${season}-${episodeNumber}?${queryParams}`;
         videoTitle = `${movie.name} - MappleTV - Tập ${episodeNumber}`;
       }
     } else if (selectedSource === 'videasy' && movie?.tmdb?.id) {
+      // Ad Server: ALWAYS use iframe
       const tmdbType = movie.tmdb.type === 'movie' ? 'movie' : 'tv';
       if (tmdbType === 'movie') {
-        videoSource = `https://player.videasy.net/movie/${movie.tmdb.id}`;
+        embedSource = `https://player.videasy.net/movie/${movie.tmdb.id}`;
         videoTitle = `${movie.name} - Videasy`;
       } else {
         // For TV shows, we need season and episode
         const season = movie.tmdb.season || 1; // Default to season 1 if not provided
         const episodeNumber = selectedEpisode + 1;
-        videoSource = `https://player.videasy.net/tv/${movie.tmdb.id}/${season}/${episodeNumber}`;
+        embedSource = `https://player.videasy.net/tv/${movie.tmdb.id}/${season}/${episodeNumber}`;
         videoTitle = `${movie.name} - Videasy - Tập ${episodeNumber}`;
       }
     } else if (selectedSource === 'vidlink' && movie?.tmdb?.id) {
+      // Ad Server: ALWAYS use iframe
       const tmdbType = movie.tmdb.type === 'movie' ? 'movie' : 'tv';
       if (tmdbType === 'movie') {
-        videoSource = `https://vidlink.pro/movie/${movie.tmdb.id}`;
+        embedSource = `https://vidlink.pro/movie/${movie.tmdb.id}`;
         videoTitle = `${movie.name} - VidLink`;
       } else {
         // For TV shows, we need season and episode
         const season = movie.tmdb.season || 1; // Default to season 1 if not provided
         const episodeNumber = selectedEpisode + 1;
-        videoSource = `https://vidlink.pro/tv/${movie.tmdb.id}/${season}/${episodeNumber}`;
+        embedSource = `https://vidlink.pro/tv/${movie.tmdb.id}/${season}/${episodeNumber}`;
         videoTitle = `${movie.name} - VidLink - Tập ${episodeNumber}`;
       }
     } else if (selectedSource === 'vidfast' && movie?.tmdb?.id) {
+      // Ad Server: ALWAYS use iframe
       const tmdbType = movie.tmdb.type === 'movie' ? 'movie' : 'tv';
       if (tmdbType === 'movie') {
-        videoSource = `https://vidfast.to/embed/movie/${movie.tmdb.id}`;
+        embedSource = `https://vidfast.to/embed/movie/${movie.tmdb.id}`;
         videoTitle = `${movie.name} - VidFast`;
       } else {
         const season = movie.tmdb.season || 1;
         const episodeNumber = selectedEpisode + 1;
-        videoSource = `https://vidfast.to/embed/tv/${movie.tmdb.id}/${season}/${episodeNumber}`;
+        embedSource = `https://vidfast.to/embed/tv/${movie.tmdb.id}/${season}/${episodeNumber}`;
         videoTitle = `${movie.name} - VidFast - Tập ${episodeNumber}`;
       }
     }
 
-    return { videoSource, videoTitle };
+    return { videoSource, embedSource, videoTitle, isM3u8 };
   };
 
   const getServerList = () => {
@@ -255,7 +318,7 @@ export default function WatchPage() {
     // Main source servers
     if (movie?.episodes) {
       movie.episodes.forEach((ep, idx) => {
-        const serverName = ep.server_name;
+        const serverName = ep.server_name || '';
         const displayName = getServerLanguage(serverName, serverCounter++);
         servers.push({ name: displayName, source: 'ophim', index: idx });
       });
@@ -263,8 +326,8 @@ export default function WatchPage() {
 
     // PhimAPI servers
     if (alternativeSources.phimapi?.episodes) {
-      alternativeSources.phimapi.episodes.forEach((ep: any, idx: number) => {
-        const serverName = ep.server_name;
+      alternativeSources.phimapi.episodes.forEach((ep, idx) => {
+        const serverName = ep.server_name || '';
         const displayName = getServerLanguage(serverName, serverCounter++);
         servers.push({ name: displayName, source: 'phimapi', index: idx });
       });
@@ -272,8 +335,8 @@ export default function WatchPage() {
 
     // NguonC servers
     if (alternativeSources.nguonc?.movie?.episodes) {
-      alternativeSources.nguonc.movie.episodes.forEach((ep: any, idx: number) => {
-        const serverName = ep.server_name;
+      alternativeSources.nguonc.movie.episodes.forEach((ep, idx) => {
+        const serverName = ep.server_name || '';
         const displayName = getServerLanguage(serverName, serverCounter++);
         servers.push({ name: displayName, source: 'nguonc', index: idx });
       });
@@ -348,7 +411,7 @@ export default function WatchPage() {
     );
   }
 
-  const { videoSource, videoTitle } = getCurrentVideoSource();
+  const { videoSource, embedSource, videoTitle, isM3u8 } = getCurrentVideoSource();
   const servers = getServerList();
 
   return (
@@ -372,16 +435,44 @@ export default function WatchPage() {
 
           {/* Video Player */}
           <div className="mb-6">
-            <div className="aspect-video bg-black rounded-lg overflow-hidden">
-              {videoSource ? (
+            {videoSource && isM3u8 ? (
+              // Use Vidstack for m3u8 sources
+              <VideoPlayer
+                key={playerKey} // Force re-render when switching episodes
+                src={videoSource}
+                title={videoTitle}
+                poster={movie.poster_url || movie.thumb_url}
+                showLogo={selectedSource === 'ophim' || selectedSource === 'phimapi'}
+                logoSrc="/logo.png"
+                startTime={savedStartTime}
+                onTimeUpdate={(currentTime, duration) => {
+                  // Update playback state
+                  setCurrentPlaybackTime(currentTime);
+                  setVideoDuration(duration);
+                  
+                  // Save playback position periodically (every 5 seconds)
+                  if (currentTime > 0 && duration > 0 && Math.abs(currentTime - currentPlaybackTime) >= 5) {
+                    saveHistory({
+                      currentTime: currentTime,
+                      duration: duration
+                    });
+                  }
+                }}
+              />
+            ) : embedSource ? (
+              // Use iframe for embed sources
+              <div className="aspect-video bg-black rounded-lg overflow-hidden">
                 <iframe
                   ref={videoRef}
-                  src={videoSource}
+                  src={embedSource}
                   className="w-full h-full"
                   allowFullScreen
                   title={videoTitle}
                 />
-              ) : (
+              </div>
+            ) : (
+              // No video source available
+              <div className="aspect-video bg-black rounded-lg overflow-hidden">
                 <div className="w-full h-full flex items-center justify-center text-gray-400">
                   <div className="text-center">
                     <svg className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -391,8 +482,8 @@ export default function WatchPage() {
                     <p>Chọn server và tập phim để xem</p>
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Server Selection */}
@@ -417,6 +508,26 @@ export default function WatchPage() {
                       setSelectedSource(nextSource);
                       setSelectedServer(nextServer);
                       setSelectedEpisode(0);
+                      
+                      // Load saved progress for the new server
+                      if (movie) {
+                        const savedProgress = WatchHistoryManager.getProgress(
+                          movie._id,
+                          0,
+                          nextServer
+                        );
+                        if (savedProgress && savedProgress.currentTime > 0) {
+                          setSavedStartTime(savedProgress.currentTime);
+                          setCurrentPlaybackTime(savedProgress.currentTime);
+                          setVideoDuration(savedProgress.duration);
+                        } else {
+                          setSavedStartTime(0);
+                          setCurrentPlaybackTime(0);
+                          setVideoDuration(0);
+                        }
+                      }
+                      
+                      setPlayerKey(prev => prev + 1); // Force player re-render
                     }}
                     className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                       selectedSource === server.source && selectedServer === server.index
@@ -436,12 +547,32 @@ export default function WatchPage() {
             <div>
               <h2 className="text-lg font-semibold text-white mb-3">Chọn Tập:</h2>
               <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2">
-                {episodes.map((episode: any, idx: number) => (
+                {episodes.map((episode, idx: number) => (
                   <button
                     key={idx}
                     onClick={() => {
                       saveHistory({ episodeIndex: idx });
                       setSelectedEpisode(idx);
+                      
+                      // Load saved progress for the new episode
+                      if (movie) {
+                        const savedProgress = WatchHistoryManager.getProgress(
+                          movie._id,
+                          idx,
+                          selectedServer
+                        );
+                        if (savedProgress && savedProgress.currentTime > 0) {
+                          setSavedStartTime(savedProgress.currentTime);
+                          setCurrentPlaybackTime(savedProgress.currentTime);
+                          setVideoDuration(savedProgress.duration);
+                        } else {
+                          setSavedStartTime(0);
+                          setCurrentPlaybackTime(0);
+                          setVideoDuration(0);
+                        }
+                      }
+                      
+                      setPlayerKey(prev => prev + 1); // Force player re-render
                     }}
                     className={`px-3 py-2 rounded-lg font-medium transition-colors ${
                       selectedEpisode === idx

@@ -9,6 +9,13 @@ export default function ContinueWatching() {
   const [watchHistory, setWatchHistory] = useState<WatchHistoryItem[]>([]);
   const [mounted, setMounted] = useState(false);
 
+  const getProgressPercent = (item: WatchHistoryItem) => {
+    const duration = Math.max(1, Math.floor(item.duration || 0));
+    const current = Math.max(0, Math.floor(item.currentTime || 0));
+    const percent = Math.min(100, Math.max(0, Math.round((current / duration) * 100)));
+    return percent;
+  };
+
   useEffect(() => {
     setMounted(true);
     
@@ -81,9 +88,12 @@ export default function ContinueWatching() {
                       </div>
                     </div>
                     
-                    {/* Progress bar - always show at bottom since we set progress to 0 */}
-                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/50">
-                      <div className="h-full bg-netflix-red w-1" />
+                    {/* Progress bar */}
+                    <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-black/60" aria-hidden>
+                      <div
+                        className="h-full bg-netflix-red"
+                        style={{ width: `${getProgressPercent(item)}%` }}
+                      />
                     </div>
                   </div>
                   
@@ -96,6 +106,9 @@ export default function ContinueWatching() {
                         Tập {item.episodeName}
                       </div>
                     )}
+                    <div className="text-[11px] text-gray-400 mt-1">
+                      Tiếp tục: {WatchHistoryManager.formatTime(item.currentTime)} / {WatchHistoryManager.formatTime(item.duration)}
+                    </div>
                     <div className="text-xs text-gray-500 mt-1">
                       {WatchHistoryManager.formatRelativeTime(item.watchedAt)}
                     </div>

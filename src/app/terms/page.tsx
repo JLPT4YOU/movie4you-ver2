@@ -33,8 +33,8 @@ export default function TermsOfService() {
               1. Chấp thuận Điều khoản
             </h2>
             <p className="text-gray-300 leading-relaxed">
-              Bằng việc truy cập hoặc sử dụng MOVIE4YOU tại movie4you.net ("Dịch vụ"), bạn xác nhận đã đọc, 
-              hiểu và đồng ý bị ràng buộc bởi Điều khoản Dịch vụ này ("ToS") và Chính sách Quyền riêng tư. 
+              Bằng việc truy cập hoặc sử dụng MOVIE4YOU tại movie4you.net (&quot;Dịch vụ&quot;), bạn xác nhận đã đọc, 
+              hiểu và đồng ý bị ràng buộc bởi Điều khoản Dịch vụ này (&quot;ToS&quot;) và Chính sách Quyền riêng tư. 
               Nếu không đồng ý, vui lòng rời khỏi trang ngay.
             </p>
           </section>
@@ -46,15 +46,15 @@ export default function TermsOfService() {
             </h2>
             <div className="space-y-3">
               <p>
-                <strong className="text-white">"Nội dung Bên thứ ba":</strong> phim/ảnh/dữ liệu lấy qua API 
+                <strong className="text-white">&quot;Nội dung Bên thứ ba&quot;:</strong> phim/ảnh/dữ liệu lấy qua API 
                 nguồn mở/đối tác, không thuộc sở hữu MOVIE4YOU.
               </p>
               <p>
-                <strong className="text-white">"API Bên thứ ba":</strong> bất kỳ API/SDK/nguồn dữ liệu do 
+                <strong className="text-white">&quot;API Bên thứ ba&quot;:</strong> bất kỳ API/SDK/nguồn dữ liệu do 
                 bên khác cung cấp.
               </p>
               <p>
-                <strong className="text-white">"Người dùng":</strong> cá nhân/tổ chức truy cập hoặc sử dụng 
+                <strong className="text-white">&quot;Người dùng&quot;:</strong> cá nhân/tổ chức truy cập hoặc sử dụng 
                 Dịch vụ.
               </p>
             </div>
@@ -239,7 +239,7 @@ export default function TermsOfService() {
             </h2>
             <div className="bg-yellow-900/20 border border-yellow-800 rounded-lg p-4">
               <p className="text-yellow-400">
-                Dịch vụ được cung cấp "nguyên trạng" (as-is) và "theo khả dụng" (as-available), không có 
+                Dịch vụ được cung cấp &quot;nguyên trạng&quot; (as-is) và &quot;theo khả dụng&quot; (as-available), không có 
                 bảo đảm dưới bất kỳ hình thức nào (rõ ràng hay ngụ ý), bao gồm nhưng không giới hạn ở: 
                 khả năng thương mại, phù hợp mục đích cụ thể, không vi phạm.
               </p>

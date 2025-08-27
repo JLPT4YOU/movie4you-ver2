@@ -25,7 +25,7 @@ export default function SmartResourceHints({
       // Preload critical API endpoints after LCP using idle time
       const schedule = (cb: () => void) => {
         if ('requestIdleCallback' in window) {
-          (window as any).requestIdleCallback(cb, { timeout: 5000 });
+          (window as unknown as { requestIdleCallback: (cb: () => void, opts?: { timeout?: number }) => void }).requestIdleCallback(cb, { timeout: 5000 });
         } else {
           setTimeout(cb, 2000);
         }

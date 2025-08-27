@@ -12,9 +12,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ path?: 
   const upstream = `${base}/${pathname}${search}`;
 
   try {
-    // Smart caching based on endpoint type
-    const isListEndpoint = pathname.includes('danh-sach') || pathname.includes('the-loai') || pathname.includes('quoc-gia');
-    const isDetailEndpoint = pathname.includes('/phim/');
+    // Smart caching based on endpoint type (reserved for future use)
     
     const res = await fetch(upstream, {
       method: "GET",

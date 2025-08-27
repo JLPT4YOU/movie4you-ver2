@@ -69,7 +69,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           const movies = data.data.items.slice(0, 50); // Limit to 50 per category
           
           moviePages = moviePages.concat(
-            movies.map((movie: any) => ({
+            movies.map((movie: { slug: string; modified?: { time?: string } }) => ({
               url: `${baseUrl}/phim/${movie.slug}`,
               lastModified: movie.modified?.time ? new Date(movie.modified.time) : new Date(),
               changeFrequency: 'weekly' as const,
@@ -95,7 +95,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const data = await response.json();
       
       if (data.status === 'success' && data.data?.items) {
-        categoryPages = data.data.items.map((category: any) => ({
+        categoryPages = data.data.items.map((category: { slug: string }) => ({
           url: `${baseUrl}/the-loai/${category.slug}`,
           lastModified: new Date(),
           changeFrequency: 'weekly' as const,

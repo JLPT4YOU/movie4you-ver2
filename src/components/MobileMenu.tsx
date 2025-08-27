@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { IconBell } from './icons';
 
 interface DropdownItem {
   _id: string;
@@ -57,8 +56,8 @@ export default function MobileMenu({
           } else if (data.data.items && Array.isArray(data.data.items)) {
             itemsArray = data.data.items;
           } else if (typeof data.data === 'object') {
-            itemsArray = Object.values(data.data).filter((item: any) =>
-              item && typeof item === 'object' && item._id && item.name && item.slug
+            itemsArray = Object.values(data.data).filter((item: unknown) =>
+              item && typeof item === 'object' && (item as DropdownItem)._id && (item as DropdownItem).name && (item as DropdownItem).slug
             ) as DropdownItem[];
           }
         }
@@ -88,8 +87,8 @@ export default function MobileMenu({
           } else if (data.data.items && Array.isArray(data.data.items)) {
             itemsArray = data.data.items;
           } else if (typeof data.data === 'object') {
-            itemsArray = Object.values(data.data).filter((item: any) =>
-              item && typeof item === 'object' && item._id && item.name && item.slug
+            itemsArray = Object.values(data.data).filter((item: unknown) =>
+              item && typeof item === 'object' && (item as DropdownItem)._id && (item as DropdownItem).name && (item as DropdownItem).slug
             ) as DropdownItem[];
           }
         }
@@ -114,9 +113,9 @@ export default function MobileMenu({
         let itemsArray: DropdownItem[] = [];
 
         if (data.status && data.data && data.data.items && Array.isArray(data.data.items)) {
-          itemsArray = data.data.items.filter((item: any) =>
-            item && typeof item === 'object' && typeof item.year === 'number' && item.year >= 2010
-          ).map((item: any) => ({
+          itemsArray = data.data.items.filter((item: unknown) =>
+            item && typeof item === 'object' && typeof (item as { year?: number }).year === 'number' && (item as { year: number }).year >= 2010
+          ).map((item: { year: number }) => ({
             _id: item.year.toString(),
             name: item.year.toString(),
             slug: item.year.toString(),

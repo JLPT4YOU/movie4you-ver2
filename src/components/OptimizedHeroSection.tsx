@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect, useCallback } from "react";
-import { resolveImageUrl, resolveOriginalImageUrl } from "@/utils/ophim";
+import { resolveImageUrl } from "@/utils/ophim";
 import { IconChevronLeft, IconChevronRight, IconVideo } from "@/components/icons";
 import { useTrailer } from "@/contexts/TrailerContext";
 

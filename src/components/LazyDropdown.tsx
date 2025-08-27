@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 
 interface DropdownItem {
@@ -31,7 +31,7 @@ export default function LazyDropdown({
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Fetch data when dropdown opens
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (loaded || loading) return;
     
     setLoading(true);
@@ -54,8 +54,8 @@ export default function LazyDropdown({
         } else if (data.data.items && Array.isArray(data.data.items)) {
           itemsArray = data.data.items;
         } else if (typeof data.data === 'object') {
-          itemsArray = Object.values(data.data).filter((item: any) => 
-            item && typeof item === 'object' && item._id && item.name && (item.slug || item.year)
+          itemsArray = Object.values(data.data).filter((item: unknown) => 
+            item && typeof item === 'object' && (item as DropdownItem)._id && (item as DropdownItem).name && ((item as DropdownItem).slug || (item as DropdownItem).year)
           ) as DropdownItem[];
         }
       }
@@ -67,14 +67,14 @@ export default function LazyDropdown({
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiEndpoint, loaded, loading]);
 
   // Load data when dropdown opens
   useEffect(() => {
     if (isOpen && !loaded) {
       fetchData();
     }
-  }, [isOpen, loaded]);
+  }, [isOpen, loaded, fetchData]);
 
   // Close dropdown when clicking outside
   useEffect(() => {

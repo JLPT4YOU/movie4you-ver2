@@ -20,8 +20,8 @@ interface Movie {
   time?: string;
   episode_time?: string;
   episode_total?: string;
-  categories?: any[];
-  countries?: any[];
+  categories?: { name: string; slug: string }[];
+  countries?: { name: string; slug: string }[];
   actor?: string[];
   director?: string[];
   content?: string;
@@ -72,7 +72,7 @@ async function fetchCinemaMoviesData() {
 
     // Process first movie details immediately for hero section
     const firstMovieItem = movieItems[0];
-    const movie = (firstMovieItem as Record<string, any>)?.movie || firstMovieItem;
+    const movie = (firstMovieItem as Record<string, unknown>)?.movie || firstMovieItem;
     
     let firstMovie: Movie;
     try {
@@ -81,7 +81,7 @@ async function fetchCinemaMoviesData() {
           ? 'https://movie4you-ver2.vercel.app'
           : 'http://localhost:3000');
       const detailResponse = await fetch(
-        `${baseUrl}/api/ophim/v1/api/phim/${(movie as Record<string, any>).slug}`,
+        `${baseUrl}/api/ophim/v1/api/phim/${(movie as Record<string, { slug?: string }>).slug}`,
         { cache: 'no-store' }
       );
       
@@ -121,15 +121,15 @@ async function fetchCinemaMoviesData() {
 
     // Fetch remaining movies details
     const remainingMovies = await Promise.all(
-      movieItems.slice(1, 6).map(async (item: any) => {
-        const m = (item as Record<string, any>)?.movie || item;
+      movieItems.slice(1, 6).map(async (item: Record<string, unknown>) => {
+        const m = (item as Record<string, unknown> & { movie?: Record<string, unknown> })?.movie || item;
         try {
           const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ||
             (process.env.NODE_ENV === 'production'
               ? 'https://movie4you-ver2.vercel.app'
               : 'http://localhost:3000');
           const res = await fetch(
-            `${baseUrl}/api/ophim/v1/api/phim/${(m as Record<string, any>).slug}`,
+            `${baseUrl}/api/ophim/v1/api/phim/${(m as Record<string, { slug?: string }>).slug}`,
             { cache: 'no-store' }
           );
           
@@ -164,7 +164,7 @@ async function fetchCinemaMoviesData() {
           } as Movie;
         } catch (error) {
           console.error('Error fetching movie details:', error);
-          return m as Movie;
+          return m as unknown as Movie;
         }
       })
     );

@@ -32,10 +32,11 @@ export default function LazyMovieSection({ title, slug, viewAllUrl, priority = f
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isFetching, setIsFetching] = useState(false);
-  const observerRef = useRef<IntersectionObserver | null>(null);
+  // IntersectionObserver instance ref (kept for potential future use)
+  const observerRef = useRef<IntersectionObserver | null>(null); // eslint-disable-line @typescript-eslint/no-unused-vars
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const loadMoreTriggerRef = useRef<HTMLDivElement>(null);
+  // removed unused ref loadMoreTriggerRef
 
   const fetchMovies = useCallback(async (pageNum: number) => {
     if (isFetching) return;

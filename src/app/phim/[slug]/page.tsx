@@ -187,7 +187,7 @@ export default function MovieDetailPage() {
 
                 {/* Tags */}
                 <div className="flex flex-wrap gap-3 mb-8 justify-center lg:justify-start">
-                  {movie.category?.map((cat: any) => (
+                  {movie.category?.map((cat) => (
                     <Link
                       key={cat.id}
                       href={`/the-loai/${cat.slug}`}
@@ -253,7 +253,7 @@ export default function MovieDetailPage() {
                   {movie.director && movie.director.length > 0 && (
                     <div className="mb-4">
                       <span className="text-gray-400 text-sm">Đạo diễn: </span>
-                      <span className="text-white font-medium">{movie.country.map((country: any) => country.name).slice(0, 2).join(', ')}</span>
+                      <span className="text-white font-medium">{movie.country.map((country) => country.name).slice(0, 2).join(', ')}</span>
                     </div>
                   )}
 

@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import MovieCard from "@/components/MovieCard";
+import type { NormalizedMovie } from "@/utils/ophim";
 import FilterBar from "@/components/FilterBar";
 import { useInfiniteOphimList, type FetchPathKind } from "@/hooks/useInfiniteOphimList";
 
@@ -27,6 +28,7 @@ export default function CategoryClient({
   title,
   endpoint
 }: CategoryClientProps) {
+  const cryptoRandomKey = () => Math.random().toString(36);
   const searchParams = useSearchParams();
   const [listParams, setListParams] = useState<ListParams>({});
 
@@ -130,8 +132,8 @@ export default function CategoryClient({
       {items.length > 0 && (
         <>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 mt-6">
-            {items.map((movie: any) => (
-              <MovieCard key={movie._id || movie.slug} movie={movie} />
+            {items.map((movie) => (
+              <MovieCard key={(movie as NormalizedMovie).id || (movie as { slug?: string }).slug || cryptoRandomKey()} movie={movie as unknown as NormalizedMovie} />
             ))}
           </div>
 

@@ -255,7 +255,7 @@ export default function PrivacyPolicy() {
           <ul className="list-disc ml-6 space-y-2 text-gray-300">
             <li>• Banner cookie hiển thị khi truy cập lần đầu.</li>
             <li>• Bạn có thể chấp nhận/từ chối nhóm cookie không thiết yếu.</li>
-            <li>• Trang "Cài đặt Cookie" cho phép thay đổi lựa chọn bất cứ lúc nào.</li>
+            <li>• Trang &quot;Cài đặt Cookie&quot; cho phép thay đổi lựa chọn bất cứ lúc nào.</li>
             <li>• Chúng tôi tôn trọng tín hiệu GPC để tự động tắt cookie không thiết yếu.</li>
           </ul>
         </section>
