@@ -1,6 +1,8 @@
 import OptimizedHeroSection from "@/components/OptimizedHeroSection";
 import LazyMovieSection from "@/components/LazyMovieSection";
 import SmartResourceHints from "@/components/SmartResourceHints";
+import PreloadResources from "@/components/PreloadResources";
+import { resolveImageUrl } from "@/utils/ophim";
 import ContinueWatching from "@/components/ContinueWatching";
 
 interface Movie {
@@ -186,6 +188,11 @@ export default async function Home() {
       {/* Smart resource hints - only load when needed */}
       <SmartResourceHints enableImagePreconnect={true} enableAPIPreload={true} />
 
+      {/* Preload hero LCP image (client-side) */}
+      {heroMovies?.[0] && (
+        <PreloadResources heroImageUrl={resolveImageUrl(heroMovies[0].poster_url || heroMovies[0].thumb_url, 1600, 85)} />
+      )}
+
       <OptimizedHeroSection movies={heroMovies} loading={false} />
 
       {/* Continue Watching Section */}
@@ -196,7 +203,6 @@ export default async function Home() {
         title="Phim chiếu rạp"
         slug="phim-chieu-rap"
         viewAllUrl="/category/phim-chieu-rap"
-        priority={true} // Load ngay lập tức
       />
 
       <LazyMovieSection

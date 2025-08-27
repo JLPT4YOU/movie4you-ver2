@@ -13,7 +13,6 @@ export default function SmartResourceHints({
 }: SmartResourceHintsProps) {
   useEffect(() => {
     // Only add resource hints when they're actually needed
-    
     if (enableImagePreconnect) {
       // Add preconnect for img.ophim.live only when images are about to load
       const link = document.createElement('link');
@@ -23,17 +22,27 @@ export default function SmartResourceHints({
     }
 
     if (enableAPIPreload) {
-      // Preload critical API endpoints only when needed
-      const criticalEndpoints = [
-        '/api/ophim/v1/api/danh-sach/phim-chieu-rap?page=1&limit=6&sort_field=modified.time&sort_type=desc'
-      ];
+      // Preload critical API endpoints after LCP using idle time
+      const schedule = (cb: () => void) => {
+        if ('requestIdleCallback' in window) {
+          (window as any).requestIdleCallback(cb, { timeout: 5000 });
+        } else {
+          setTimeout(cb, 2000);
+        }
+      };
 
-      criticalEndpoints.forEach(endpoint => {
-        fetch(endpoint, { 
-          method: 'GET',
-          priority: 'low' as RequestPriority
-        }).catch(() => {
-          // Ignore errors for preload
+      schedule(() => {
+        const criticalEndpoints = [
+          '/api/ophim/v1/api/danh-sach/phim-chieu-rap?page=1&limit=6&sort_field=modified.time&sort_type=desc'
+        ];
+
+        criticalEndpoints.forEach(endpoint => {
+          fetch(endpoint, {
+            method: 'GET',
+            priority: 'low' as RequestPriority
+          }).catch(() => {
+            // Ignore errors for preload
+          });
         });
       });
     }

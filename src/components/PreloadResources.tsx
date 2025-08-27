@@ -16,6 +16,7 @@ export default function PreloadResources({ heroImageUrl, criticalImages = [] }: 
       link.as = 'image';
       link.href = heroImageUrl;
       link.fetchPriority = 'high';
+      link.crossOrigin = 'anonymous';
       document.head.appendChild(link);
     }
 

@@ -83,3 +83,19 @@ export function resolveImageUrl(src?: string, width?: number, quality?: number):
   return wsrvUrl.toString();
 }
 
+/**
+ * Trả về URL ảnh gốc (không qua wsrv.nl) để dùng với next/image.
+ * Cho phép Next.js tự tối ưu kích thước theo `sizes`/viewport, tránh double proxy.
+ */
+export function resolveOriginalImageUrl(src?: string): string {
+  const s = (src || "").trim();
+  if (!s) return PLACEHOLDER_POSTER;
+
+  if (s.startsWith("http")) {
+    return s;
+  }
+
+  const path = s.startsWith("/") ? s : `/uploads/movies/${s}`;
+  return `${OPHIM_IMG_BASE}${path}`;
+}
+

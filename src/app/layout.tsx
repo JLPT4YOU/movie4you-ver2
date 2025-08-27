@@ -99,8 +99,11 @@ export default function RootLayout({
     <html lang="vi">
       <head>
         {/* Preconnect to the image optimization service */}
-        <link rel="preconnect" href="https://wsrv.nl" />
+        <link rel="preconnect" href="https://wsrv.nl" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://wsrv.nl" />
+        {/* Preconnect to original Ophim image host for next/image direct fetch */}
+        <link rel="preconnect" href="https://img.ophim.live" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://img.ophim.live" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
