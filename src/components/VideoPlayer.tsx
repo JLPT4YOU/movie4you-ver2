@@ -20,6 +20,7 @@ interface VideoPlayerProps {
   startTime?: number;
   showLogo?: boolean;
   logoSrc?: string;
+  onError?: () => void;
 }
 
 export default function VideoPlayer({
@@ -30,6 +31,7 @@ export default function VideoPlayer({
   startTime = 0,
   showLogo = false,
   logoSrc = '/logo.png',
+  onError,
 }: VideoPlayerProps) {
   const playerRef = useRef<MediaPlayerInstance>(null);
   const posterUrl = poster ? resolveOriginalImageUrl(poster) : undefined;
@@ -55,6 +57,9 @@ export default function VideoPlayer({
       src={src}
       crossOrigin="anonymous"
       playsInline
+      onError={() => {
+        if (onError) onError();
+      }}
       onTimeUpdate={(detail) => {
         if (onTimeUpdate) {
           const currentTime = detail?.currentTime ?? 0;

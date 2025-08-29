@@ -313,49 +313,59 @@ export default function WatchPage() {
 
   const getServerList = () => {
     const servers: { name: string; source: string; index: number }[] = [];
-    let serverCounter = 0;
 
-    // Main source servers
-    if (movie?.episodes) {
-      movie.episodes.forEach((ep, idx) => {
-        const serverName = ep.server_name || '';
-        const displayName = getServerLanguage(serverName, serverCounter++);
-        servers.push({ name: displayName, source: 'ophim', index: idx });
-      });
+    // Vietsub #1: Ophim (prefer first server)
+    const hasOphim = Array.isArray(movie?.episodes) && movie!.episodes.length > 0;
+    if (hasOphim) {
+      servers.push({ name: 'Vietsub #1', source: 'ophim', index: 0 });
     }
 
-    // PhimAPI servers
-    if (alternativeSources.phimapi?.episodes) {
-      alternativeSources.phimapi.episodes.forEach((ep, idx) => {
-        const serverName = ep.server_name || '';
-        const displayName = getServerLanguage(serverName, serverCounter++);
-        servers.push({ name: displayName, source: 'phimapi', index: idx });
+    // Prepare PhimAPI episodes
+    const phimapiEpisodes = alternativeSources.phimapi?.episodes || [];
+    const findPhimapiIndexByVariant = (variant: 's4' | 's1' | 's2') => {
+      if (!Array.isArray(phimapiEpisodes) || phimapiEpisodes.length === 0) return -1;
+      if (variant === 's1' || variant === 's2') {
+        const label = `(${variant})`;
+        return phimapiEpisodes.findIndex((ep) => String(ep?.server_name || '').toLowerCase().includes(label));
+      }
+      // s4: original entries without (s1)/(s2); prefer those with m3u8 present
+      return phimapiEpisodes.findIndex((ep) => {
+        const name = String(ep?.server_name || '').toLowerCase();
+        const isOriginal = !name.includes('(s1)') && !name.includes('(s2)');
+        const hasM3u8 = Array.isArray((ep as any)?.server_data) && (ep as any).server_data.some((it: any) => Boolean(it?.link_m3u8));
+        return isOriginal && hasM3u8;
       });
+    };
+
+    // Vietsub #2: PhimAPI S4 (original)
+    const phimapiS4Index = findPhimapiIndexByVariant('s4');
+    if (phimapiS4Index >= 0) {
+      servers.push({ name: 'Vietsub #2', source: 'phimapi', index: phimapiS4Index });
     }
 
-    // NguonC servers
-    if (alternativeSources.nguonc?.movie?.episodes) {
-      alternativeSources.nguonc.movie.episodes.forEach((ep, idx) => {
-        const serverName = ep.server_name || '';
-        const displayName = getServerLanguage(serverName, serverCounter++);
-        servers.push({ name: displayName, source: 'nguonc', index: idx });
-      });
+    // Vietsub #3: PhimAPI S1
+    const phimapiS1Index = findPhimapiIndexByVariant('s1');
+    if (phimapiS1Index >= 0) {
+      servers.push({ name: 'Vietsub #3', source: 'phimapi', index: phimapiS1Index });
     }
 
-    // Ad servers (only if TMDB ID is available)
+    // Vietsub #4: PhimAPI S2
+    const phimapiS2Index = findPhimapiIndexByVariant('s2');
+    if (phimapiS2Index >= 0) {
+      servers.push({ name: 'Vietsub #4', source: 'phimapi', index: phimapiS2Index });
+    }
+
+    // Vietsub #5: NguonC (iframe)
+    const hasNguonC = Array.isArray(alternativeSources.nguonc?.movie?.episodes) && alternativeSources.nguonc!.movie!.episodes!.length > 0;
+    if (hasNguonC) {
+      servers.push({ name: 'Vietsub #5', source: 'nguonc', index: 0 });
+    }
+
+    // Ad servers (only if TMDB ID is available) - keep after main servers
     if (movie?.tmdb?.id) {
       servers.push({ name: 'Ad #1', source: 'mappletv', index: 0 });
-    }
-
-    if (movie?.tmdb?.id) {
       servers.push({ name: 'Ad #2', source: 'videasy', index: 0 });
-    }
-
-    if (movie?.tmdb?.id) {
       servers.push({ name: 'Ad #3', source: 'vidlink', index: 0 });
-    }
-
-    if (movie?.tmdb?.id) {
       servers.push({ name: 'Ad #4', source: 'vidfast', index: 0 });
     }
 
@@ -414,6 +424,49 @@ export default function WatchPage() {
   const { videoSource, embedSource, videoTitle, isM3u8 } = getCurrentVideoSource();
   const servers = getServerList();
 
+  const applyServerChange = (nextSource: 'ophim' | 'phimapi' | 'nguonc' | 'mappletv' | 'videasy' | 'vidlink' | 'vidfast', nextServer: number) => {
+    // save immediately for this selection
+    saveHistory({ source: nextSource, serverIndex: nextServer, episodeIndex: selectedEpisode });
+    setSelectedSource(nextSource);
+    setSelectedServer(nextServer);
+
+    // Load saved progress for the new server/episode
+    if (movie) {
+      const savedProgress = WatchHistoryManager.getProgress(
+        movie._id,
+        selectedEpisode,
+        nextServer
+      );
+      if (savedProgress && savedProgress.currentTime > 0) {
+        setSavedStartTime(savedProgress.currentTime);
+        setCurrentPlaybackTime(savedProgress.currentTime);
+        setVideoDuration(savedProgress.duration);
+      } else {
+        setSavedStartTime(0);
+        setCurrentPlaybackTime(0);
+        setVideoDuration(0);
+      }
+    }
+
+    setPlayerKey(prev => prev + 1); // Force player re-render
+  };
+
+  const fallbackToNextPreferredServer = () => {
+    // Consider only main Vietsub servers for fallback order
+    const mainServers = servers.filter((s) => s.name.startsWith('Vietsub'));
+    if (mainServers.length === 0) return;
+
+    const currentIdx = mainServers.findIndex((s) => s.source === selectedSource && s.index === selectedServer);
+    if (currentIdx === -1) return;
+
+    const nextIdx = currentIdx + 1;
+    if (nextIdx < mainServers.length) {
+      const next = mainServers[nextIdx];
+      const nextSource = next.source as 'ophim' | 'phimapi' | 'nguonc' | 'mappletv' | 'videasy' | 'vidlink' | 'vidfast';
+      applyServerChange(nextSource, next.index);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-netflix-black">
       <Header />
@@ -444,6 +497,10 @@ export default function WatchPage() {
                 poster={movie.poster_url || movie.thumb_url}
                 showLogo={selectedSource === 'ophim' || selectedSource === 'phimapi'}
                 logoSrc="/logo.png"
+                onError={() => {
+                  // Auto-fallback to next preferred Vietsub server
+                  fallbackToNextPreferredServer();
+                }}
                 startTime={savedStartTime}
                 onTimeUpdate={(currentTime, duration) => {
                   // Update playback state
@@ -468,6 +525,9 @@ export default function WatchPage() {
                   className="w-full h-full"
                   allowFullScreen
                   title={videoTitle}
+                  onError={() => {
+                    fallbackToNextPreferredServer();
+                  }}
                 />
               </div>
             ) : (
