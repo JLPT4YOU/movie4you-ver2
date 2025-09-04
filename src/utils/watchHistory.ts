@@ -24,7 +24,6 @@ export class WatchHistoryManager {
       const history = localStorage.getItem(this.STORAGE_KEY);
       return history ? JSON.parse(history) : [];
     } catch (error) {
-      console.error('Error reading watch history:', error);
       return [];
     }
   }
@@ -65,7 +64,7 @@ export class WatchHistoryManager {
 
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(history));
     } catch (error) {
-      console.error('Error saving watch history:', error);
+      // Silent error - localStorage may be disabled
     }
   }
 
@@ -95,7 +94,7 @@ export class WatchHistoryManager {
       const filteredHistory = history.filter(h => h.movieId !== movieId);
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(filteredHistory));
     } catch (error) {
-      console.error('Error removing movie from history:', error);
+      // Silent error - localStorage may be disabled
     }
   }
 
@@ -106,7 +105,7 @@ export class WatchHistoryManager {
     try {
       localStorage.removeItem(this.STORAGE_KEY);
     } catch (error) {
-      console.error('Error clearing watch history:', error);
+      // Silent error - localStorage may be disabled
     }
   }
 

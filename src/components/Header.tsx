@@ -7,10 +7,12 @@ import { IconSearch, IconBell, IconMenu, IconX } from "./icons";
 import SearchPopup from "./SearchPopup";
 import LazyDropdown from "./LazyDropdown";
 import MobileMenu from "./MobileMenu";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Interfaces moved to LazyDropdown component
 
 export default function Header() {
+  const { user, userProfile, isPremium, isAdmin, signOut } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   
   // Data states - removed, now handled by LazyDropdown
@@ -121,46 +123,69 @@ export default function Header() {
               <IconBell className="w-6 h-6" />
             </button>
 
-            {/* User Dropdown */}
-            <div className="relative user-dropdown">
-              <button
-                onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-                className="w-8 h-8 rounded overflow-hidden ring-1 ring-netflix-red/50 hover:ring-netflix-red transition-all"
-              >
-                <Image src="https://i.pravatar.cc/64?img=12" alt="avatar" width={32} height={32} className="w-full h-full object-cover" />
-              </button>
+            {user ? (
+              /* User Dropdown */
+              <div className="relative user-dropdown">
+                <button
+                  onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+                  className="w-8 h-8 rounded overflow-hidden ring-1 ring-netflix-red/50 hover:ring-netflix-red transition-all"
+                >
+                  <Image src="https://i.pravatar.cc/64?img=12" alt="avatar" width={32} height={32} className="w-full h-full object-cover" />
+                </button>
 
-              {isUserDropdownOpen && (
-                <div className="absolute top-full right-0 mt-2 w-48 bg-netflix-dark border border-netflix-light-gray rounded-md shadow-lg z-50">
-                  <div className="py-2">
-                    <Link
-                      href="/lich-su"
-                      onClick={() => setIsUserDropdownOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2 text-sm text-netflix-text-gray hover:text-netflix-white hover:bg-netflix-gray transition-colors"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      Lịch sử xem
-                    </Link>
-                    <div className="border-t border-netflix-gray my-1"></div>
-                    <button className="flex items-center gap-3 px-4 py-2 text-sm text-netflix-text-gray hover:text-netflix-white hover:bg-netflix-gray transition-colors w-full text-left">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      Cài đặt
-                    </button>
-                    <button className="flex items-center gap-3 px-4 py-2 text-sm text-netflix-text-gray hover:text-netflix-white hover:bg-netflix-gray transition-colors w-full text-left">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                      </svg>
-                      Đăng xuất
-                    </button>
+                {isUserDropdownOpen && (
+                  <div className="absolute top-full right-0 mt-2 w-48 bg-netflix-dark border border-netflix-light-gray rounded-md shadow-lg z-50">
+                    <div className="py-2">
+                      <div className="px-4 py-2 text-xs border-b border-netflix-gray">
+                        <div className="text-netflix-text-gray">{user.email}</div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            isAdmin 
+                              ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white' 
+                              : isPremium 
+                              ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black' 
+                              : 'bg-gray-600 text-gray-300'
+                          }`}>
+                            {isAdmin ? 'Admin' : isPremium ? 'Premium' : 'Free'}
+                          </span>
+                        </div>
+                      </div>
+                      <Link
+                        href="/lich-su"
+                        onClick={() => setIsUserDropdownOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2 text-sm text-netflix-text-gray hover:text-netflix-white hover:bg-netflix-gray transition-colors"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Lịch sử xem
+                      </Link>
+                      <div className="border-t border-netflix-gray my-1"></div>
+                      <button 
+                        onClick={() => {
+                          signOut();
+                          setIsUserDropdownOpen(false);
+                        }}
+                        className="flex items-center gap-3 px-4 py-2 text-sm text-netflix-text-gray hover:text-netflix-white hover:bg-netflix-gray transition-colors w-full text-left"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        Đăng xuất
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            ) : (
+              /* Login Button */
+              <Link
+                href="/login"
+                className="px-4 py-2 bg-netflix-red hover:bg-netflix-red/80 text-white rounded-md transition-colors font-medium"
+              >
+                Đăng nhập
+              </Link>
+            )}
           </div>
 
           {/* Mobile Right Side */}

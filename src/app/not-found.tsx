@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
+// This component bypasses the main layout to avoid showing header/footer
 export default function NotFound() {
   const [mounted, setMounted] = useState(false);
 

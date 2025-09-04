@@ -4,6 +4,7 @@ import SmartResourceHints from "@/components/SmartResourceHints";
 import PreloadResources from "@/components/PreloadResources";
 import { resolveImageUrl } from "@/utils/ophim";
 import ContinueWatching from "@/components/ContinueWatching";
+import AdminPremiumProtectedRoute from "@/components/AdminPremiumProtectedRoute";
 
 interface Movie {
   name: string;
@@ -38,9 +39,9 @@ async function fetchCinemaMoviesData() {
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ||
       (process.env.NODE_ENV === 'production'
         ? 'https://movie4you-ver2.vercel.app'
-        : 'http://localhost:3000');
+        : 'http://localhost:3001');
     
-    console.log('Fetching from URL:', baseUrl);
+    // Fetching from configured URL
     
     // Fetch 6 movies at once with ISR caching
     const response = await fetch(
@@ -52,13 +53,11 @@ async function fetchCinemaMoviesData() {
     );
     
     if (!response.ok) {
-      console.error('Failed to fetch cinema movies:', response.status, response.statusText);
       return { heroMovies: [], cinemaMovies: [] };
     }
     
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
-      console.error('Response is not JSON, got:', contentType);
       return { heroMovies: [], cinemaMovies: [] };
     }
     
@@ -79,7 +78,7 @@ async function fetchCinemaMoviesData() {
       const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ||
         (process.env.NODE_ENV === 'production'
           ? 'https://movie4you-ver2.vercel.app'
-          : 'http://localhost:3000');
+          : 'http://localhost:3001');
       const detailResponse = await fetch(
         `${baseUrl}/api/ophim/v1/api/phim/${(movie as Record<string, { slug?: string }>).slug}`,
         { cache: 'no-store' }
@@ -115,7 +114,6 @@ async function fetchCinemaMoviesData() {
         modified: movieDetail.modified || movie.modified || { time: new Date().toISOString() }
       } as Movie;
     } catch (error) {
-      console.error('Error fetching first movie details:', error);
       firstMovie = movie as Movie;
     }
 
@@ -127,7 +125,7 @@ async function fetchCinemaMoviesData() {
           const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ||
             (process.env.NODE_ENV === 'production'
               ? 'https://movie4you-ver2.vercel.app'
-              : 'http://localhost:3000');
+              : 'http://localhost:3001');
           const res = await fetch(
             `${baseUrl}/api/ophim/v1/api/phim/${(m as Record<string, { slug?: string }>).slug}`,
             { cache: 'no-store' }
@@ -163,7 +161,6 @@ async function fetchCinemaMoviesData() {
             modified: detail.modified || m.modified || { time: new Date().toISOString() }
           } as Movie;
         } catch (error) {
-          console.error('Error fetching movie details:', error);
           return m as unknown as Movie;
         }
       })
@@ -175,7 +172,6 @@ async function fetchCinemaMoviesData() {
       cinemaMovies: allMovies
     };
   } catch (error) {
-    console.error('Error fetching cinema movies:', error);
     return { heroMovies: [], cinemaMovies: [] };
   }
 }
@@ -184,7 +180,7 @@ export default async function Home() {
   const { heroMovies } = await fetchCinemaMoviesData();
 
   return (
-    <>
+    <AdminPremiumProtectedRoute>
       {/* Smart resource hints - only load when needed */}
       <SmartResourceHints enableImagePreconnect={true} enableAPIPreload={true} />
 
@@ -234,6 +230,6 @@ export default async function Home() {
         slug="hoat-hinh"
         viewAllUrl="/category/hoat-hinh"
       />
-    </>
+    </AdminPremiumProtectedRoute>
   );
 }

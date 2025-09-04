@@ -1,3 +1,4 @@
+import AdminPremiumProtectedRoute from "@/components/AdminPremiumProtectedRoute";
 import CategoryClient from "./CategoryClient";
 
 function slugTitle(slug: string) {
@@ -56,11 +57,13 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   const title = slugTitle(slug);
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 pt-24 pb-8 space-y-6">
-      <CategoryClient
-        slug={slug}
-        title={title}
-      />
-    </div>
+    <AdminPremiumProtectedRoute>
+      <div className="px-4 sm:px-6 lg:px-8 pt-24 pb-8 space-y-6">
+        <CategoryClient
+          slug={slug}
+          title={title}
+        />
+      </div>
+    </AdminPremiumProtectedRoute>
   );
 }

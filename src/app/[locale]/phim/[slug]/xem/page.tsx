@@ -192,60 +192,21 @@ export default function WatchMovie({ params }: { params: Promise<{ slug: string 
   // Save on page/tab exit with current playback time
   useEffect(() => {
     const onUnloadOrHide = () => {
-      // Use direct save instead of saveHistory callback to avoid dependency issues
-      if (movie && currentPlaybackTime > 0) {
-        try {
-          // Save to localStorage immediately (synchronous)
-          WatchHistoryManager.saveProgress({
-            movieId: movie._id,
-            movieName: movie.name,
-            movieSlug: movie.slug,
-            posterUrl: movie.poster_url?.replace('https://img.ophim.live/uploads/movies/', '') || '',
-            episodeIndex: selectedEpisode,
-            episodeName: getCurrentVideoSource().videoTitle || `Tập ${selectedEpisode + 1}`,
-            serverIndex: selectedServer,
-            currentTime: currentPlaybackTime,
-            duration: videoDuration
-          });
-
-          // Save to Supabase if authenticated (async but fire-and-forget)
-          if (user) {
-            watchProgressService.saveProgress({
-              movie_id: movie._id,
-              movie_name: movie.name,
-              movie_slug: movie.slug,
-              poster_url: movie.poster_url?.replace('https://img.ophim.live/uploads/movies/', '') || '',
-              episode_index: selectedEpisode,
-              episode_name: getCurrentVideoSource().videoTitle || `Tập ${selectedEpisode + 1}`,
-              server_index: selectedServer,
-              progress_seconds: currentPlaybackTime,
-              duration_seconds: videoDuration,
-            }).catch(() => {}); // Silent error handling
-          }
-        } catch (error) {
-          // Silent error handling
-        }
-      }
+      saveHistory({
+        currentTime: currentPlaybackTime,
+        duration: videoDuration
+      });
     };
-
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      onUnloadOrHide();
+    window.addEventListener('beforeunload', onUnloadOrHide);
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') onUnloadOrHide();
     };
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        onUnloadOrHide();
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
+    document.addEventListener('visibilitychange', onVisibilityChange);
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', onUnloadOrHide);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
     };
-  }, [movie, currentPlaybackTime, videoDuration, selectedEpisode, selectedServer, user]);
+  }, [saveHistory, currentPlaybackTime, videoDuration]);
 
   // Load saved progress when movie and initial selections are ready
   useEffect(() => {
@@ -256,41 +217,33 @@ export default function WatchMovie({ params }: { params: Promise<{ slug: string 
       
       // Try to load from Supabase first if user is authenticated
       if (user) {
-        try {
-          const supabaseProgress = await watchProgressService.getProgress(
-            movie._id,
-            selectedEpisode,
-            selectedServer
-          );
-          
-          if (supabaseProgress) {
-            savedProgress = {
-              currentTime: supabaseProgress.progress_seconds,
-              duration: supabaseProgress.duration_seconds
-            };
-          }
-        } catch (error) {
-          // Silent error handling for Supabase issues
+        const supabaseProgress = await watchProgressService.getProgress(
+          movie._id,
+          selectedEpisode,
+          selectedServer
+        );
+        
+        if (supabaseProgress) {
+          savedProgress = {
+            currentTime: supabaseProgress.progress_seconds,
+            duration: supabaseProgress.duration_seconds
+          };
         }
       }
       
       // Fallback to localStorage if no Supabase data
       if (!savedProgress) {
-        try {
-          const localProgress = WatchHistoryManager.getProgress(
-            movie._id,
-            selectedEpisode,
-            selectedServer
-          );
-          
-          if (localProgress) {
-            savedProgress = {
-              currentTime: localProgress.currentTime,
-              duration: localProgress.duration
-            };
-          }
-        } catch (error) {
-          // Silent error handling for localStorage issues
+        const localProgress = WatchHistoryManager.getProgress(
+          movie._id,
+          selectedEpisode,
+          selectedServer
+        );
+        
+        if (localProgress) {
+          savedProgress = {
+            currentTime: localProgress.currentTime,
+            duration: localProgress.duration
+          };
         }
       }
       
@@ -302,7 +255,7 @@ export default function WatchMovie({ params }: { params: Promise<{ slug: string 
     };
     
     loadProgress();
-    // FIXED: Removed saveHistory from deps to prevent infinite loop
+    // Note: saveHistory removed from deps to avoid infinite loop
   }, [movie, selectedEpisode, selectedServer, user]);
 
   const getCurrentVideoSource = () => {
@@ -572,17 +525,9 @@ export default function WatchMovie({ params }: { params: Promise<{ slug: string 
       
       <div className="pt-16 pb-8">
         <div className="container mx-auto px-4">
-          {/* Title and Back button */}
-          <div className="flex items-center justify-between mb-4">
+          {/* Title */}
+          <div className="mb-4">
             <h1 className="text-2xl md:text-3xl font-bold text-white">{movie.name}</h1>
-            <Link 
-              href={`/phim/${movie.slug}`}
-              className="text-gray-400 hover:text-white transition-colors flex items-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              Quay lại
-            </Link>
           </div>
 
           {/* Video Player */}
@@ -602,56 +547,37 @@ export default function WatchMovie({ params }: { params: Promise<{ slug: string 
                 }}
                 startTime={savedStartTime}
                 onTimeUpdate={(currentTime, duration) => {
-                  // Update playback state
-                  setCurrentPlaybackTime(currentTime);
-                  setVideoDuration(duration);
-                  
-                  // Save progress every 10 seconds to avoid excessive calls
-                  if (currentTime > 0 && duration > 0 && Math.abs(currentTime - currentPlaybackTime) >= 10) {
+                  // Save to localStorage immediately (every 5 seconds)
+                  // Save to Supabase less frequently to reduce server load
+                  if (currentTime > 0 && duration > 0 && Math.abs(currentTime - currentPlaybackTime) >= 5) {
                     // Always save to localStorage immediately for better UX
                     if (movie) {
-                      try {
-                        WatchHistoryManager.saveProgress({
-                          movieId: movie._id,
-                          movieName: movie.name,
-                          movieSlug: movie.slug,
-                          posterUrl: movie.poster_url?.replace('https://img.ophim.live/uploads/movies/', '') || '',
-                          episodeIndex: selectedEpisode,
-                          episodeName: getCurrentVideoSource().videoTitle || `Tập ${selectedEpisode + 1}`,
-                          serverIndex: selectedServer,
-                          currentTime: currentTime,
-                          duration: duration
-                        });
-                      } catch (error) {
-                        // Silent error handling
-                      }
+                      WatchHistoryManager.saveProgress({
+                        movieId: movie._id,
+                        movieName: movie.name,
+                        movieSlug: movie.slug,
+                        posterUrl: movie.poster_url || '',
+                        episodeIndex: selectedEpisode,
+                        episodeName: getCurrentVideoSource().videoTitle || `Tập ${selectedEpisode + 1}`,
+                        serverIndex: selectedServer,
+                        currentTime: currentTime,
+                        duration: duration
+                      });
                     }
-                    
-                    // Save to Supabase only every 2 minutes to reduce server load
+
+                    // Save to Supabase only every 10 minutes to reduce server load
                     const now = Date.now();
-                    const saveKey = `supabase_last_save_${movie?._id}_${selectedEpisode}_${selectedServer}`;
-                    const lastSupabaseSave = localStorage.getItem(saveKey);
-                    const shouldSaveToSupabase = !lastSupabaseSave || (now - parseInt(lastSupabaseSave)) > 120000; // 2 minutes
-                    
-                    if (shouldSaveToSupabase && user && movie) {
-                      try {
-                        watchProgressService.saveProgress({
-                          movie_id: movie._id,
-                          movie_name: movie.name,
-                          movie_slug: movie.slug,
-                          poster_url: movie.poster_url?.replace('https://img.ophim.live/uploads/movies/', '') || '',
-                          episode_index: selectedEpisode,
-                          episode_name: getCurrentVideoSource().videoTitle || `Tập ${selectedEpisode + 1}`,
-                          server_index: selectedServer,
-                          progress_seconds: currentTime,
-                          duration_seconds: duration,
-                        }).catch(() => {}); // Silent error handling
-                        localStorage.setItem(saveKey, now.toString());
-                      } catch (error) {
-                        // Silent error handling
-                      }
+                    const lastSupabaseSave = localStorage.getItem(`supabase_last_save_${movie?._id}_${selectedEpisode}_${selectedServer}`);
+                    const shouldSaveToSupabase = !lastSupabaseSave || (now - parseInt(lastSupabaseSave)) > 600000; // 10 minutes
+
+                    if (shouldSaveToSupabase && user) {
+                      saveHistory({
+                        currentTime: currentTime,
+                        duration: duration
+                      });
+                      localStorage.setItem(`supabase_last_save_${movie?._id}_${selectedEpisode}_${selectedServer}`, now.toString());
                     }
-                    
+
                     setCurrentPlaybackTime(currentTime);
                     setVideoDuration(duration);
                   }

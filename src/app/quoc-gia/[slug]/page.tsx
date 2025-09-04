@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import AdminPremiumProtectedRoute from '@/components/AdminPremiumProtectedRoute';
 import CategoryClient from './CategoryClient';
 
 export const dynamic = "force-dynamic";
@@ -100,11 +101,13 @@ export default async function CountryPage({ params }: { params: Promise<{ slug: 
   const countryName = countryNames[slug] || slug.charAt(0).toUpperCase() + slug.slice(1);
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 pt-24 pb-8 space-y-6">
-      <CategoryClient
-        slug={slug}
-        title={`Phim ${countryName}`}
-      />
-    </div>
+    <AdminPremiumProtectedRoute>
+      <div className="px-4 sm:px-6 lg:px-8 pt-24 pb-8 space-y-6">
+        <CategoryClient
+          slug={slug}
+          title={`Phim ${countryName}`}
+        />
+      </div>
+    </AdminPremiumProtectedRoute>
   );
 }

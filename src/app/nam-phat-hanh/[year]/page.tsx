@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import AdminPremiumProtectedRoute from '@/components/AdminPremiumProtectedRoute';
 import CategoryClient from './CategoryClient';
 
 export const dynamic = "force-dynamic";
@@ -22,11 +23,13 @@ export default async function YearPage({ params }: { params: Promise<{ year: str
   // Future use: const resolvedSearchParams = await searchParams;
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 pt-24 pb-8 space-y-6">
-      <CategoryClient
-        year={year}
-        title={`Phim năm ${year}`}
-      />
-    </div>
+    <AdminPremiumProtectedRoute>
+      <div className="px-4 sm:px-6 lg:px-8 pt-24 pb-8 space-y-6">
+        <CategoryClient
+          year={year}
+          title={`Phim năm ${year}`}
+        />
+      </div>
+    </AdminPremiumProtectedRoute>
   );
 }

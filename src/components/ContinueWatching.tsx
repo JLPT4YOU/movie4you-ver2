@@ -4,14 +4,17 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { WatchHistoryManager, WatchHistoryItem } from '@/utils/watchHistory';
+import { watchProgressService, WatchProgress } from '@/services/watchProgressService';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function ContinueWatching() {
-  const [watchHistory, setWatchHistory] = useState<WatchHistoryItem[]>([]);
+  const { user } = useAuth();
+  const [watchHistory, setWatchHistory] = useState<(WatchHistoryItem | WatchProgress)[]>([]);
   const [mounted, setMounted] = useState(false);
 
-  const getProgressPercent = (item: WatchHistoryItem) => {
-    const duration = Math.max(1, Math.floor(item.duration || 0));
-    const current = Math.max(0, Math.floor(item.currentTime || 0));
+  const getProgressPercent = (item: WatchHistoryItem | WatchProgress) => {
+    const duration = Math.max(1, Math.floor('duration' in item ? item.duration : item.duration_seconds || 0));
+    const current = Math.max(0, Math.floor('currentTime' in item ? item.currentTime : item.progress_seconds || 0));
     const percent = Math.min(100, Math.max(0, Math.round((current / duration) * 100)));
     return percent;
   };
@@ -19,10 +22,22 @@ export default function ContinueWatching() {
   useEffect(() => {
     setMounted(true);
     
-    const loadHistory = () => {
-      const history = WatchHistoryManager.getWatchedMovies();
-      // Show all recent movies (not filtering by progress since we can't track it with iframe)
-      setWatchHistory(history.slice(0, 12));
+    const loadHistory = async () => {
+      let history: (WatchHistoryItem | WatchProgress)[] = [];
+      
+      // Load from Supabase if user is authenticated
+      if (user) {
+        const supabaseHistory = await watchProgressService.getWatchedMovies();
+        history = supabaseHistory.slice(0, 12);
+      }
+      
+      // Fallback to localStorage if no Supabase data or not authenticated
+      if (history.length === 0) {
+        const localHistory = WatchHistoryManager.getWatchedMovies();
+        history = localHistory.slice(0, 12);
+      }
+      
+      setWatchHistory(history);
     };
 
     loadHistory();
@@ -34,7 +49,7 @@ export default function ContinueWatching() {
     return () => {
       window.removeEventListener('focus', handleFocus);
     };
-  }, []);
+  }, [user]);
 
   // Don't render on server or if no history
   if (!mounted || watchHistory.length === 0) {
@@ -61,15 +76,15 @@ export default function ContinueWatching() {
         >
           {watchHistory.map((item) => (
             <div 
-              key={`${item.movieId}-${item.episodeIndex}`} 
+              key={`${'movieId' in item ? item.movieId : item.movie_id}-${'episodeIndex' in item ? item.episodeIndex : item.episode_index}`} 
               className="flex-none w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5 xl:w-1/6 min-w-[160px]"
             >
-              <Link href={`/phim/${item.movieSlug}/xem`}>
+              <Link href={`/phim/${'movieSlug' in item ? item.movieSlug : item.movie_slug}/xem`}>
                 <div className="group relative">
                   <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-netflix-gray">
                     <Image
-                      src={`https://img.ophim.live/uploads/movies/${item.posterUrl}`}
-                      alt={item.movieName}
+                      src={`https://img.ophim.live/uploads/movies/${'posterUrl' in item ? item.posterUrl : item.poster_url}`}
+                      alt={'movieName' in item ? item.movieName : item.movie_name}
                       fill
                       sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
                       className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -99,18 +114,18 @@ export default function ContinueWatching() {
                   
                   <div className="mt-3">
                     <h3 className="text-white font-medium text-sm line-clamp-2 group-hover:text-netflix-red transition-colors">
-                      {item.movieName}
+                      {'movieName' in item ? item.movieName : item.movie_name}
                     </h3>
-                    {item.episodeName !== 'Full' && (
+                    {(('episodeName' in item ? item.episodeName : item.episode_name) !== 'Full') && (
                       <div className="text-xs text-gray-400 mt-1">
-                        Tập {item.episodeName}
+                        Tập {'episodeName' in item ? item.episodeName : item.episode_name}
                       </div>
                     )}
                     <div className="text-[11px] text-gray-400 mt-1">
-                      Tiếp tục: {WatchHistoryManager.formatTime(item.currentTime)} / {WatchHistoryManager.formatTime(item.duration)}
+                      Tiếp tục: {WatchHistoryManager.formatTime('currentTime' in item ? item.currentTime : item.progress_seconds)} / {WatchHistoryManager.formatTime('duration' in item ? item.duration : item.duration_seconds)}
                     </div>
                     <div className="text-xs text-gray-500 mt-1">
-                      {WatchHistoryManager.formatRelativeTime(item.watchedAt)}
+                      {WatchHistoryManager.formatRelativeTime('watchedAt' in item ? item.watchedAt : item.watched_at || '')}
                     </div>
                   </div>
                 </div>
