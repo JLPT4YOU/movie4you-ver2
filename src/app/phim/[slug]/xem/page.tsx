@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback, use } from 'react';
 import Link from 'next/link';
 import { MovieDetail } from '@/types/movie';
 import Header from '@/components/Header';
@@ -67,9 +67,9 @@ const AdBlockerNotification = ({ isOpen, onClose }: { isOpen: boolean; onClose: 
 
 
 
-export default function WatchMovie({ params }: { params: { slug: string } }) {
+export default function WatchMovie({ params }: { params: Promise<{ slug: string }> }) {
   const { user } = useAuth();
-  const resolvedParams = params;
+  const resolvedParams = use(params);
 
   const [movie, setMovie] = useState<MovieDetail | null>(null);
   const [loading, setLoading] = useState(true);
