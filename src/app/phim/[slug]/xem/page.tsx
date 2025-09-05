@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback, use } from 'react';
-import { useParams } from 'next/navigation';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { MovieDetail } from '@/types/movie';
 import Header from '@/components/Header';
@@ -68,9 +67,9 @@ const AdBlockerNotification = ({ isOpen, onClose }: { isOpen: boolean; onClose: 
 
 
 
-export default function WatchMovie({ params }: { params: Promise<{ slug: string }> }) {
+export default function WatchMovie({ params }: { params: { slug: string } }) {
   const { user } = useAuth();
-  const resolvedParams = use(params);
+  const resolvedParams = params;
 
   const [movie, setMovie] = useState<MovieDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -89,6 +88,7 @@ export default function WatchMovie({ params }: { params: Promise<{ slug: string 
   const [savedStartTime, setSavedStartTime] = useState(0);
 
   const videoRef = useRef<HTMLIFrameElement>(null);
+  const lastSessionSaveRef = useRef<number>(0);
 
   const saveHistory = useCallback(async (overrides?: {
     source?: 'ophim' | 'phimapi' | 'nguonc' | 'mappletv' | 'videasy' | 'vidlink' | 'vidfast';
@@ -252,54 +252,45 @@ export default function WatchMovie({ params }: { params: Promise<{ slug: string 
     if (!movie) return;
     
     const loadProgress = async () => {
-      let savedProgress = null;
-      
-      // Try to load from Supabase first if user is authenticated
+      let canonicalProgress: { currentTime: number; duration: number } | null = null;
+      let sessionProgress: { currentTime: number; duration: number; savedAt: number } | null = null;
+
+      // 1. Get canonical progress from Supabase (first) or localStorage (fallback)
       if (user) {
-        try {
-          const supabaseProgress = await watchProgressService.getProgress(
-            movie._id,
-            selectedEpisode,
-            selectedServer
-          );
-          
-          if (supabaseProgress) {
-            savedProgress = {
-              currentTime: supabaseProgress.progress_seconds,
-              duration: supabaseProgress.duration_seconds
-            };
-          }
-        } catch (error) {
-          // Silent error handling for Supabase issues
+        const supabaseProgress = await watchProgressService.getProgress(movie._id, selectedEpisode, selectedServer);
+        if (supabaseProgress && supabaseProgress.progress_seconds > 0) {
+          canonicalProgress = { currentTime: supabaseProgress.progress_seconds, duration: supabaseProgress.duration_seconds };
+        }
+      } else {
+        const localProgress = WatchHistoryManager.getProgress(movie._id, selectedEpisode, selectedServer);
+        if (localProgress && localProgress.currentTime > 0) {
+          canonicalProgress = { currentTime: localProgress.currentTime, duration: localProgress.duration };
         }
       }
-      
-      // Fallback to localStorage if no Supabase data
-      if (!savedProgress) {
-        try {
-          const localProgress = WatchHistoryManager.getProgress(
-            movie._id,
-            selectedEpisode,
-            selectedServer
-          );
-          
-          if (localProgress) {
-            savedProgress = {
-              currentTime: localProgress.currentTime,
-              duration: localProgress.duration
-            };
-          }
-        } catch (error) {
-          // Silent error handling for localStorage issues
-        }
+
+      // 2. Get latest session progress for crash recovery
+      try {
+        const sessionKey = `session_progress_${movie._id}_${selectedEpisode}_${selectedServer}`;
+        const sessionStr = sessionStorage.getItem(sessionKey);
+        if (sessionStr) sessionProgress = JSON.parse(sessionStr);
+      } catch {}
+
+      // 3. Decide which progress to use
+      let finalProgress = canonicalProgress;
+      // If session progress is more recent than canonical, use it instead.
+      if (sessionProgress && canonicalProgress && sessionProgress.currentTime > canonicalProgress.currentTime) {
+        finalProgress = sessionProgress;
+      } else if (sessionProgress && !canonicalProgress) {
+        finalProgress = sessionProgress;
       }
-      
-      if (savedProgress && savedProgress.currentTime > 0) {
-        setSavedStartTime(savedProgress.currentTime);
-        setCurrentPlaybackTime(savedProgress.currentTime);
-        setVideoDuration(savedProgress.duration);
+
+      if (finalProgress && finalProgress.currentTime > 0) {
+        setSavedStartTime(finalProgress.currentTime);
+        setCurrentPlaybackTime(finalProgress.currentTime);
+        setVideoDuration(finalProgress.duration);
       }
     };
+
     
     loadProgress();
     // FIXED: Removed saveHistory from deps to prevent infinite loop
@@ -597,7 +588,8 @@ export default function WatchMovie({ params }: { params: Promise<{ slug: string 
                 showLogo={selectedSource === 'ophim' || selectedSource === 'phimapi'}
                 logoSrc="/logo.png"
                 onError={() => {
-                  // Auto-fallback to next preferred Vietsub server
+                  // Save current progress before switching server, then auto-fallback
+                  saveHistory({ currentTime: currentPlaybackTime, duration: videoDuration });
                   fallbackToNextPreferredServer();
                 }}
                 startTime={savedStartTime}
@@ -605,7 +597,17 @@ export default function WatchMovie({ params }: { params: Promise<{ slug: string 
                   // Update playback state
                   setCurrentPlaybackTime(currentTime);
                   setVideoDuration(duration);
-                  
+
+                  // Crash-proof: store to sessionStorage every ~3s
+                  try {
+                    const now = Date.now();
+                    if (now - lastSessionSaveRef.current >= 3000 && movie) {
+                      const sessionKey = `session_progress_${movie._id}_${selectedEpisode}_${selectedServer}`;
+                      sessionStorage.setItem(sessionKey, JSON.stringify({ currentTime, duration, savedAt: now }));
+                      lastSessionSaveRef.current = now;
+                    }
+                  } catch {}
+
                   // Save progress every 10 seconds to avoid excessive calls
                   if (currentTime > 0 && duration > 0 && Math.abs(currentTime - currentPlaybackTime) >= 10) {
                     // Always save to localStorage immediately for better UX

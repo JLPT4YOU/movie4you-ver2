@@ -17,14 +17,20 @@ export default function AdminPremiumProtectedRoute({
   const router = useRouter()
 
   useEffect(() => {
-    if (!loading) {
-      if (!user) {
-        // Not logged in - redirect to login without adding history entry
-        router.replace(redirectTo)
-      } else if (!isAuthorized) {
-        // Not authorized - redirect to login (free users are blocked in AuthContext)
-        router.replace('/login')
-      }
+    if (loading) return;
+
+    if (!user) {
+      // Not logged in - redirect to login without adding history entry
+      router.replace(redirectTo);
+      return;
+    }
+
+    // Wait until userProfile is loaded before deciding authorization to avoid false negatives
+    if (!userProfile) return;
+
+    if (!isAuthorized) {
+      // Not authorized - redirect to login (free users are blocked in AuthContext)
+      router.replace('/login');
     }
   }, [user, userProfile, isAuthorized, loading, router, redirectTo])
 
