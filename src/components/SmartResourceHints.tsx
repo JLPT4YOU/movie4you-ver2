@@ -7,18 +7,25 @@ interface SmartResourceHintsProps {
   enableAPIPreload?: boolean;
 }
 
-export default function SmartResourceHints({ 
+export default function SmartResourceHints({
   enableImagePreconnect = false,
-  enableAPIPreload = false 
+  enableAPIPreload = false
 }: SmartResourceHintsProps) {
   useEffect(() => {
+    const createdLinks: HTMLLinkElement[] = [];
+
     // Only add resource hints when they're actually needed
     if (enableImagePreconnect) {
-      // Add preconnect for img.ophim.live only when images are about to load
-      const link = document.createElement('link');
-      link.rel = 'preconnect';
-      link.href = 'https://wsrv.nl';
-      document.head.appendChild(link);
+      // Avoid duplicating preconnect if already present in <head>
+      const existing = Array.from(document.querySelectorAll('link[rel="preconnect"]'))
+        .some((el) => (el as HTMLLinkElement).href?.startsWith('https://wsrv.nl'));
+      if (!existing) {
+        const link = document.createElement('link');
+        link.rel = 'preconnect';
+        link.href = 'https://wsrv.nl';
+        document.head.appendChild(link);
+        createdLinks.push(link);
+      }
     }
 
     if (enableAPIPreload) {
@@ -47,6 +54,11 @@ export default function SmartResourceHints({
       });
     }
 
+    return () => {
+      createdLinks.forEach((l) => {
+        try { document.head.removeChild(l); } catch {}
+      })
+    }
   }, [enableImagePreconnect, enableAPIPreload]);
 
   return null;

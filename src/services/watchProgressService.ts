@@ -17,7 +17,7 @@ export interface WatchProgress {
   updated_at?: string;
 }
 
-export class WatchProgressService {
+class WatchProgressService {
   private supabase = supabase;
   private static MAX_HISTORY_ITEMS = 50;
 
@@ -47,7 +47,7 @@ export class WatchProgressService {
       }
 
       return { data, error: null };
-    } catch (error) {
+    } catch (_error) {
       return { error: 'Failed to save progress' };
     }
   }
@@ -70,7 +70,7 @@ export class WatchProgressService {
       }
 
       return data || [];
-    } catch (error) {
+    } catch (_error) {
       return [];
     }
   }
@@ -95,7 +95,7 @@ export class WatchProgressService {
       }
 
       return data || null;
-    } catch (error) {
+    } catch (_error) {
       return null;
     }
   }
@@ -120,7 +120,7 @@ export class WatchProgressService {
       }
 
       return data || null;
-    } catch (error) {
+    } catch (_error) {
       return null;
     }
   }
@@ -173,7 +173,7 @@ export class WatchProgressService {
       }
 
       return { error: null };
-    } catch (error) {
+    } catch (_error) {
       return { error: 'Failed to remove movie' };
     }
   }
@@ -194,7 +194,7 @@ export class WatchProgressService {
       }
 
       return { error: null };
-    } catch (error) {
+    } catch (_error) {
       return { error: 'Failed to clear history' };
     }
   }

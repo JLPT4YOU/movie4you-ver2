@@ -21,7 +21,7 @@ export default function MobileMenu({
   isOpen,
   onClose,
 }: MobileMenuProps) {
-  const { user, userProfile, isPremium, isAdmin, signOut } = useAuth();
+  const { user, isPremium, isAdmin, signOut } = useAuth();
   // Dropdown states
   const [dropdownStates, setDropdownStates] = useState({
     categories: false,
@@ -47,7 +47,11 @@ export default function MobileMenu({
 
     setLoading(prev => ({ ...prev, categories: true }));
     try {
-      const response = await fetch('/api/ophim/v1/api/the-loai');
+      const response = await fetch('/api/ophim/v1/api/the-loai', {
+        headers: { accept: 'application/json' },
+        cache: 'force-cache',
+        next: { revalidate: 3600 }
+      });
       if (response.ok) {
         const data = await response.json();
         let itemsArray: DropdownItem[] = [];
@@ -78,7 +82,11 @@ export default function MobileMenu({
 
     setLoading(prev => ({ ...prev, countries: true }));
     try {
-      const response = await fetch('/api/ophim/v1/api/quoc-gia');
+      const response = await fetch('/api/ophim/v1/api/quoc-gia', {
+        headers: { accept: 'application/json' },
+        cache: 'force-cache',
+        next: { revalidate: 3600 }
+      });
       if (response.ok) {
         const data = await response.json();
         let itemsArray: DropdownItem[] = [];
@@ -109,7 +117,11 @@ export default function MobileMenu({
 
     setLoading(prev => ({ ...prev, years: true }));
     try {
-      const response = await fetch('/api/ophim/v1/api/nam-phat-hanh');
+      const response = await fetch('/api/ophim/v1/api/nam-phat-hanh', {
+        headers: { accept: 'application/json' },
+        cache: 'force-cache',
+        next: { revalidate: 3600 }
+      });
       if (response.ok) {
         const data = await response.json();
         let itemsArray: DropdownItem[] = [];

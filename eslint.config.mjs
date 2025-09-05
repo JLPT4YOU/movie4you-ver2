@@ -14,9 +14,16 @@ const eslintConfig = [
   {
     rules: {
       "@typescript-eslint/no-explicit-any": "warn",
-      "@typescript-eslint/no-unused-vars": "warn",
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }
+      ],
       "@next/next/no-img-element": "warn",
-      "react/no-unescaped-entities": "warn"
+      "react/no-unescaped-entities": "warn",
+      // Safer hooks usage
+      "react-hooks/exhaustive-deps": "warn",
+      // Keep console clean in production but allow error/warn during dev
+      "no-console": ["warn", { allow: ["warn", "error"] }]
     }
   }
 ];

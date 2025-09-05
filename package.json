@@ -8,8 +8,18 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "lint:fix": "next lint --fix",
+    "typecheck": "tsc --noEmit",
+    "analyze": "ANALYZE=true next build",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "knip": "knip",
+    "ts-prune": "ts-prune",
     "test": "vitest",
-    "test:watch": "vitest --watch"
+    "test:coverage": "vitest --coverage",
+    "test:watch": "vitest --watch",
+    "prepare": "husky",
+    "lhci:ci": "lhci autorun --upload.target=temporary-public-storage"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.0",
@@ -19,6 +29,7 @@
     "next": "15.4.6",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "server-only": "^0.0.1",
     "sharp": "^0.34.3"
   },
   "devDependencies": {
@@ -33,9 +44,23 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.4.6",
+    "husky": "^9",
     "jsdom": "^25.0.0",
+    "knip": "^5",
+    "lint-staged": "^15",
+    "postcss": "^8",
+    "prettier": "^3",
     "tailwindcss": "^4",
+    "ts-prune": "^0.10.3",
     "typescript": "^5",
-    "vitest": "^2.0.5"
+    "vitest": "^2.0.5",
+    "@lhci/cli": "^0.13.0",
+    "@vitest/coverage-v8": "^2.0.5"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,css,md}": [
+      "prettier --write",
+      "eslint --fix --max-warnings=0"
+    ]
   }
 }

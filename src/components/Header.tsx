@@ -3,16 +3,19 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { IconSearch, IconBell, IconMenu, IconX } from "./icons";
-import SearchPopup from "./SearchPopup";
 import LazyDropdown from "./LazyDropdown";
 import MobileMenu from "./MobileMenu";
 import { useAuth } from "@/contexts/AuthContext";
 
+// Lazy-load heavy/rarely used overlays to reduce initial bundle
+const SearchPopup = dynamic(() => import("./SearchPopup"));
+
 // Interfaces moved to LazyDropdown component
 
 export default function Header() {
-  const { user, userProfile, isPremium, isAdmin, signOut } = useAuth();
+  const { user, isPremium, isAdmin, signOut } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   
   // Data states - removed, now handled by LazyDropdown
@@ -35,23 +38,21 @@ export default function Header() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Close dropdowns when clicking outside
+  // Close overlays when clicking outside (dropdowns self-manage outside-click)
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
-      if (!target.closest('.category-dropdown')) setIsCategoryDropdownOpen(false);
-      if (!target.closest('.country-dropdown')) setIsCountryDropdownOpen(false);
-      if (!target.closest('.year-dropdown')) setIsYearDropdownOpen(false);
+      // Let LazyDropdown handle itself; only close global overlays here
       if (!target.closest('.mobile-menu')) setIsMobileMenuOpen(false);
       if (!target.closest('.user-dropdown')) setIsUserDropdownOpen(false);
       if (!target.closest('.search-popup')) setIsSearchOpen(false);
     };
 
-    if (isCategoryDropdownOpen || isCountryDropdownOpen || isYearDropdownOpen || isMobileMenuOpen || isUserDropdownOpen || isSearchOpen) {
+    if (isMobileMenuOpen || isUserDropdownOpen || isSearchOpen) {
       document.addEventListener('click', handleClickOutside);
       return () => document.removeEventListener('click', handleClickOutside);
     }
-  }, [isCategoryDropdownOpen, isCountryDropdownOpen, isYearDropdownOpen, isMobileMenuOpen, isUserDropdownOpen, isSearchOpen]);
+  }, [isMobileMenuOpen, isUserDropdownOpen, isSearchOpen]);
 
   return (
     <header className={`fixed top-0 inset-x-0 z-50 transition-colors ${

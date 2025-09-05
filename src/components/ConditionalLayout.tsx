@@ -4,8 +4,11 @@ import React from 'react'
 import { usePathname } from 'next/navigation'
 import Header from './Header'
 import Footer from './Footer'
-import GlobalTrailer from './GlobalTrailer'
+import dynamic from 'next/dynamic'
 import { useIsNotFound } from '@/hooks/useIsNotFound'
+
+// Lazy-load global trailer overlay to reduce initial bundle
+const GlobalTrailer = dynamic(() => import('./GlobalTrailer'))
 
 interface ConditionalLayoutProps {
   children: React.ReactNode
@@ -14,9 +17,8 @@ interface ConditionalLayoutProps {
 export default function ConditionalLayout({ children }: ConditionalLayoutProps) {
   const pathname = usePathname()
   const isNotFound = useIsNotFound()
-  
+
   // Pages that should not have header/footer
-  const noLayoutPages = ['/login']
   const isLoginPage = pathname === '/login' || pathname?.endsWith('/login')
   const shouldHideLayout = isLoginPage || isNotFound
 

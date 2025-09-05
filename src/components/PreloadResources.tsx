@@ -9,6 +9,8 @@ interface PreloadResourcesProps {
 
 export default function PreloadResources({ heroImageUrl, criticalImages = [] }: PreloadResourcesProps) {
   useEffect(() => {
+    const createdLinks: HTMLLinkElement[] = [];
+
     // Preload hero image with high priority
     if (heroImageUrl) {
       const link = document.createElement('link');
@@ -18,6 +20,7 @@ export default function PreloadResources({ heroImageUrl, criticalImages = [] }: 
       link.fetchPriority = 'high';
       link.crossOrigin = 'anonymous';
       document.head.appendChild(link);
+      createdLinks.push(link);
     }
 
     // Preload critical images
@@ -28,11 +31,17 @@ export default function PreloadResources({ heroImageUrl, criticalImages = [] }: 
       link.href = imageUrl;
       link.fetchPriority = index < 3 ? 'high' : 'low';
       document.head.appendChild(link);
+      createdLinks.push(link);
     });
 
-    // Only preload API endpoints that are actually used immediately
-    // Remove unused API preloads to avoid warnings
-
+    // Cleanup on unmount or when deps change
+    return () => {
+      createdLinks.forEach((link) => {
+        try {
+          document.head.removeChild(link);
+        } catch {}
+      });
+    };
   }, [heroImageUrl, criticalImages]);
 
   return null;
