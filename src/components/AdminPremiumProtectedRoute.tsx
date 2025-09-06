@@ -1,7 +1,7 @@
 'use client'
 
 import { useAuth } from '@/contexts/AuthContext'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 
 interface AdminPremiumProtectedRouteProps {
@@ -9,30 +9,29 @@ interface AdminPremiumProtectedRouteProps {
   redirectTo?: string
 }
 
-export default function AdminPremiumProtectedRoute({ 
-  children, 
+export default function AdminPremiumProtectedRoute({
+  children,
   redirectTo = '/login'
 }: AdminPremiumProtectedRouteProps) {
   const { user, userProfile, isAuthorized, loading } = useAuth()
   const router = useRouter()
+  const pathname = usePathname()
+  const isWatchPage = typeof pathname === 'string' && pathname.includes('/xem')
 
   useEffect(() => {
-    if (loading) return;
+    // On watch page: allow brief auth fluctuations (loading or profile not yet loaded)
+    if (isWatchPage && (loading || !userProfile)) return
 
-    if (!user) {
-      // Not logged in - redirect to login without adding history entry
-      router.replace(redirectTo);
-      return;
+    if (!user || !isAuthorized) {
+      router.replace(redirectTo)
     }
+  }, [user, userProfile, isAuthorized, loading, router, redirectTo, isWatchPage])
 
-    // Wait until userProfile is loaded before deciding authorization to avoid false negatives
-    if (!userProfile) return;
-
-    if (!isAuthorized) {
-      // Not authorized - redirect to login (free users are blocked in AuthContext)
-      router.replace('/login');
-    }
-  }, [user, userProfile, isAuthorized, loading, router, redirectTo])
+  // On the watch page, always render children to prevent playback interruption.
+  // If user ends up unauthorized once auth/profile are fully resolved, the effect above will navigate away.
+  if (isWatchPage) {
+    return <>{children}</>
+  }
 
   if (loading) {
     return (

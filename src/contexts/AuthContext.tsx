@@ -43,6 +43,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   // Fetch user profile from users table
+  // Important: Do NOT downgrade to Free on transient errors.
+  // Only return a Free profile when we are certain the row does not exist (PGRST116).
   const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
     try {
       const { data, error } = await supabase
@@ -52,10 +54,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single()
 
       if (error) {
-        // If user profile doesn't exist, create a default Free profile
         if (error.code === 'PGRST116') {
           // No rows returned - user doesn't exist in users table yet
-          // Return a default Free user profile
+          // Treat as explicit Free profile
           return {
             id: userId,
             email: '', // Will be filled by auth data
@@ -67,31 +68,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           } as UserProfile
         }
         console.error('Error fetching user profile:', error)
-        // For other errors, return Free user as fallback
-        return {
-          id: userId,
-          email: '',
-          role: 'Free',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          is_active: true,
-          balance: 0
-        } as UserProfile
+        // Transient/unknown error: return null so callers can preserve previous state
+        return null
       }
 
       return data as UserProfile
     } catch (error) {
       console.error('Error fetching user profile:', error)
-      // Return Free user profile as fallback
-      return {
-        id: userId,
-        email: '',
-        role: 'Free',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        is_active: true,
-        balance: 0
-      } as UserProfile
+      // Unexpected error: return null, do not treat as Free to avoid false sign-outs
+      return null
     }
   }
 
@@ -107,28 +92,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session)
       setUser(session?.user ?? null)
-      
+
       if (session?.user) {
         const profile = await fetchUserProfile(session.user.id)
-        setUserProfile(profile)
-        // Block Free users immediately if they still have a session
-        if (profile && profile.role === 'Free') {
-          // Free users: sign out silently and stay on current page (avoid flicker)
-          // Don't sign out if on watch page to avoid interrupting playback
-          const isWatchPage = typeof window !== 'undefined' && window.location.pathname.includes('/xem')
-          if (!isWatchPage) {
-            await supabase.auth.signOut()
+        if (profile) {
+          setUserProfile(profile)
+          // Block Free users immediately if they still have a session
+          if (profile.role === 'Free') {
+            // Free users: sign out silently and stay on current page (avoid flicker)
+            // Don't sign out if on watch page to avoid interrupting playback
+            const isWatchPage = typeof window !== 'undefined' && window.location.pathname.includes('/xem')
+            if (!isWatchPage) {
+              await supabase.auth.signOut()
+            }
+            setUser(null)
+            setUserProfile(null)
+            setSession(null)
+            setLoading(false) // Must set loading to false before return
+            return
           }
-          setUser(null)
-          setUserProfile(null)
-          setSession(null)
-          setLoading(false) // Fix: Must set loading to false before return
-          return
-        }
+        } // if profile is null due to transient error, keep previous userProfile to avoid flicker
       } else {
         setUserProfile(null)
       }
-      
+
       setLoading(false)
     })
 
@@ -146,22 +133,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (session?.user) {
         const profile = await fetchUserProfile(session.user.id)
-        setUserProfile(profile)
+        if (profile) {
+          setUserProfile(profile)
 
-        // Block Free users on any auth state change as well
-        if (profile && profile.role === 'Free') {
-          // Free users: sign out silently and stay on current page (avoid flicker)
-          // Don't sign out if on watch page to avoid interrupting playback
-          const isWatchPage = typeof window !== 'undefined' && window.location.pathname.includes('/xem')
-          if (!isWatchPage) {
-            await supabase.auth.signOut()
+          // Block Free users on any auth state change as well
+          if (profile.role === 'Free') {
+            // Free users: sign out silently and stay on current page (avoid flicker)
+            // Don't sign out if on watch page to avoid interrupting playback
+            const isWatchPage = typeof window !== 'undefined' && window.location.pathname.includes('/xem')
+            if (!isWatchPage) {
+              await supabase.auth.signOut()
+            }
+            setUser(null)
+            setUserProfile(null)
+            setSession(null)
+            setLoading(false) // Must set loading to false before return
+            return
           }
-          setUser(null)
-          setUserProfile(null)
-          setSession(null)
-          setLoading(false) // Fix: Must set loading to false before return
-          return
-        }
+        } // If profile is null (transient error), keep previous userProfile to avoid flicker
       } else {
         setUserProfile(null)
       }
