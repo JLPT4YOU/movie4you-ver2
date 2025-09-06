@@ -52,14 +52,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single()
 
       if (error) {
+        // If user profile doesn't exist, create a default Free profile
+        if (error.code === 'PGRST116') {
+          // No rows returned - user doesn't exist in users table yet
+          // Return a default Free user profile
+          return {
+            id: userId,
+            email: '', // Will be filled by auth data
+            role: 'Free',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            is_active: true,
+            balance: 0
+          } as UserProfile
+        }
         console.error('Error fetching user profile:', error)
-        return null
+        // For other errors, return Free user as fallback
+        return {
+          id: userId,
+          email: '',
+          role: 'Free',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          is_active: true,
+          balance: 0
+        } as UserProfile
       }
 
       return data as UserProfile
     } catch (error) {
       console.error('Error fetching user profile:', error)
-      return null
+      // Return Free user profile as fallback
+      return {
+        id: userId,
+        email: '',
+        role: 'Free',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        is_active: true,
+        balance: 0
+      } as UserProfile
     }
   }
 
@@ -82,10 +114,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Block Free users immediately if they still have a session
         if (profile && profile.role === 'Free') {
           // Free users: sign out silently and stay on current page (avoid flicker)
-          await supabase.auth.signOut()
+          // Don't sign out if on watch page to avoid interrupting playback
+          const isWatchPage = typeof window !== 'undefined' && window.location.pathname.includes('/xem')
+          if (!isWatchPage) {
+            await supabase.auth.signOut()
+          }
           setUser(null)
           setUserProfile(null)
           setSession(null)
+          setLoading(false) // Fix: Must set loading to false before return
           return
         }
       } else {
@@ -109,10 +146,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Block Free users on any auth state change as well
         if (profile && profile.role === 'Free') {
           // Free users: sign out silently and stay on current page (avoid flicker)
-          await supabase.auth.signOut()
+          // Don't sign out if on watch page to avoid interrupting playback
+          const isWatchPage = typeof window !== 'undefined' && window.location.pathname.includes('/xem')
+          if (!isWatchPage) {
+            await supabase.auth.signOut()
+          }
           setUser(null)
           setUserProfile(null)
           setSession(null)
+          setLoading(false) // Fix: Must set loading to false before return
           return
         }
       } else {
@@ -161,8 +203,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     await supabase.auth.signOut()
     setUserProfile(null)
-    // Redirect to login page after logout
-    window.location.href = '/login'
+    // Use Next.js router instead of window.location to avoid hard reload
+    // Only redirect if not on watch page to prevent interrupting video playback
+    if (typeof window !== 'undefined') {
+      const currentPath = window.location.pathname
+      const isWatchPage = currentPath.includes('/xem')
+      if (!isWatchPage) {
+        // Use router.push for client-side navigation
+        window.location.href = '/login'
+      }
+    }
   }
 
   // Check if user is premium
