@@ -116,7 +116,7 @@ export default function LoginForm({ isSignUp, onToggleMode }: LoginFormProps) {
           {error && (
             isFreeAccountError ? (
               <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-3 text-sm text-yellow-300">
-                Vui lòng nâng cấp lên{' '}
+                Your account is on the Free plan. Please upgrade to{' '}
                 <a
                   href="https://jlpt4you.com/premium"
                   target="_blank"
@@ -124,7 +124,7 @@ export default function LoginForm({ isSignUp, onToggleMode }: LoginFormProps) {
                   className="font-bold underline text-current"
                 >
                   Premium
-                </a>{' '}.
+                </a>{' '}to continue.
               </div>
             ) : (
               <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
