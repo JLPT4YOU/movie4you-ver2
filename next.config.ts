@@ -22,22 +22,12 @@ const securityHeaders = [
 // Basic, permissive CSP that shouldn't break Next.js runtime
 const csp = [
   "default-src 'self'",
-  "base-uri 'self'",
-  "frame-ancestors 'self'",
-  "object-src 'none'",
-  "form-action 'self'",
-  "upgrade-insecure-requests",
-  // Scripts: no unsafe-eval/inline in production build
-  "script-src 'self' https:",
-  // Styles: keep 'unsafe-inline' for inline styles (e.g. critical CSS)
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  // Allow API/websocket connections to HTTPS/WSS endpoints used by the app (Supabase, etc.)
   "connect-src 'self' https: wss:",
-  // Allow YouTube embeds
   "frame-src https://www.youtube.com",
-  // Allow media streaming from self/blob/https
   "media-src 'self' blob: https:"
 ].join('; ');
 

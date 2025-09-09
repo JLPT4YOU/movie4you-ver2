@@ -53,7 +53,7 @@ export default function MovieDetailPage() {
           script.text = JSON.stringify(structuredData);
           document.head.appendChild(script);
         }
-      } catch {
+      } catch (error) {
       } finally {
         setLoading(false);
       }

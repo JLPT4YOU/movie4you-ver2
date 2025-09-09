@@ -25,7 +25,7 @@ export default function DisclaimerPage() {
           <section className="bg-zinc-900/50 backdrop-blur-sm rounded-lg p-6 mb-6 border border-zinc-800">
             <h2 className="text-2xl font-semibold text-white mb-4">Purpose</h2>
             <p className="text-gray-300 leading-relaxed">
-              This website and its content (the &quot;Website&quot;) are provided for educational and informational purposes only. The Website, its operators, and contributors (collectively, the &quot;Service Provider&quot;) do not make any guarantees regarding accuracy, completeness, suitability, or availability of any content or services provided.
+              This website and its content (the "Website") are provided for educational and informational purposes only. The Website, its operators, and contributors (collectively, the "Service Provider") do not make any guarantees regarding accuracy, completeness, suitability, or availability of any content or services provided.
             </p>
           </section>
 
@@ -53,7 +53,7 @@ export default function DisclaimerPage() {
           <section className="bg-zinc-900/50 backdrop-blur-sm rounded-lg p-6 mb-6 border border-zinc-800">
             <h2 className="text-2xl font-semibold text-white mb-4">No Warranties</h2>
             <p className="text-gray-300 leading-relaxed">
-              The Website is provided on an &quot;as is&quot; and &quot;as available&quot; basis without warranties of any kind, whether express or implied, including but not limited to warranties of accuracy, non-infringement, merchantability, or fitness for a particular purpose. Availability and uninterrupted access are not guaranteed.
+              The Website is provided on an "as is" and "as available" basis without warranties of any kind, whether express or implied, including but not limited to warranties of accuracy, non-infringement, merchantability, or fitness for a particular purpose. Availability and uninterrupted access are not guaranteed.
             </p>
           </section>
 
