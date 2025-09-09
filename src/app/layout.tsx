@@ -9,6 +9,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { TrailerProvider } from '@/contexts/TrailerContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import GlobalTrailer from '@/components/GlobalTrailer';
+import GlobalDisclaimerGate from '@/components/GlobalDisclaimerGate';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -135,6 +136,7 @@ export default function RootLayout({
                 {children}
               </main>
               <GlobalTrailer />
+              <GlobalDisclaimerGate />
             </TrailerProvider>
           </AuthProvider>
           <SpeedInsights />

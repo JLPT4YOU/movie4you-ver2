@@ -174,6 +174,9 @@ const Footer = () => {
               <Link href="/privacy" className="text-gray-400 hover:text-white transition-colors">
                 Chính sách bảo mật
               </Link>
+              <Link href="/disclaimer" className="text-gray-400 hover:text-white transition-colors">
+                Tuyên bố từ chối trách nhiệm
+              </Link>
 
               <Link href="/contact" className="text-gray-400 hover:text-white transition-colors">
                 Liên hệ
