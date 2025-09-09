@@ -39,9 +39,8 @@ export async function GET(req: NextRequest, context: { params: Promise<{ path?: 
       status: res.status,
       headers: safeHeaders,
     });
-  } catch (e) {
+  } catch {
     // Generic error message - don't expose upstream API details
-    console.error("API Proxy Error:", e instanceof Error ? e.message : "Unknown error");
     return NextResponse.json(
       { error: true, message: "Service temporarily unavailable. Please try again later." },
       { status: 502 }

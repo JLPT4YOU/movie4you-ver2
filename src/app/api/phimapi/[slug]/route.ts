@@ -66,9 +66,8 @@ export async function GET(
     }, {
       headers: { 'x-powered-by': process.env.CUSTOM_APP_NAME || 'Movie4You' }
     });
-  } catch (error) {
-    // Log error internally but don't expose details
-    console.error('API Service Error:', error instanceof Error ? error.message : 'Unknown error');
+  } catch {
+    // Log suppressed to keep console clean in production
     return NextResponse.json(
       { error: 'Service temporarily unavailable. Please try again later.' },
       {

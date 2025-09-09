@@ -186,7 +186,7 @@ export default function OptimizedHeroSection({ movies: propMovies = [], loading:
 
                 {/* Play Button Overlay */}
                 <Link
-                  href={`/phim/${currentMovie.slug}`}
+                  href={`/home/phim/${currentMovie.slug}`}
                   className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                 >
                   <div className="bg-netflix-red rounded-full p-4 shadow-lg">
@@ -235,7 +235,7 @@ export default function OptimizedHeroSection({ movies: propMovies = [], loading:
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Link
-                  href={`/phim/${currentMovie.slug}`}
+                  href={`/home/phim/${currentMovie.slug}`}
                   className="bg-netflix-red hover:bg-red-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold transition-colors duration-300 flex items-center justify-center gap-3 text-base sm:text-lg shadow-lg"
                 >
                   <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="currentColor" viewBox="0 0 24 24">

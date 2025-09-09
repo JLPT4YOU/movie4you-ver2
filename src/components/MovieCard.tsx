@@ -59,7 +59,7 @@ export default function MovieCard({ movie, lazy = true }: MovieCardProps) {
   return (
     <div ref={cardRef}>
       <Link
-        href={`/phim/${movie.slug}`}
+        href={`/home/phim/${movie.slug}`}
         className="relative cursor-pointer transition-transform duration-300 hover:scale-105 hover:z-10 block"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}

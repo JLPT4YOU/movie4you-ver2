@@ -1,239 +1,212 @@
-import OptimizedHeroSection from "@/components/OptimizedHeroSection";
-import LazyMovieSection from "@/components/LazyMovieSection";
-import SmartResourceHints from "@/components/SmartResourceHints";
-import PreloadResources from "@/components/PreloadResources";
-import { resolveImageUrl } from "@/utils/ophim";
-import ContinueWatching from "@/components/ContinueWatching";
+'use client';
 
-interface Movie {
-  name: string;
-  slug: string;
-  origin_name: string;
-  thumb_url: string;
-  poster_url: string;
-  year: number;
-  type?: string;
-  sub_docquyen?: boolean;
-  episode_current?: string;
-  quality?: string;
-  lang?: string;
-  time?: string;
-  episode_time?: string;
-  episode_total?: string;
-  categories?: { name: string; slug: string }[];
-  countries?: { name: string; slug: string }[];
-  actor?: string[];
-  director?: string[];
-  content?: string;
-  trailer_url?: string;
-  showtimes?: string;
-  modified: {
-    time: string;
-  };
-}
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
 
-async function fetchCinemaMoviesData() {
-  try {
-    // Use absolute URL for deployment
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ||
-      (process.env.NODE_ENV === 'production'
-        ? 'https://movie4you-ver2.vercel.app'
-        : 'http://localhost:3000');
-    
-    console.log('Fetching from URL:', baseUrl);
-    
-    // Fetch 6 movies at once with ISR caching
-    const response = await fetch(
-      `${baseUrl}/api/ophim/v1/api/danh-sach/phim-chieu-rap?page=1&limit=6&sort_field=modified.time&sort_type=desc`,
-      {
-        next: { revalidate: 300 }, // Revalidate every 5 minutes
-        cache: 'force-cache'
-      }
-    );
-    
-    if (!response.ok) {
-      console.error('Failed to fetch cinema movies:', response.status, response.statusText);
-      return { heroMovies: [], cinemaMovies: [] };
+export default function LoginPage() {
+  const router = useRouter();
+  const { signIn, hasAccess, loading } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [error, setError] = useState('');
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (hasAccess && !loading) {
+      router.push('/home');
     }
-    
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      console.error('Response is not JSON, got:', contentType);
-      return { heroMovies: [], cinemaMovies: [] };
-    }
-    
-    const data = await response.json();
-    const arr = data?.data?.items ?? data?.items ?? data?.data ?? [] as Array<Record<string, unknown>>;
-    const movieItems = arr;
+  }, [hasAccess, loading, router]);
 
-    if (movieItems.length === 0) {
-      return { heroMovies: [], cinemaMovies: [] };
-    }
-
-    // Process first movie details immediately for hero section
-    const firstMovieItem = movieItems[0];
-    const movie = (firstMovieItem as Record<string, unknown>)?.movie || firstMovieItem;
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
     
-    let firstMovie: Movie;
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ||
-        (process.env.NODE_ENV === 'production'
-          ? 'https://movie4you-ver2.vercel.app'
-          : 'http://localhost:3000');
-      const detailResponse = await fetch(
-        `${baseUrl}/api/ophim/v1/api/phim/${(movie as Record<string, { slug?: string }>).slug}`,
-        { cache: 'no-store' }
-      );
+      const result = await signIn(email, password);
       
-      if (!detailResponse.ok || !detailResponse.headers.get('content-type')?.includes('application/json')) {
-        throw new Error('Invalid response from API');
+      if (result.success) {
+        router.push('/home');
+      } else {
+        setError(result.error || 'Đăng nhập thất bại');
       }
-      
-      const detailData = await detailResponse.json();
-      const movieDetail = detailData?.data?.item || {};
-
-      firstMovie = {
-        name: movieDetail.name || movie.name,
-        slug: movieDetail.slug || movie.slug,
-        origin_name: movieDetail.origin_name || movie.origin_name,
-        thumb_url: movieDetail.thumb_url || movie.thumb_url,
-        poster_url: movieDetail.poster_url || movie.poster_url,
-        year: movieDetail.year || movie.year,
-        type: movieDetail.type || movie.type || 'single',
-        sub_docquyen: movieDetail.sub_docquyen || movie.sub_docquyen || false,
-        episode_current: movieDetail.episode_current || movie.episode_current || '',
-        quality: movieDetail.quality || movie.quality || 'HD',
-        lang: movieDetail.lang || movie.lang || 'Vietsub',
-        time: movieDetail.time || movie.time || movieDetail.episode_time || movie.episode_time || '',
-        episode_total: movieDetail.episode_total || movie.episode_total || '1',
-        categories: movieDetail.category || movie.category || [],
-        actor: movieDetail.actor || movie.actor || [],
-        director: movieDetail.director || movie.director || [],
-        content: movieDetail.content || movie.content || '',
-        trailer_url: movieDetail.trailer_url || movie.trailer_url || '',
-        showtimes: movieDetail.showtimes || movie.showtimes || '',
-        modified: movieDetail.modified || movie.modified || { time: new Date().toISOString() }
-      } as Movie;
     } catch (error) {
-      console.error('Error fetching first movie details:', error);
-      firstMovie = movie as Movie;
+      setError('Đã xảy ra lỗi khi đăng nhập');
+    } finally {
+      setIsLoading(false);
     }
-
-    // Fetch remaining movies details
-    const remainingMovies = await Promise.all(
-      movieItems.slice(1, 6).map(async (item: Record<string, unknown>) => {
-        const m = (item as Record<string, unknown> & { movie?: Record<string, unknown> })?.movie || item;
-        try {
-          const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ||
-            (process.env.NODE_ENV === 'production'
-              ? 'https://movie4you-ver2.vercel.app'
-              : 'http://localhost:3000');
-          const res = await fetch(
-            `${baseUrl}/api/ophim/v1/api/phim/${(m as Record<string, { slug?: string }>).slug}`,
-            { cache: 'no-store' }
-          );
-          
-          if (!res.ok || !res.headers.get('content-type')?.includes('application/json')) {
-            throw new Error('Invalid response from API');
-          }
-          
-          const detailData = await res.json();
-          const detail = detailData?.data?.item || {};
-          
-          return {
-            name: detail.name || m.name,
-            slug: detail.slug || m.slug,
-            origin_name: detail.origin_name || m.origin_name,
-            thumb_url: detail.thumb_url || m.thumb_url,
-            poster_url: detail.poster_url || m.poster_url,
-            year: detail.year || m.year,
-            type: detail.type || m.type || 'single',
-            sub_docquyen: detail.sub_docquyen || m.sub_docquyen || false,
-            episode_current: detail.episode_current || m.episode_current || '',
-            quality: detail.quality || m.quality || 'HD',
-            lang: detail.lang || m.lang || 'Vietsub',
-            time: detail.time || m.time || detail.episode_time || m.episode_time || '',
-            episode_total: detail.episode_total || m.episode_total || '1',
-            categories: detail.category || m.category || [],
-            actor: detail.actor || m.actor || [],
-            director: detail.director || m.director || [],
-            content: detail.content || m.content || '',
-            trailer_url: detail.trailer_url || m.trailer_url || '',
-            showtimes: detail.showtimes || m.showtimes || '',
-            modified: detail.modified || m.modified || { time: new Date().toISOString() }
-          } as Movie;
-        } catch (error) {
-          console.error('Error fetching movie details:', error);
-          return m as unknown as Movie;
-        }
-      })
-    );
-
-    const allMovies = [firstMovie, ...remainingMovies];
-    return {
-      heroMovies: allMovies,
-      cinemaMovies: allMovies
-    };
-  } catch (error) {
-    console.error('Error fetching cinema movies:', error);
-    return { heroMovies: [], cinemaMovies: [] };
-  }
-}
-
-export default async function Home() {
-  const { heroMovies } = await fetchCinemaMoviesData();
+  };
 
   return (
-    <>
-      {/* Smart resource hints - only load when needed */}
-      <SmartResourceHints enableImagePreconnect={true} enableAPIPreload={true} />
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Background Image */}
+      <div className="absolute inset-0 z-0">
+        <Image
+          src="/bg.webp"
+          alt="Background"
+          fill
+          className="object-cover"
+          priority
+          quality={90}
+        />
+        {/* Multi-layer gradient overlay for better text readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/30"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-black/40"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/90"></div>
+      </div>
 
-      {/* Preload hero LCP image (client-side) */}
-      {heroMovies?.[0] && (
-        <PreloadResources heroImageUrl={resolveImageUrl(heroMovies[0].poster_url || heroMovies[0].thumb_url, 1600, 85)} />
-      )}
+      {/* Content */}
+      <div className="relative z-10 min-h-screen flex flex-col">
+        {/* Header */}
+        <header className="p-6 md:p-8">
+          <Link href="/" className="inline-block">
+            <Image
+              src="/logo.png"
+              alt="MOVIE4YOU"
+              width={240}
+              height={56}
+              className="h-auto w-32 md:w-40 lg:w-48"
+              priority
+            />
+          </Link>
+        </header>
 
-      <OptimizedHeroSection movies={heroMovies} loading={false} />
+        {/* Main Content */}
+        <div className="flex-1 flex items-center justify-center px-6 py-12">
+          <div className="w-full max-w-md">
+            {/* Login Card */}
+            <div className="bg-black/75 backdrop-blur-md rounded-2xl p-8 shadow-2xl border border-white/10">
+              {/* Welcome Text */}
+              <div className="text-center mb-8">
+                <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+                  Chào mừng trở lại
+                </h1>
+                <p className="text-gray-300 text-lg">
+                  Đăng nhập để tiếp tục xem phim
+                </p>
+              </div>
 
-      {/* Continue Watching Section */}
-      <ContinueWatching />
+              {/* Error Message */}
+              {error && (
+                <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg">
+                  <p className="text-red-200 text-sm">{error}</p>
+                </div>
+              )}
 
-      {/* Lazy load movie sections - chỉ load khi scroll tới */}
-      <LazyMovieSection
-        title="Phim chiếu rạp"
-        slug="phim-chieu-rap"
-        viewAllUrl="/category/phim-chieu-rap"
-      />
+              {/* Login Form */}
+              <form onSubmit={handleLogin} className="space-y-6">
+                {/* Email Field */}
+                <div className="space-y-2">
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-200">
+                    Email hoặc số điện thoại
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full px-4 py-3 bg-gray-800/60 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-netflix-red focus:border-transparent transition-all"
+                    placeholder="name@example.com"
+                    required
+                  />
+                </div>
 
-      <LazyMovieSection
-        title="Phim mới"
-        slug="phim-moi"
-        viewAllUrl="/category/phim-moi"
-      />
+                {/* Password Field */}
+                <div className="space-y-2">
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-200">
+                    Mật khẩu
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      id="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full px-4 py-3 pr-12 bg-gray-800/60 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-netflix-red focus:border-transparent transition-all"
+                      placeholder="••••••••"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                    >
+                      {showPassword ? (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L8.05 8.05M21.95 21.95l-2.122-2.122m0 0L8.05 8.05M21.95 21.95L21.07 21.07" />
+                        </svg>
+                      ) : (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                </div>
 
-      <LazyMovieSection
-        title="Phim lẻ"
-        slug="phim-le"
-        viewAllUrl="/category/phim-le"
-      />
+                {/* Remember Me & Forgot Password */}
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="w-4 h-4 text-netflix-red bg-transparent border-gray-600 rounded focus:ring-netflix-red focus:ring-2"
+                    />
+                    <span className="text-sm text-gray-300">Ghi nhớ tôi</span>
+                  </label>
+                  <Link
+                    href="#"
+                    className="text-sm text-netflix-red hover:text-red-400 transition-colors"
+                  >
+                    Quên mật khẩu?
+                  </Link>
+                </div>
 
-      <LazyMovieSection
-        title="Phim bộ"
-        slug="phim-bo"
-        viewAllUrl="/category/phim-bo"
-      />
+                {/* Login Button */}
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full bg-gradient-to-r from-netflix-red to-red-600 hover:from-red-600 hover:to-red-700 disabled:from-gray-600 disabled:to-gray-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-[1.02] disabled:scale-100 disabled:cursor-not-allowed shadow-lg"
+                >
+                  {isLoading ? (
+                    <div className="flex items-center justify-center space-x-2">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      <span>Đang đăng nhập...</span>
+                    </div>
+                  ) : (
+                    'Đăng nhập'
+                  )}
+                </button>
+              </form>
 
-      <LazyMovieSection
-        title="TV Shows"
-        slug="tv-shows"
-        viewAllUrl="/category/tv-shows"
-      />
+              {/* Sign Up Link */}
+              <div className="mt-8 text-center">
+                <p className="text-gray-400">
+                  Chưa có tài khoản?{' '}
+                  <Link href="#" className="text-netflix-red hover:text-red-400 font-medium transition-colors">
+                    Đăng ký ngay
+                  </Link>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
 
-      <LazyMovieSection
-        title="Hoạt hình"
-        slug="hoat-hinh"
-        viewAllUrl="/category/hoat-hinh"
-      />
-    </>
+        {/* Footer */}
+        <footer className="p-6 text-center">
+          <p className="text-gray-400 text-sm">
+            © 2024 MOVIE4YOU. Tất cả quyền được bảo lưu.
+          </p>
+        </footer>
+      </div>
+    </div>
   );
 }

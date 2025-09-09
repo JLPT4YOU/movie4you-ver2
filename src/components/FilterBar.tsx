@@ -77,7 +77,6 @@ export default function FilterBar({
           setCountries(data.data.items);
         }
       } catch (error) {
-        console.error('Error fetching countries:', error);
       }
     };
 
@@ -89,7 +88,6 @@ export default function FilterBar({
           setCategories(data.data.items);
         }
       } catch (error) {
-        console.error('Error fetching categories:', error);
       }
     };
 

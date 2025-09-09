@@ -65,7 +65,7 @@ export default function MobileMenu({
         setCategories(itemsArray);
       }
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      
     } finally {
       setLoading(prev => ({ ...prev, categories: false }));
     }
@@ -96,7 +96,7 @@ export default function MobileMenu({
         setCountries(itemsArray);
       }
     } catch (error) {
-      console.error('Error fetching countries:', error);
+      
     } finally {
       setLoading(prev => ({ ...prev, countries: false }));
     }
@@ -126,7 +126,7 @@ export default function MobileMenu({
         setYears(itemsArray);
       }
     } catch (error) {
-      console.error('Error fetching years:', error);
+      
     } finally {
       setLoading(prev => ({ ...prev, years: false }));
     }
@@ -167,42 +167,42 @@ export default function MobileMenu({
         {/* Navigation Links */}
         <div className="px-4 py-3 space-y-1">
           <Link
-            href="/category/phim-moi"
+            href="/home/category/phim-moi"
             className="block py-2 text-netflix-text-gray hover:text-netflix-white transition-colors font-medium"
             onClick={onClose}
           >
             Phim mới
           </Link>
           <Link
-            href="/category/phim-bo"
+            href="/home/category/phim-bo"
             className="block py-2 text-netflix-text-gray hover:text-netflix-white transition-colors font-medium"
             onClick={onClose}
           >
             Phim bộ
           </Link>
           <Link
-            href="/category/phim-le"
+            href="/home/category/phim-le"
             className="block py-2 text-netflix-text-gray hover:text-netflix-white transition-colors font-medium"
             onClick={onClose}
           >
             Phim lẻ
           </Link>
           <Link
-            href="/category/phim-chieu-rap"
+            href="/home/category/phim-chieu-rap"
             className="block py-2 text-netflix-text-gray hover:text-netflix-white transition-colors font-medium"
             onClick={onClose}
           >
             Phim chiếu rạp
           </Link>
           <Link
-            href="/category/tv-shows"
+            href="/home/category/tv-shows"
             className="block py-2 text-netflix-text-gray hover:text-netflix-white transition-colors font-medium"
             onClick={onClose}
           >
             TV Shows
           </Link>
           <Link
-            href="/category/hoat-hinh"
+            href="/home/category/hoat-hinh"
             className="block py-2 text-netflix-text-gray hover:text-netflix-white transition-colors font-medium"
             onClick={onClose}
           >
@@ -362,7 +362,7 @@ export default function MobileMenu({
           </div>
 
           <Link
-            href="/lich-su"
+            href="/home/lich-su"
             className="flex items-center gap-3 py-2 text-netflix-text-gray hover:text-netflix-white transition-colors"
             onClick={onClose}
           >

@@ -1,3 +1,5 @@
+import { watchProgressService, WatchProgress } from '@/services/watchProgressService';
+
 export interface WatchHistoryItem {
   movieId: string;
   movieName: string;
@@ -9,32 +11,145 @@ export interface WatchHistoryItem {
   currentTime: number; // Thời gian hiện tại (giây)
   duration: number; // Tổng thời lượng (giây)
   watchedAt: string; // ISO timestamp
-
 }
 
 export class WatchHistoryManager {
   private static STORAGE_KEY = 'movie4you_watch_history';
   private static MAX_HISTORY_ITEMS = 50;
+  // Throttle Supabase writes per (userId+movie+episode+server)
+  private static THROTTLE_MS = 5000;
+  private static pending: Map<string, {
+    latest: Omit<WatchHistoryItem, 'watchedAt'>;
+    userId?: string;
+    lastSentAt: number;
+    timeoutId: ReturnType<typeof setTimeout> | null;
+  }> = new Map();
 
-  // Lấy toàn bộ lịch sử
-  static getHistory(): WatchHistoryItem[] {
+  private static makeKey(item: Omit<WatchHistoryItem, 'watchedAt'>, userId?: string) {
+    return `${userId || 'anon'}:${item.movieId}:${item.episodeIndex}:${item.serverIndex}`;
+  }
+
+  private static async sendToSupabase(item: Omit<WatchHistoryItem, 'watchedAt'>, userId: string) {
+    const progressInput = this.convertToProgressInput(item);
+    await watchProgressService.saveProgress(userId, progressInput);
+  }
+
+  private static scheduleSupabaseSave(item: Omit<WatchHistoryItem, 'watchedAt'>, userId?: string) {
+    if (!userId) return; // only throttle remote when authenticated
+    const key = this.makeKey(item, userId);
+    const now = Date.now();
+    const entry = this.pending.get(key) || { latest: item, userId, lastSentAt: 0, timeoutId: null };
+    entry.latest = item;
+    entry.userId = userId;
+
+    const elapsed = now - entry.lastSentAt;
+    const shouldSendNow = elapsed >= this.THROTTLE_MS;
+
+    if (shouldSendNow) {
+      // Fire immediately and reset timer window
+      entry.lastSentAt = now;
+      if (entry.timeoutId) {
+        clearTimeout(entry.timeoutId);
+        entry.timeoutId = null;
+      }
+      this.pending.set(key, entry);
+      this.sendToSupabase(item, userId).catch(() => {});
+    } else {
+      // Schedule a send after remaining throttle window
+      const remaining = Math.max(this.THROTTLE_MS - elapsed, 1000);
+      if (!entry.timeoutId) {
+        entry.timeoutId = setTimeout(async () => {
+          entry.lastSentAt = Date.now();
+          entry.timeoutId = null;
+          try {
+            await this.sendToSupabase(entry.latest, userId);
+          } catch (e) {
+            // silent
+          }
+        }, remaining);
+      } else {
+        // Timer already scheduled; keep latest data and wait
+      }
+      this.pending.set(key, entry);
+    }
+  }
+
+  // Convert Supabase WatchProgress to WatchHistoryItem
+  private static convertToHistoryItem(progress: WatchProgress): WatchHistoryItem {
+    return {
+      movieId: progress.movie_id,
+      movieName: progress.movie_name,
+      movieSlug: progress.movie_slug,
+      posterUrl: progress.poster_url || '',
+      episodeIndex: progress.episode_index,
+      episodeName: progress.episode_name || '',
+      serverIndex: progress.server_index,
+      currentTime: Number(progress.progress_seconds),
+      duration: Number(progress.duration_seconds),
+      watchedAt: progress.watched_at
+    };
+  }
+
+  // Convert WatchHistoryItem to Supabase input format
+  private static convertToProgressInput(item: Omit<WatchHistoryItem, 'watchedAt'>): any {
+    return {
+      movie_id: item.movieId,
+      movie_name: item.movieName,
+      movie_slug: item.movieSlug,
+      poster_url: item.posterUrl,
+      episode_index: item.episodeIndex,
+      episode_name: item.episodeName,
+      server_index: item.serverIndex,
+      progress_seconds: item.currentTime,
+      duration_seconds: item.duration
+    };
+  }
+
+  // Lấy toàn bộ lịch sử (Supabase + localStorage fallback)
+  static async getHistory(userId?: string): Promise<WatchHistoryItem[]> {
+    if (typeof window === 'undefined') return [];
+    
+    // If user is authenticated, get from Supabase
+    if (userId) {
+      try {
+        const supabaseHistory = await watchProgressService.getUserWatchHistory(userId, this.MAX_HISTORY_ITEMS);
+        return supabaseHistory.map(this.convertToHistoryItem);
+      } catch (error) {
+        // Fallback to localStorage
+      }
+    }
+
+    // Fallback to localStorage
+    try {
+      const history = localStorage.getItem(this.STORAGE_KEY);
+      return history ? JSON.parse(history) : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  // Get history synchronously from localStorage only (for compatibility)
+  static getHistorySync(): WatchHistoryItem[] {
     if (typeof window === 'undefined') return [];
     
     try {
       const history = localStorage.getItem(this.STORAGE_KEY);
       return history ? JSON.parse(history) : [];
     } catch (error) {
-      console.error('Error reading watch history:', error);
       return [];
     }
   }
 
-  // Lưu/cập nhật progress xem phim
-    static saveProgress(item: Omit<WatchHistoryItem, 'watchedAt'>) {
+  // Lưu/cập nhật progress xem phim (Supabase + localStorage)
+  static async saveProgress(item: Omit<WatchHistoryItem, 'watchedAt'>, userId?: string): Promise<void> {
     if (typeof window === 'undefined') return;
 
     try {
-      const history = this.getHistory();
+      // Throttle Supabase writes
+      this.scheduleSupabaseSave(item, userId);
+
+      // Always save to localStorage as fallback
+      const history = this.getHistorySync();
       const newItem: WatchHistoryItem = {
         ...item,
         watchedAt: new Date().toISOString()
@@ -65,58 +180,131 @@ export class WatchHistoryManager {
 
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(history));
     } catch (error) {
-      console.error('Error saving watch history:', error);
+      // silent
     }
   }
 
-  // Lấy progress của một tập phim cụ thể
-  static getProgress(movieId: string, episodeIndex: number, serverIndex: number): WatchHistoryItem | null {
-    const history = this.getHistory();
+  // Force flush all pending Supabase writes (use on pagehide/beforeunload)
+  static async flushPending(): Promise<void> {
+    const entries = Array.from(this.pending.entries());
+    this.pending.clear();
+    await Promise.all(entries.map(async ([key, entry]) => {
+      try {
+        if (entry.timeoutId) clearTimeout(entry.timeoutId);
+        if (entry.userId) {
+          await this.sendToSupabase(entry.latest, entry.userId);
+        }
+      } catch (e) {
+        // silent
+      }
+    }));
+  }
+
+  // Lấy progress của một tập phim cụ thể (Supabase + localStorage)
+  static async getProgress(movieId: string, episodeIndex: number, serverIndex: number, userId?: string): Promise<WatchHistoryItem | null> {
+    // If user is authenticated, try Supabase first
+    if (userId) {
+      try {
+        const progress = await watchProgressService.getProgress(userId, movieId, episodeIndex, serverIndex);
+        if (progress) {
+          return this.convertToHistoryItem(progress);
+        }
+      } catch (error) {
+        // silent
+      }
+    }
+
+    // Fallback to localStorage
+    const history = this.getHistorySync();
     return history.find(
-      h => h.movieId === movieId && 
+      (h: WatchHistoryItem) => h.movieId === movieId && 
            h.episodeIndex === episodeIndex && 
            h.serverIndex === serverIndex
     ) || null;
   }
 
-  // Lấy tập phim gần nhất của một bộ phim
-  static getLatestEpisode(movieId: string): WatchHistoryItem | null {
-    const history = this.getHistory();
-    const movieHistory = history.filter(h => h.movieId === movieId);
+  // Lấy tập phim gần nhất của một bộ phim (Supabase + localStorage)
+  static async getLatestEpisode(movieId: string, userId?: string): Promise<WatchHistoryItem | null> {
+    // If user is authenticated, try Supabase first
+    if (userId) {
+      try {
+        const movieProgress = await watchProgressService.getMovieProgress(userId, movieId);
+        if (movieProgress.length > 0) {
+          // Sort by episode index and return the latest
+          const sorted = movieProgress.sort((a, b) => new Date(b.watched_at).getTime() - new Date(a.watched_at).getTime());
+          return this.convertToHistoryItem(sorted[0]);
+        }
+      } catch (error) {
+        // silent
+      }
+    }
+
+    // Fallback to localStorage
+    const history = this.getHistorySync();
+    const movieHistory = history.filter((h: WatchHistoryItem) => h.movieId === movieId);
     return movieHistory.length > 0 ? movieHistory[0] : null;
   }
 
-  // Xóa lịch sử của một phim
-  static removeMovie(movieId: string) {
+  // Xóa lịch sử của một phim (Supabase + localStorage)  
+  static async removeMovie(movieId: string, userId?: string): Promise<void> {
     if (typeof window === 'undefined') return;
 
     try {
-      const history = this.getHistory();
-      const filteredHistory = history.filter(h => h.movieId !== movieId);
+      // If user is authenticated, remove from Supabase
+      if (userId) {
+        await watchProgressService.removeMovieProgress(userId, movieId);
+      }
+
+      // Always remove from localStorage as well
+      const history = this.getHistorySync();
+      const filteredHistory = history.filter((h: WatchHistoryItem) => h.movieId !== movieId);
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(filteredHistory));
     } catch (error) {
-      console.error('Error removing movie from history:', error);
+      // silent
     }
   }
 
-  // Xóa toàn bộ lịch sử
-  static clearHistory() {
+  // Xóa toàn bộ lịch sử (Supabase + localStorage)
+  static async clearHistory(userId?: string): Promise<void> {
     if (typeof window === 'undefined') return;
     
     try {
+      // If user is authenticated, clear from Supabase
+      if (userId) {
+        await watchProgressService.clearUserProgress(userId);
+      }
+
+      // Always clear localStorage as well
       localStorage.removeItem(this.STORAGE_KEY);
     } catch (error) {
-      console.error('Error clearing watch history:', error);
+      // silent
     }
   }
 
-  // Lấy danh sách phim đã xem (unique movies)
-  static getWatchedMovies(): WatchHistoryItem[] {
-    const history = this.getHistory();
+  // Lấy danh sách phim đã xem (unique movies) - Supabase + localStorage
+  static async getWatchedMovies(userId?: string): Promise<WatchHistoryItem[]> {
+    const history = await this.getHistory(userId);
     const uniqueMovies = new Map<string, WatchHistoryItem>();
 
     // Lấy tập gần nhất của mỗi phim
-    history.forEach(item => {
+    history.forEach((item: WatchHistoryItem) => {
+      if (!uniqueMovies.has(item.movieId) || 
+          new Date(item.watchedAt) > new Date(uniqueMovies.get(item.movieId)!.watchedAt)) {
+        uniqueMovies.set(item.movieId, item);
+      }
+    });
+
+    return Array.from(uniqueMovies.values())
+      .sort((a, b) => new Date(b.watchedAt).getTime() - new Date(a.watchedAt).getTime());
+  }
+
+  // Lấy danh sách phim đã xem (synchronous version for compatibility)
+  static getWatchedMoviesSync(): WatchHistoryItem[] {
+    const history = this.getHistorySync();
+    const uniqueMovies = new Map<string, WatchHistoryItem>();
+
+    // Lấy tập gần nhất của mỗi phim
+    history.forEach((item: WatchHistoryItem) => {
       if (!uniqueMovies.has(item.movieId) || 
           new Date(item.watchedAt) > new Date(uniqueMovies.get(item.movieId)!.watchedAt)) {
         uniqueMovies.set(item.movieId, item);

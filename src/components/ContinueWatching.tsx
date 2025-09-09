@@ -4,9 +4,10 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { WatchHistoryManager, WatchHistoryItem } from '@/utils/watchHistory';
+import { useWatchedMovies } from '@/hooks/useWatchedMovies';
 
 export default function ContinueWatching() {
-  const [watchHistory, setWatchHistory] = useState<WatchHistoryItem[]>([]);
+  const { items, loading } = useWatchedMovies();
   const [mounted, setMounted] = useState(false);
 
   const getProgressPercent = (item: WatchHistoryItem) => {
@@ -18,26 +19,11 @@ export default function ContinueWatching() {
 
   useEffect(() => {
     setMounted(true);
-    
-    const loadHistory = () => {
-      const history = WatchHistoryManager.getWatchedMovies();
-      // Show all recent movies (not filtering by progress since we can't track it with iframe)
-      setWatchHistory(history.slice(0, 12));
-    };
-
-    loadHistory();
-    
-    // Refresh when window gets focus (when user comes back to tab)
-    const handleFocus = () => loadHistory();
-    window.addEventListener('focus', handleFocus);
-    
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-    };
   }, []);
 
   // Don't render on server or if no history
-  if (!mounted || watchHistory.length === 0) {
+  const watchHistory = (items || []).slice(0, 12);
+  if (!mounted || loading || watchHistory.length === 0) {
     return null;
   }
 
@@ -47,7 +33,7 @@ export default function ContinueWatching() {
         <div className="mb-4 flex items-center justify-between">
         <h2 className="text-xl md:text-2xl font-bold text-white">Tiếp tục xem</h2>
         <Link 
-          href="/lich-su" 
+          href="/home/lich-su" 
           className="text-sm text-white/80 hover:text-white transition-colors"
         >
           Xem tất cả
@@ -64,7 +50,7 @@ export default function ContinueWatching() {
               key={`${item.movieId}-${item.episodeIndex}`} 
               className="flex-none w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5 xl:w-1/6 min-w-[160px]"
             >
-              <Link href={`/phim/${item.movieSlug}/xem`}>
+              <Link href={`/home/phim/${item.movieSlug}/xem`}>
                 <div className="group relative">
                   <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-netflix-gray">
                     <Image

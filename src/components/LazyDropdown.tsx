@@ -63,7 +63,6 @@ export default function LazyDropdown({
       setItems(itemsArray);
       setLoaded(true);
     } catch (error) {
-      console.error(`Error fetching ${apiEndpoint}:`, error);
     } finally {
       setLoading(false);
     }

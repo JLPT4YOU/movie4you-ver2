@@ -10,7 +10,7 @@ import {
   DefaultVideoLayout,
   defaultLayoutIcons,
 } from '@vidstack/react/player/layouts/default';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface VideoPlayerProps {
   src: string;
@@ -34,21 +34,30 @@ export default function VideoPlayer({
   onError,
 }: VideoPlayerProps) {
   const playerRef = useRef<MediaPlayerInstance>(null);
+  const [hasSeeked, setHasSeeked] = useState(false);
   const posterUrl = poster ? resolveOriginalImageUrl(poster) : undefined;
 
   useEffect(() => {
-    if (!playerRef.current || startTime <= 0) return;
+    if (!playerRef.current || startTime <= 0 || hasSeeked) return;
     
     const player = playerRef.current;
-    // Set start time when player is ready
+    
+    // Subscribe to player state changes
     const subscription = player.subscribe((state) => {
-      if (state.canPlay && state.currentTime === 0) {
+      // Wait for media to be ready and have duration
+      if (state.canPlay && state.duration > 0 && !hasSeeked) {
         player.currentTime = startTime;
+        setHasSeeked(true);
       }
     });
 
     return () => subscription();
-  }, [startTime]);
+  }, [startTime, hasSeeked]);
+
+  // Reset seeked flag when src or startTime changes
+  useEffect(() => {
+    setHasSeeked(false);
+  }, [src, startTime]);
 
   return (
     <MediaPlayer

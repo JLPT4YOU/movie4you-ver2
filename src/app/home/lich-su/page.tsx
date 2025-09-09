@@ -1,44 +1,40 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import Header from '@/components/Header';
-import { WatchHistoryManager, WatchHistoryItem } from '@/utils/watchHistory';
+import { WatchHistoryManager } from '@/utils/watchHistory';
+import { useAuth } from '@/contexts/AuthContext';
+import { useWatchedMovies } from '@/hooks/useWatchedMovies';
 
 export default function WatchHistoryPage() {
-  const [history, setHistory] = useState<WatchHistoryItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const { items: history, loading, reload } = useWatchedMovies();
 
-  useEffect(() => {
-    const loadHistory = () => {
-      const watchedMovies = WatchHistoryManager.getWatchedMovies();
-      setHistory(watchedMovies);
-      setLoading(false);
-    };
-
-    loadHistory();
-  }, []);
-
-  const handleRemoveMovie = (movieId: string) => {
-    WatchHistoryManager.removeMovie(movieId);
-    setHistory(prev => prev.filter(item => item.movieId !== movieId));
+  const handleRemoveMovie = async (movieId: string) => {
+    try {
+      await WatchHistoryManager.removeMovie(movieId, user?.id);
+      await reload();
+    } catch {
+      
+    }
   };
 
-  const handleClearAll = () => {
+  const handleClearAll = async () => {
     if (confirm('Bạn có chắc muốn xóa toàn bộ lịch sử xem?')) {
-      WatchHistoryManager.clearHistory();
-      setHistory([]);
+      try {
+        await WatchHistoryManager.clearHistory(user?.id);
+        await reload();
+      } catch {
+        
+      }
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-netflix-black">
-        <Header />
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-white text-xl">Đang tải...</div>
-        </div>
+      <div className="min-h-screen bg-netflix-black flex items-center justify-center">
+        <div className="text-white text-xl">Đang tải...</div>
       </div>
     );
   }
@@ -47,9 +43,7 @@ export default function WatchHistoryPage() {
 
   return (
     <div className="min-h-screen bg-netflix-black">
-      <Header />
-
-      {/* Push content down below header */}
+      {/* Push content down below fixed header from layout */}
       <div className="pt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header */}
@@ -70,7 +64,7 @@ export default function WatchHistoryPage() {
             <div className="text-center py-16">
               <div className="text-gray-400 text-lg mb-4">Chưa có phim để tiếp tục xem</div>
               <Link
-                href="/"
+                href="/home"
                 className="bg-netflix-red hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
               >
                 Khám phá phim
@@ -80,7 +74,7 @@ export default function WatchHistoryPage() {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
               {history.map((item) => (
                 <div key={`${item.movieId}-${item.episodeIndex}`} className="group relative">
-                  <Link href={`/phim/${item.movieSlug}`}>
+                  <Link href={`/home/phim/${item.movieSlug}/xem`}>
                     <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-netflix-gray">
                       <Image
                         src={`https://img.ophim.live/uploads/movies/${item.posterUrl}`}

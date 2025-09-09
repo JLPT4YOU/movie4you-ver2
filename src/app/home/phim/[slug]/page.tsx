@@ -54,7 +54,6 @@ export default function MovieDetailPage() {
           document.head.appendChild(script);
         }
       } catch (error) {
-        console.error('Error fetching movie:', error);
       } finally {
         setLoading(false);
       }
@@ -64,7 +63,7 @@ export default function MovieDetailPage() {
   }, [params.slug]);
 
   const handleWatchMovie = () => {
-    router.push(`/phim/${params.slug}/xem`);
+    router.push(`/home/phim/${params.slug}/xem`);
   };
 
   const handleWatchTrailer = () => {

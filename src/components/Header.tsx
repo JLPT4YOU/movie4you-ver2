@@ -7,11 +7,13 @@ import { IconSearch, IconBell, IconMenu, IconX } from "./icons";
 import SearchPopup from "./SearchPopup";
 import LazyDropdown from "./LazyDropdown";
 import MobileMenu from "./MobileMenu";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Interfaces moved to LazyDropdown component
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
+  const { user, supabaseUser, signOut } = useAuth();
   
   // Data states - removed, now handled by LazyDropdown
   
@@ -58,7 +60,7 @@ export default function Header() {
       <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between text-sm text-netflix-text-gray">
           {/* Logo */}
-          <Link href="/" className="flex items-center hover:opacity-80 transition-opacity min-w-0" aria-label="Trang chủ MOVIE4YOU">
+          <Link href="/home" className="flex items-center hover:opacity-80 transition-opacity min-w-0" aria-label="Trang chủ MOVIE4YOU">
             <Image
               src="/logo.png"
               alt="MOVIE4YOU"
@@ -72,12 +74,12 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-4 ml-8">
-            <Link href="/category/phim-moi" className="whitespace-nowrap hover:text-netflix-white transition-colors font-medium">Phim mới</Link>
-            <Link href="/category/phim-bo" className="whitespace-nowrap hover:text-netflix-white transition-colors font-medium">Phim bộ</Link>
-            <Link href="/category/phim-le" className="whitespace-nowrap hover:text-netflix-white transition-colors font-medium">Phim lẻ</Link>
-            <Link href="/category/phim-chieu-rap" className="whitespace-nowrap hover:text-netflix-white transition-colors font-medium">Phim chiếu rạp</Link>
-            <Link href="/category/tv-shows" className="whitespace-nowrap hover:text-netflix-white transition-colors font-medium">TV Shows</Link>
-            <Link href="/category/hoat-hinh" className="whitespace-nowrap hover:text-netflix-white transition-colors font-medium">Hoạt hình</Link>
+            <Link href="/home/category/phim-moi" className="whitespace-nowrap hover:text-netflix-white transition-colors font-medium">Phim mới</Link>
+            <Link href="/home/category/phim-bo" className="whitespace-nowrap hover:text-netflix-white transition-colors font-medium">Phim bộ</Link>
+            <Link href="/home/category/phim-le" className="whitespace-nowrap hover:text-netflix-white transition-colors font-medium">Phim lẻ</Link>
+            <Link href="/home/category/phim-chieu-rap" className="whitespace-nowrap hover:text-netflix-white transition-colors font-medium">Phim chiếu rạp</Link>
+            <Link href="/home/category/tv-shows" className="whitespace-nowrap hover:text-netflix-white transition-colors font-medium">TV Shows</Link>
+            <Link href="/home/category/hoat-hinh" className="whitespace-nowrap hover:text-netflix-white transition-colors font-medium">Hoạt hình</Link>
             
             {/* Separator */}
             <div className="w-px h-4 bg-netflix-light-gray/30 mx-3"></div>
@@ -86,7 +88,7 @@ export default function Header() {
             <LazyDropdown
               title="Thể loại"
               apiEndpoint="/api/ophim/v1/api/the-loai"
-              urlPrefix="/the-loai"
+              urlPrefix="/home/the-loai"
               isOpen={isCategoryDropdownOpen}
               onToggle={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
             />
@@ -94,7 +96,7 @@ export default function Header() {
             <LazyDropdown
               title="Quốc gia"
               apiEndpoint="/api/ophim/v1/api/quoc-gia"
-              urlPrefix="/quoc-gia"
+              urlPrefix="/home/quoc-gia"
               isOpen={isCountryDropdownOpen}
               onToggle={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)}
             />
@@ -102,7 +104,7 @@ export default function Header() {
             <LazyDropdown
               title="Năm phát hành"
               apiEndpoint="/api/ophim/v1/api/nam-phat-hanh"
-              urlPrefix="/nam-phat-hanh"
+              urlPrefix="/home/nam-phat-hanh"
               isOpen={isYearDropdownOpen}
               onToggle={() => setIsYearDropdownOpen(!isYearDropdownOpen)}
             />
@@ -131,10 +133,20 @@ export default function Header() {
               </button>
 
               {isUserDropdownOpen && (
-                <div className="absolute top-full right-0 mt-2 w-48 bg-netflix-dark border border-netflix-light-gray rounded-md shadow-lg z-50">
+                <div className="absolute top-full right-0 mt-2 w-56 bg-netflix-dark border border-netflix-light-gray rounded-md shadow-lg z-50">
                   <div className="py-2">
+                    {/* User info */}
+                    <div className="px-4 pb-2 pt-2">
+                      <div className="text-sm text-white truncate font-medium">
+                        {user?.email || supabaseUser?.email || 'Người dùng'}
+                      </div>
+                      <div className="text-xs text-gray-400">
+                        Vai trò: {user?.role ?? '—'}
+                      </div>
+                    </div>
+                    <div className="border-t border-netflix-gray my-1"></div>
                     <Link
-                      href="/lich-su"
+                      href="/home/lich-su"
                       onClick={() => setIsUserDropdownOpen(false)}
                       className="flex items-center gap-3 px-4 py-2 text-sm text-netflix-text-gray hover:text-netflix-white hover:bg-netflix-gray transition-colors"
                     >
@@ -151,7 +163,13 @@ export default function Header() {
                       </svg>
                       Cài đặt
                     </button>
-                    <button className="flex items-center gap-3 px-4 py-2 text-sm text-netflix-text-gray hover:text-netflix-white hover:bg-netflix-gray transition-colors w-full text-left">
+                    <button
+                      onClick={async () => {
+                        setIsUserDropdownOpen(false);
+                        try { await signOut(); } catch (e) { /* silent */ }
+                      }}
+                      className="flex items-center gap-3 px-4 py-2 text-sm text-netflix-text-gray hover:text-netflix-white hover:bg-netflix-gray transition-colors w-full text-left"
+                    >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                       </svg>

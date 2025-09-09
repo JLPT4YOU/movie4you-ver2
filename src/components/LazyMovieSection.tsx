@@ -55,7 +55,6 @@ export default function LazyMovieSection({ title, slug, viewAllUrl, priority = f
       
       setMovies(prev => pageNum === 1 ? items : [...prev, ...items]);
     } catch (error) {
-      console.error('Error fetching movies:', error);
       setHasMore(false);
     } finally {
       setIsFetching(false);

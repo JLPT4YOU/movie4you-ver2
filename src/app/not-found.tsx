@@ -83,28 +83,28 @@ export default function NotFound() {
             </h3>
             <div className="flex flex-wrap justify-center gap-3">
               <Link 
-                href="/category/phim-hanh-dong" 
+                href="/home/category/phim-hanh-dong" 
                 className="text-red-400 hover:text-red-300 transition-colors"
               >
                 Phim Hành Động
               </Link>
               <span className="text-gray-600">•</span>
               <Link 
-                href="/category/phim-hai-huoc" 
+                href="/home/category/phim-hai-huoc" 
                 className="text-red-400 hover:text-red-300 transition-colors"
               >
                 Phim Hài Hước
               </Link>
               <span className="text-gray-600">•</span>
               <Link 
-                href="/category/phim-tinh-cam" 
+                href="/home/category/phim-tinh-cam" 
                 className="text-red-400 hover:text-red-300 transition-colors"
               >
                 Phim Tình Cảm
               </Link>
               <span className="text-gray-600">•</span>
               <Link 
-                href="/category/phim-kiem-hiep" 
+                href="/home/category/phim-kiem-hiep" 
                 className="text-red-400 hover:text-red-300 transition-colors"
               >
                 Phim Kiếm Hiệp

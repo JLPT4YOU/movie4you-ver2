@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { MovieDetail } from '@/types/movie';
 import Header from '@/components/Header';
 import { WatchHistoryManager } from '@/utils/watchHistory';
+import { useAuth } from '@/contexts/AuthContext';
 import dynamic from 'next/dynamic';
 
 // Dynamic import to avoid SSR issues with Vidstack
@@ -67,6 +68,7 @@ const AdBlockerNotification = ({ isOpen, onClose }: { isOpen: boolean; onClose: 
 
 export default function WatchPage() {
   const params = useParams();
+  const { user } = useAuth();
 
   const [movie, setMovie] = useState<MovieDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -85,6 +87,8 @@ export default function WatchPage() {
   const [savedStartTime, setSavedStartTime] = useState(0);
 
   const videoRef = useRef<HTMLIFrameElement>(null);
+  const initialSaveDoneRef = useRef(false);
+  const lastPeriodicSaveAtRef = useRef(0); // ms timestamp for throttled periodic save
 
   const saveHistory = useCallback((overrides?: {
     source?: 'ophim' | 'phimapi' | 'nguonc' | 'mappletv' | 'videasy' | 'vidlink' | 'vidfast';
@@ -130,8 +134,8 @@ export default function WatchPage() {
       serverIndex: serverIndex,
       currentTime: overrides?.currentTime ?? currentPlaybackTime,
       duration: overrides?.duration ?? (videoDuration || 1),
-    });
-  }, [movie, selectedSource, selectedServer, selectedEpisode, alternativeSources, currentPlaybackTime, videoDuration]);
+    }, user?.id);
+  }, [movie, selectedSource, selectedServer, selectedEpisode, alternativeSources, currentPlaybackTime, videoDuration, user?.id]);
 
   useEffect(() => {
     const fetchMovieData = async () => {
@@ -160,7 +164,6 @@ export default function WatchPage() {
           setAlternativeSources({ phimapi, nguonc });
         });
       } catch (error) {
-        console.error('Error fetching movie:', error);
       } finally {
         setLoading(false);
       }
@@ -172,18 +175,24 @@ export default function WatchPage() {
   // Save on page/tab exit with current playback time
   useEffect(() => {
     const onUnloadOrHide = () => {
+      // Save latest progress to localStorage immediately and schedule remote save
       saveHistory({
         currentTime: currentPlaybackTime,
         duration: videoDuration
       });
+      // Force flush any pending remote saves to reduce data loss on sudden exit
+      void WatchHistoryManager.flushPending();
     };
     window.addEventListener('beforeunload', onUnloadOrHide);
+    // pagehide is more reliable than beforeunload on mobile/Safari
+    window.addEventListener('pagehide', onUnloadOrHide);
     const onVisibilityChange = () => {
       if (document.visibilityState === 'hidden') onUnloadOrHide();
     };
     document.addEventListener('visibilitychange', onVisibilityChange);
     return () => {
       window.removeEventListener('beforeunload', onUnloadOrHide);
+      window.removeEventListener('pagehide', onUnloadOrHide);
       document.removeEventListener('visibilitychange', onVisibilityChange);
     };
   }, [saveHistory, currentPlaybackTime, videoDuration]);
@@ -191,21 +200,32 @@ export default function WatchPage() {
   // Load saved progress when movie and initial selections are ready
   useEffect(() => {
     if (!movie) return;
+    // Reset early-save guard when playback context changes
+    initialSaveDoneRef.current = false;
     
     // Load saved progress for initial episode/server
-    const savedProgress = WatchHistoryManager.getProgress(
-      movie._id,
-      selectedEpisode,
-      selectedServer
-    );
-    
-    if (savedProgress && savedProgress.currentTime > 0) {
-      setSavedStartTime(savedProgress.currentTime);
-      setCurrentPlaybackTime(savedProgress.currentTime);
-      setVideoDuration(savedProgress.duration);
-    }
+    const loadProgress = async () => {
+      const savedProgress = await WatchHistoryManager.getProgress(
+        movie._id,
+        selectedEpisode,
+        selectedServer,
+        user?.id
+      );
+      
+      if (savedProgress && savedProgress.currentTime > 0) {
+        setSavedStartTime(savedProgress.currentTime);
+        setCurrentPlaybackTime(savedProgress.currentTime);
+        setVideoDuration(savedProgress.duration);
+      } else {
+        setSavedStartTime(0);
+        setCurrentPlaybackTime(0);
+        setVideoDuration(0);
+      }
+    };
+
+    loadProgress();
     // Note: saveHistory removed from deps to avoid infinite loop
-  }, [movie, selectedEpisode, selectedServer]);
+  }, [movie, selectedEpisode, selectedServer, user?.id]);
 
   const getCurrentVideoSource = () => {
     let videoSource = null;
@@ -424,18 +444,19 @@ export default function WatchPage() {
   const { videoSource, embedSource, videoTitle, isM3u8 } = getCurrentVideoSource();
   const servers = getServerList();
 
-  const applyServerChange = (nextSource: 'ophim' | 'phimapi' | 'nguonc' | 'mappletv' | 'videasy' | 'vidlink' | 'vidfast', nextServer: number) => {
+  const applyServerChange = async (nextSource: 'ophim' | 'phimapi' | 'nguonc' | 'mappletv' | 'videasy' | 'vidlink' | 'vidfast', nextServer: number) => {
     // save immediately for this selection
-    saveHistory({ source: nextSource, serverIndex: nextServer, episodeIndex: selectedEpisode });
+    await saveHistory({ source: nextSource, serverIndex: nextServer, episodeIndex: selectedEpisode });
     setSelectedSource(nextSource);
     setSelectedServer(nextServer);
 
     // Load saved progress for the new server/episode
     if (movie) {
-      const savedProgress = WatchHistoryManager.getProgress(
+      const savedProgress = await WatchHistoryManager.getProgress(
         movie._id,
         selectedEpisode,
-        nextServer
+        nextServer,
+        user?.id
       );
       if (savedProgress && savedProgress.currentTime > 0) {
         setSavedStartTime(savedProgress.currentTime);
@@ -448,6 +469,8 @@ export default function WatchPage() {
       }
     }
 
+    // New context -> allow early save again
+    initialSaveDoneRef.current = false;
     setPlayerKey(prev => prev + 1); // Force player re-render
   };
 
@@ -477,7 +500,7 @@ export default function WatchPage() {
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl md:text-3xl font-bold text-white">{movie.name}</h1>
             <Link 
-              href={`/phim/${movie.slug}`}
+              href={`/home/phim/${movie.slug}`}
               className="text-gray-400 hover:text-white transition-colors flex items-center gap-2">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -506,13 +529,18 @@ export default function WatchPage() {
                   // Update playback state
                   setCurrentPlaybackTime(currentTime);
                   setVideoDuration(duration);
-                  
-                  // Save playback position periodically (every 5 seconds)
-                  if (currentTime > 0 && duration > 0 && Math.abs(currentTime - currentPlaybackTime) >= 5) {
-                    saveHistory({
-                      currentTime: currentTime,
-                      duration: duration
-                    });
+
+                  // Ensure we persist at least once early to minimize loss on sudden refresh
+                  if (!initialSaveDoneRef.current && currentTime > 2 && duration > 0) {
+                    saveHistory({ currentTime, duration });
+                    initialSaveDoneRef.current = true;
+                  }
+
+                  // Throttled periodic save (every ~5s)
+                  const now = Date.now();
+                  if (currentTime > 0 && duration > 0 && now - lastPeriodicSaveAtRef.current >= 5000) {
+                    lastPeriodicSaveAtRef.current = now;
+                    saveHistory({ currentTime, duration });
                   }
                 }}
               />
@@ -523,6 +551,11 @@ export default function WatchPage() {
                   ref={videoRef}
                   src={embedSource}
                   className="w-full h-full"
+                  // Prevent ad/third-party players from navigating the parent page
+                  sandbox="allow-same-origin allow-scripts allow-forms allow-presentation allow-popups"
+                  // Allow common media capabilities
+                  allow="autoplay; fullscreen; encrypted-media; picture-in-picture; clipboard-write"
+                  referrerPolicy="no-referrer"
                   allowFullScreen
                   title={videoTitle}
                   onError={() => {
@@ -550,55 +583,52 @@ export default function WatchPage() {
           <div className="mb-6">
             <h2 className="text-lg font-semibold text-white mb-3">Chọn Server:</h2>
             <div className="flex flex-wrap gap-2">
-              {/* Display all servers */}
-              {servers.map((server) => {
-                const isAdServer = ['mappletv', 'videasy', 'vidlink', 'vidfast'].includes(server.source);
-                
-                return (
-                  <button
-                    key={`${server.source}-${server.index}`}
-                    onClick={() => {
-                      if (isAdServer) {
-                        setShowAdNotification(true);
+              {servers.map((server) => (
+                <button
+                  key={server.source + server.index}
+                  onClick={async () => {
+                    const hasAds = ['mappletv', 'videasy', 'vidlink', 'vidfast'].includes(server.source);
+                    if (hasAds) setShowAdNotification(true);
+                    
+                    const nextSource = server.source as 'ophim' | 'phimapi' | 'nguonc' | 'mappletv' | 'videasy' | 'vidlink' | 'vidfast';
+                    const nextServer = server.index;
+                    
+                    // save immediately for this selection
+                    await saveHistory({ source: nextSource, serverIndex: nextServer, episodeIndex: 0 });
+                    setSelectedSource(nextSource);
+                    setSelectedServer(nextServer);
+                    setSelectedEpisode(0);
+                    
+                    // Load saved progress for the new server
+                    if (movie) {
+                      const savedProgress = await WatchHistoryManager.getProgress(
+                        movie._id,
+                        0,
+                        nextServer,
+                        user?.id
+                      );
+                      if (savedProgress && savedProgress.currentTime > 0) {
+                        setSavedStartTime(savedProgress.currentTime);
+                        setCurrentPlaybackTime(savedProgress.currentTime);
+                        setVideoDuration(savedProgress.duration);
+                      } else {
+                        setSavedStartTime(0);
+                        setCurrentPlaybackTime(0);
+                        setVideoDuration(0);
                       }
-                      const nextSource = server.source as 'ophim' | 'phimapi' | 'nguonc' | 'mappletv' | 'videasy' | 'vidlink' | 'vidfast';
-                      const nextServer = server.index;
-                      // save immediately for this selection
-                      saveHistory({ source: nextSource, serverIndex: nextServer, episodeIndex: 0 });
-                      setSelectedSource(nextSource);
-                      setSelectedServer(nextServer);
-                      setSelectedEpisode(0);
-                      
-                      // Load saved progress for the new server
-                      if (movie) {
-                        const savedProgress = WatchHistoryManager.getProgress(
-                          movie._id,
-                          0,
-                          nextServer
-                        );
-                        if (savedProgress && savedProgress.currentTime > 0) {
-                          setSavedStartTime(savedProgress.currentTime);
-                          setCurrentPlaybackTime(savedProgress.currentTime);
-                          setVideoDuration(savedProgress.duration);
-                        } else {
-                          setSavedStartTime(0);
-                          setCurrentPlaybackTime(0);
-                          setVideoDuration(0);
-                        }
-                      }
-                      
-                      setPlayerKey(prev => prev + 1); // Force player re-render
-                    }}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                      selectedSource === server.source && selectedServer === server.index
-                        ? 'bg-netflix-red text-white'
-                        : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                    }`}
-                  >
-                    {server.name}
-                  </button>
-                );
-              })}
+                    }
+                    
+                    setPlayerKey(prev => prev + 1); // Force player re-render
+                  }}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    selectedSource === server.source && selectedServer === server.index
+                      ? 'bg-netflix-red text-white'
+                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  {server.name}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -610,16 +640,17 @@ export default function WatchPage() {
                 {episodes.map((episode, idx: number) => (
                   <button
                     key={idx}
-                    onClick={() => {
-                      saveHistory({ episodeIndex: idx });
+                    onClick={async () => {
+                      await saveHistory({ episodeIndex: idx });
                       setSelectedEpisode(idx);
                       
                       // Load saved progress for the new episode
                       if (movie) {
-                        const savedProgress = WatchHistoryManager.getProgress(
+                        const savedProgress = await WatchHistoryManager.getProgress(
                           movie._id,
                           idx,
-                          selectedServer
+                          selectedServer,
+                          user?.id
                         );
                         if (savedProgress && savedProgress.currentTime > 0) {
                           setSavedStartTime(savedProgress.currentTime);

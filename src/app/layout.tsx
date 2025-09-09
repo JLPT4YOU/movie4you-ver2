@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from 'next/font/google';
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
 import { TrailerProvider } from '@/contexts/TrailerContext';
+import { AuthProvider } from '@/contexts/AuthContext';
 import GlobalTrailer from '@/components/GlobalTrailer';
 
 const geistSans = Geist({
@@ -127,14 +129,14 @@ export default function RootLayout({
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <div className="bg-netflix-black min-h-screen text-netflix-white flex flex-col">
-          <TrailerProvider>
-            <Header />
-            <main className="flex-grow">
-              {children}
-            </main>
-            <Footer />
-            <GlobalTrailer />
-          </TrailerProvider>
+          <AuthProvider>
+            <TrailerProvider>
+              <main className="flex-grow">
+                {children}
+              </main>
+              <GlobalTrailer />
+            </TrailerProvider>
+          </AuthProvider>
           <SpeedInsights />
           <Analytics />
         </div>

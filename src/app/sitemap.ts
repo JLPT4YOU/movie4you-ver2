@@ -42,7 +42,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     },
     {
-      url: `${baseUrl}/lich-su`,
+      url: `${baseUrl}/home/lich-su`,
       lastModified: new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.5,
@@ -80,7 +80,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }
     }
   } catch (error) {
-    console.error('Error fetching movies for sitemap:', error);
   }
 
   // Fetch category pages
@@ -104,7 +103,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }
     }
   } catch (error) {
-    console.error('Error fetching categories for sitemap:', error);
   }
 
   return [...staticPages, ...moviePages, ...categoryPages];

@@ -43,7 +43,7 @@ const Footer = () => {
           {/* Logo and About */}
           <div className="lg:col-span-1">
             <div className="mb-6">
-              <Link href="/" className="inline-block hover:opacity-80 transition-opacity" aria-label="Trang chủ MOVIE4YOU">
+              <Link href="/home" className="inline-block hover:opacity-80 transition-opacity" aria-label="Trang chủ MOVIE4YOU">
                 <Image
                   src="/logo.png"
                   alt="MOVIE4YOU"

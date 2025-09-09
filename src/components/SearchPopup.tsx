@@ -52,7 +52,6 @@ export default function SearchPopup({ isOpen, onClose }: SearchPopupProps) {
         setSearchResults([]);
       }
     } catch (error) {
-      console.error('Error searching movies:', error);
       setSearchResults([]);
     } finally {
       setIsSearching(false);
@@ -128,7 +127,7 @@ export default function SearchPopup({ isOpen, onClose }: SearchPopupProps) {
               {searchResults.map((movie) => (
                 <Link
                   key={movie._id}
-                  href={`/phim/${movie.slug}`}
+                  href={`/home/phim/${movie.slug}`}
                   onClick={handleClose}
                   className="flex items-center gap-4 p-4 hover:bg-netflix-gray/30 transition-colors"
                 >
