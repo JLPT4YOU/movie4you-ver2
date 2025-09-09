@@ -1,6 +1,75 @@
 import type { NextConfig } from "next";
 
+const securityHeaders = [
+  {
+    key: 'X-Content-Type-Options',
+    value: 'nosniff',
+  },
+  {
+    key: 'Referrer-Policy',
+    value: 'strict-origin-when-cross-origin',
+  },
+  {
+    key: 'X-Frame-Options',
+    value: 'SAMEORIGIN',
+  },
+  {
+    key: 'Permissions-Policy',
+    value: 'camera=(), microphone=(), geolocation=()',
+  },
+];
+
+// Basic, permissive CSP that shouldn't break Next.js runtime
+const csp = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "frame-ancestors 'self'",
+  "object-src 'none'",
+  "form-action 'self'",
+  "upgrade-insecure-requests",
+  // Scripts: no unsafe-eval/inline in production build
+  "script-src 'self' https:",
+  // Styles: keep 'unsafe-inline' for inline styles (e.g. critical CSS)
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob: https:",
+  "font-src 'self' data:",
+  // Allow API/websocket connections to HTTPS/WSS endpoints used by the app (Supabase, etc.)
+  "connect-src 'self' https: wss:",
+  // Allow YouTube embeds
+  "frame-src https://www.youtube.com",
+  // Allow media streaming from self/blob/https
+  "media-src 'self' blob: https:"
+].join('; ');
+
+const oneYear = 31536000; // seconds
+
 const nextConfig: NextConfig = {
+  // Add security & caching headers
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          ...securityHeaders,
+          { key: 'Content-Security-Policy', value: csp },
+        ],
+      },
+      // Long-term cache for Next static assets
+      {
+        source: '/_next/static/:path*',
+        headers: [
+          { key: 'Cache-Control', value: `public, max-age=${oneYear}, immutable` },
+        ],
+      },
+      // Long-term cache for public assets (images, fonts, etc.)
+      {
+        source: '/:all*(png|jpg|jpeg|gif|webp|svg|ico|woff|woff2|ttf|otf|css|js)',
+        headers: [
+          { key: 'Cache-Control', value: `public, max-age=${oneYear}, immutable` },
+        ],
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {
@@ -39,7 +108,9 @@ const nextConfig: NextConfig = {
 
   // Tối ưu bundle
   compiler: {
-    removeConsole: process.env.NODE_ENV === "production",
+    removeConsole: process.env.NODE_ENV === "production"
+      ? { exclude: ["error", "warn"] }
+      : false,
   },
 
   // Compression - có thể điều khiển bằng env

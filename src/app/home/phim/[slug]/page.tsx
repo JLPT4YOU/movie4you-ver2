@@ -8,7 +8,7 @@ import { MovieDetailResponse, MovieDetail } from '@/types/movie';
 import { resolveImageUrl } from '@/utils/ophim';
 import { getYouTubeVideoId } from '@/utils/media';
 import { IconVideo } from '@/components/icons';
-import Header from '@/components/Header';
+
 
 
 export default function MovieDetailPage() {
@@ -53,7 +53,7 @@ export default function MovieDetailPage() {
           script.text = JSON.stringify(structuredData);
           document.head.appendChild(script);
         }
-      } catch (error) {
+      } catch {
       } finally {
         setLoading(false);
       }
@@ -90,7 +90,7 @@ export default function MovieDetailPage() {
 
   return (
     <div className="min-h-screen bg-netflix-black">
-      <Header />
+
       
       {/* Hero Section */}
       <div className="relative min-h-screen">
@@ -189,7 +189,7 @@ export default function MovieDetailPage() {
                   {movie.category?.map((cat) => (
                     <Link
                       key={cat.id}
-                      href={`/the-loai/${cat.slug}`}
+                      href={`/home/the-loai/${cat.slug}`}
                       className="bg-gray-800/80 hover:bg-netflix-red text-white px-4 py-2 rounded-full text-sm font-medium transition-colors duration-300 border border-gray-600 hover:border-netflix-red"
                     >
                       {cat.name}
@@ -221,7 +221,7 @@ export default function MovieDetailPage() {
                         {movie.country.map((country, index) => (
                           <span key={country.id}>
                             <Link
-                              href={`/quoc-gia/${country.slug}`}
+                              href={`/home/quoc-gia/${country.slug}`}
                               className="hover:text-netflix-red transition-colors"
                             >
                               {country.name}
@@ -252,7 +252,11 @@ export default function MovieDetailPage() {
                   {movie.director && movie.director.length > 0 && (
                     <div className="mb-4">
                       <span className="text-gray-400 text-sm">Đạo diễn: </span>
-                      <span className="text-white font-medium">{movie.country.map((country) => country.name).slice(0, 2).join(', ')}</span>
+                      <span className="text-white font-medium">
+                        {Array.isArray(movie.director)
+                          ? movie.director.slice(0, 3).join(', ')
+                          : String(movie.director)}
+                      </span>
                     </div>
                   )}
 

@@ -71,7 +71,16 @@ export function useInfiniteOphimList({
         .map((item) => normalizeMovie((item as { movie?: Record<string, unknown> })?.movie || item))
         .filter(Boolean) as NormalizedMovie[];
 
-      setItems((prev) => [...prev, ...normalized]);
+      // de-duplicate by id or slug
+      const fresh = normalized.filter((m) => {
+        const key = m.id || m.slug;
+        if (!key) return true; // keep if cannot determine key
+        if (seenRef.current.has(key)) return false;
+        seenRef.current.add(key);
+        return true;
+      });
+
+      setItems((prev) => [...prev, ...fresh]);
       setHasMore((Array.isArray(rawItems) ? rawItems.length : 0) >= size);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Fetch error");

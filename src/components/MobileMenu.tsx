@@ -242,7 +242,7 @@ export default function MobileMenu({
                     {categories.map((category) => (
                       <Link
                         key={category._id}
-                        href={`/the-loai/${category.slug}`}
+                        href={`/home/the-loai/${category.slug}`}
                         className="block py-1 px-2 text-sm text-netflix-text-gray hover:text-netflix-red hover:bg-netflix-gray/30 rounded transition-colors"
                         onClick={onClose}
                       >
@@ -287,7 +287,7 @@ export default function MobileMenu({
                     {countries.map((country) => (
                       <Link
                         key={country._id}
-                        href={`/quoc-gia/${country.slug}`}
+                        href={`/home/quoc-gia/${country.slug}`}
                         className="block py-1 px-2 text-sm text-netflix-text-gray hover:text-netflix-red hover:bg-netflix-gray/30 rounded transition-colors"
                         onClick={onClose}
                       >
@@ -332,7 +332,7 @@ export default function MobileMenu({
                     {years.map((year) => (
                       <Link
                         key={year._id}
-                        href={`/nam-phat-hanh/${year.slug}`}
+                        href={`/home/nam-phat-hanh/${year.slug}`}
                         className="block py-1 px-2 text-sm text-netflix-text-gray hover:text-netflix-red hover:bg-netflix-gray/30 rounded transition-colors text-center"
                         onClick={onClose}
                       >

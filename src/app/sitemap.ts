@@ -12,31 +12,43 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1,
     },
     {
-      url: `${baseUrl}/phim-moi`,
+      url: `${baseUrl}/home`,
+      lastModified: new Date(),
+      changeFrequency: 'daily' as const,
+      priority: 1,
+    },
+    {
+      url: `${baseUrl}/home/category/phim-moi`,
       lastModified: new Date(),
       changeFrequency: 'daily' as const,
       priority: 0.9,
     },
     {
-      url: `${baseUrl}/phim-bo`,
+      url: `${baseUrl}/home/category/phim-bo`,
       lastModified: new Date(),
       changeFrequency: 'daily' as const,
       priority: 0.9,
     },
     {
-      url: `${baseUrl}/phim-le`,
+      url: `${baseUrl}/home/category/phim-le`,
       lastModified: new Date(),
       changeFrequency: 'daily' as const,
       priority: 0.9,
     },
     {
-      url: `${baseUrl}/tv-shows`,
+      url: `${baseUrl}/home/category/tv-shows`,
       lastModified: new Date(),
       changeFrequency: 'daily' as const,
       priority: 0.8,
     },
     {
-      url: `${baseUrl}/hoat-hinh`,
+      url: `${baseUrl}/home/category/hoat-hinh`,
+      lastModified: new Date(),
+      changeFrequency: 'daily' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/home/category/phim-chieu-rap`,
       lastModified: new Date(),
       changeFrequency: 'daily' as const,
       priority: 0.8,
@@ -70,7 +82,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           
           moviePages = moviePages.concat(
             movies.map((movie: { slug: string; modified?: { time?: string } }) => ({
-              url: `${baseUrl}/phim/${movie.slug}`,
+              url: `${baseUrl}/home/phim/${movie.slug}`,
               lastModified: movie.modified?.time ? new Date(movie.modified.time) : new Date(),
               changeFrequency: 'weekly' as const,
               priority: 0.7,
@@ -95,7 +107,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       
       if (data.status === 'success' && data.data?.items) {
         categoryPages = data.data.items.map((category: { slug: string }) => ({
-          url: `${baseUrl}/the-loai/${category.slug}`,
+          url: `${baseUrl}/home/the-loai/${category.slug}`,
           lastModified: new Date(),
           changeFrequency: 'weekly' as const,
           priority: 0.6,

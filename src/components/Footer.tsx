@@ -7,30 +7,30 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   const movieCategories = [
-    { name: 'Phim Bộ', href: '/category/phim-bo' },
-    { name: 'Phim Lẻ', href: '/category/phim-le' },
-    { name: 'TV Shows', href: '/category/tv-shows' },
-    { name: 'Hoạt Hình', href: '/category/hoat-hinh' },
-    { name: 'Phim Chiếu Rạp', href: '/category/phim-chieu-rap' },
-    { name: 'Phim Vietsub', href: '/category/phim-vietsub' },
+    { name: 'Phim Bộ', href: '/home/category/phim-bo' },
+    { name: 'Phim Lẻ', href: '/home/category/phim-le' },
+    { name: 'TV Shows', href: '/home/category/tv-shows' },
+    { name: 'Hoạt Hình', href: '/home/category/hoat-hinh' },
+    { name: 'Phim Chiếu Rạp', href: '/home/category/phim-chieu-rap' },
+    { name: 'Phim Vietsub', href: '/home/category/phim-vietsub' },
   ];
 
   const genres = [
-    { name: 'Hành Động', href: '/the-loai/hanh-dong' },
-    { name: 'Tình Cảm', href: '/the-loai/tinh-cam' },
-    { name: 'Hài Hước', href: '/the-loai/hai-huoc' },
-    { name: 'Kinh Dị', href: '/the-loai/kinh-di' },
-    { name: 'Viễn Tưởng', href: '/the-loai/vien-tuong' },
-    { name: 'Võ Thuật', href: '/the-loai/vo-thuat' },
+    { name: 'Hành Động', href: '/home/the-loai/hanh-dong' },
+    { name: 'Tình Cảm', href: '/home/the-loai/tinh-cam' },
+    { name: 'Hài Hước', href: '/home/the-loai/hai-huoc' },
+    { name: 'Kinh Dị', href: '/home/the-loai/kinh-di' },
+    { name: 'Viễn Tưởng', href: '/home/the-loai/vien-tuong' },
+    { name: 'Võ Thuật', href: '/home/the-loai/vo-thuat' },
   ];
 
   const countries = [
-    { name: 'Phim Hàn Quốc', href: '/quoc-gia/han-quoc' },
-    { name: 'Phim Trung Quốc', href: '/quoc-gia/trung-quoc' },
-    { name: 'Phim Âu Mỹ', href: '/quoc-gia/au-my' },
-    { name: 'Phim Thái Lan', href: '/quoc-gia/thai-lan' },
-    { name: 'Phim Nhật Bản', href: '/quoc-gia/nhat-ban' },
-    { name: 'Phim Việt Nam', href: '/quoc-gia/viet-nam' },
+    { name: 'Phim Hàn Quốc', href: '/home/quoc-gia/han-quoc' },
+    { name: 'Phim Trung Quốc', href: '/home/quoc-gia/trung-quoc' },
+    { name: 'Phim Âu Mỹ', href: '/home/quoc-gia/au-my' },
+    { name: 'Phim Thái Lan', href: '/home/quoc-gia/thai-lan' },
+    { name: 'Phim Nhật Bản', href: '/home/quoc-gia/nhat-ban' },
+    { name: 'Phim Việt Nam', href: '/home/quoc-gia/viet-nam' },
   ];
 
   // quickLinks removed per request

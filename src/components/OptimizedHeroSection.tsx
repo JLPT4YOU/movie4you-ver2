@@ -213,7 +213,7 @@ export default function OptimizedHeroSection({ movies: propMovies = [], loading:
                 {currentMovie.categories && currentMovie.categories.slice(0, 4).map((cat, index) => (
                   <Link
                     key={index}
-                    href={`/the-loai/${cat.slug}`}
+                    href={`/home/the-loai/${cat.slug}`}
                     className="bg-gray-800/80 hover:bg-netflix-red text-white px-4 py-2 rounded-full text-sm font-medium transition-colors duration-300 border border-gray-600 hover:border-netflix-red"
                   >
                     {cat.name}
