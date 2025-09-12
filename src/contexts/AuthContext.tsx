@@ -8,7 +8,11 @@ interface AuthContextType {
   user: User | null;
   supabaseUser: SupabaseUser | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  signIn: (
+    email: string,
+    password: string,
+    captchaToken?: string
+  ) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
   isAuthenticated: boolean;
   hasAccess: boolean; // Only Premium/Admin have access
@@ -118,14 +122,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string, captchaToken?: string) => {
     try {
       setLoading(true);
       
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { data, error } = await supabase.auth.signInWithPassword(
+        captchaToken
+          ? { email, password, options: { captchaToken } }
+          : { email, password }
+      );
 
       if (error) {
         return { success: false, error: error.message };

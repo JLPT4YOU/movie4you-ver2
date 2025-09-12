@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import HCaptcha from '@hcaptcha/react-hcaptcha';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,6 +16,8 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
+  const [captchaToken, setCaptchaToken] = useState<string | undefined>(undefined);
+  const captchaRef = useRef<HCaptcha | null>(null);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -29,7 +32,7 @@ export default function LoginPage() {
     setError('');
     
     try {
-      const result = await signIn(email, password);
+      const result = await signIn(email, password, captchaToken);
       
       if (result.success) {
         router.push('/home');
@@ -40,6 +43,12 @@ export default function LoginPage() {
       setError('Đã xảy ra lỗi khi đăng nhập');
     } finally {
       setIsLoading(false);
+      try {
+        captchaRef.current?.resetCaptcha();
+        setCaptchaToken(undefined);
+      } catch (_) {
+        
+      }
     }
   };
 
@@ -117,6 +126,17 @@ export default function LoginPage() {
                   />
                 </div>
 
+                {/* hCaptcha */}
+                <div>
+                  <HCaptcha
+                    ref={captchaRef as any}
+                    sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITEKEY || ''}
+                    onVerify={(token) => setCaptchaToken(token)}
+                    onExpire={() => setCaptchaToken(undefined)}
+                    theme="dark"
+                  />
+                </div>
+
                 {/* Password Field */}
                 <div className="space-y-2">
                   <label htmlFor="password" className="block text-sm font-medium text-gray-200">
@@ -173,7 +193,7 @@ export default function LoginPage() {
                 {/* Login Button */}
                 <button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isLoading || !captchaToken}
                   className="w-full bg-gradient-to-r from-netflix-red to-red-600 hover:from-red-600 hover:to-red-700 disabled:from-gray-600 disabled:to-gray-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-[1.02] disabled:scale-100 disabled:cursor-not-allowed shadow-lg"
                 >
                   {isLoading ? (
