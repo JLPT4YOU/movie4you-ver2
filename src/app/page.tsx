@@ -126,16 +126,6 @@ export default function LoginPage() {
                   />
                 </div>
 
-                {/* hCaptcha */}
-                <div>
-                  <HCaptcha
-                    ref={captchaRef as any}
-                    sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITEKEY || ''}
-                    onVerify={(token) => setCaptchaToken(token)}
-                    onExpire={() => setCaptchaToken(undefined)}
-                    theme="dark"
-                  />
-                </div>
 
                 {/* Password Field */}
                 <div className="space-y-2">
@@ -188,6 +178,17 @@ export default function LoginPage() {
                   >
                     Quên mật khẩu?
                   </Link>
+                </div>
+
+                {/* hCaptcha (moved below Remember/Forgot and above Login button) */}
+                <div>
+                  <HCaptcha
+                    ref={captchaRef as any}
+                    sitekey="185a143a-edae-4240-8ba4-7dbeb87234b6"
+                    onVerify={(token) => setCaptchaToken(token)}
+                    onExpire={() => setCaptchaToken(undefined)}
+                    theme="dark"
+                  />
                 </div>
 
                 {/* Login Button */}
