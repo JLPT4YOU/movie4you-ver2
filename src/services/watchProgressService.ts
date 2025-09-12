@@ -36,7 +36,7 @@ class WatchProgressService {
   async saveProgress(userId: string, progressData: WatchProgressInput): Promise<WatchProgress | null> {
     try {
       const now = new Date().toISOString();
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as unknown as { from: (t: string) => any })
         .from('watch_progress')
         .upsert(
           [

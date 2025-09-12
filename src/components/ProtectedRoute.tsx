@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -12,14 +12,17 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { hasAccess, loading, user, isAuthenticated, supabaseUser } = useAuth();
   const router = useRouter();
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const hasPushedRef = useRef(false);
 
   useEffect(() => {
-    // If we don't have a session at all and we're not loading, redirect
-    if (!loading && !hasAccess && !isRedirecting && !supabaseUser) {
+    if (hasPushedRef.current) return;
+    // Redirect only when auth state settled and no session
+    if (!loading && !hasAccess && !supabaseUser) {
+      hasPushedRef.current = true;
       setIsRedirecting(true);
-      router.push('/');
+      router.replace('/');
     }
-  }, [hasAccess, loading, router, isRedirecting, supabaseUser, user]);
+  }, [hasAccess, loading, router, supabaseUser]);
 
   // Show spinner only while determining access (no access yet)
   if ((loading || (supabaseUser && !user)) && !hasAccess) {
@@ -46,7 +49,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
             }
           </p>
           <button
-            onClick={() => router.push('/')}
+            onClick={() => router.replace('/')}
             className="bg-netflix-red hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors"
           >
             Quay lại đăng nhập

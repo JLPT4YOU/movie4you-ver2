@@ -61,7 +61,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return false;
       }
       
-      return !!data?.accepted_at;
+      const record = data as { accepted_at?: string | null } | null;
+      return !!record?.accepted_at;
     } catch (error) {
       console.error('Error checking terms acceptance:', error);
       return false;
@@ -70,17 +71,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   
   const saveTermsAcceptance = async (uid: string): Promise<boolean> => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as unknown as { from: (t: string) => any })
         .from('terms_acceptance')
-        .upsert({
-          user_id: uid,
-          accepted_at: new Date().toISOString(),
-          terms_version: 'v1.0',
-          ip_address: null, // Could be added if needed
-          user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null
-        }, {
-          onConflict: 'user_id'
-        });
+        .upsert(
+          {
+            user_id: uid,
+            accepted_at: new Date().toISOString(),
+            terms_version: 'v1.0',
+            ip_address: null, // Could be added if needed
+            user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null
+          },
+          {
+            onConflict: 'user_id'
+          }
+        );
       
       if (error) {
         console.error('Error saving terms acceptance:', error);
@@ -182,10 +186,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let initialSessionComplete = false;
-    const safetyTimer = setTimeout(() => {
-      
-      setLoading(false);
-    }, 5000);
 
     // Get initial session
     const getInitialSession = async () => {
@@ -200,7 +200,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const cached = loadCachedProfile(session.user.id);
           if (cached) {
             setUser(cached);
-            setLoading(false);
           }
 
           const profile = await fetchUserProfile(session.user);
@@ -276,7 +275,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       subscription.unsubscribe();
-      clearTimeout(safetyTimer);
     };
   }, []);
 
