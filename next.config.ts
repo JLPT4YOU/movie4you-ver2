@@ -22,12 +22,15 @@ const securityHeaders = [
 // Basic, permissive CSP that shouldn't break Next.js runtime
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:",
+  // Allow hCaptcha scripts
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https: https://hcaptcha.com https://*.hcaptcha.com",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  "connect-src 'self' https: wss:",
-  "frame-src https://www.youtube.com",
+  // Allow Supabase and hCaptcha networking + websockets
+  "connect-src 'self' https: wss: https://*.supabase.co https://hcaptcha.com https://*.hcaptcha.com",
+  // Allow embedding YouTube and hCaptcha
+  "frame-src https://www.youtube.com https://hcaptcha.com https://*.hcaptcha.com",
   "media-src 'self' blob: https:"
 ].join('; ');
 
