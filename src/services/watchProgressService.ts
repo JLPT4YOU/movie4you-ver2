@@ -56,6 +56,10 @@ class WatchProgressService {
         .select();
 
       if (error) {
+        // Debug log to diagnose why progress is not saved (RLS, 401, etc.)
+        // Safe to keep in development; remove or gate by env in production if noisy
+        // eslint-disable-next-line no-console
+        console.error('[watch_progress] upsert error:', error);
         return null;
       }
 

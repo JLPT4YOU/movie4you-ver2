@@ -134,7 +134,7 @@ export default function WatchPage() {
       episodeName: source === 'mappletv' ? 'MappleTV' : (episode?.name || `Tập ${episodeIndex + 1}`),
       serverIndex: serverIndex,
       currentTime: overrides?.currentTime ?? currentPlaybackTime,
-      duration: overrides?.duration ?? (videoDuration || 1),
+      duration: overrides?.duration ?? videoDuration, // Don't fallback to 1, keep 0 if no duration
     }, user?.id);
   }, [movie, selectedSource, selectedServer, selectedEpisode, alternativeSources, currentPlaybackTime, videoDuration, user?.id]);
 
@@ -177,39 +177,34 @@ export default function WatchPage() {
   // Only set selectedEpisode on first init (when it's < 0) to avoid overriding user choice.
   useEffect(() => {
     const initFromHistory = async () => {
-      if (!movie) return;
-
-      console.log('initFromHistory: movie._id =', movie._id, 'user?.id =', user?.id);
-      console.log('Full user object:', user);
+      if (!movie) {
+        console.log('[INIT] No movie yet, skipping init');
+        return;
+      }
 
       try {
         const latest = await WatchHistoryManager.getLatestEpisode(movie._id, user?.id);
-        console.log('Latest episode from history:', latest);
-
         const epIndex = (latest && typeof latest.episodeIndex === 'number') ? latest.episodeIndex : 0;
+        
         if (selectedEpisode < 0) {
-          console.log('Setting initial episode to:', epIndex);
           setSelectedEpisode(epIndex);
         }
 
         // Load progress for that episode across any server
         const progress = await WatchHistoryManager.getEpisodeProgressAnyServer(movie._id, epIndex, user?.id);
-        console.log('Progress for episode:', progress);
-
-        if (progress && progress.currentTime > 0) {
-          console.log('Setting startTime to:', progress.currentTime);
+        
+        if (progress && progress.currentTime > 0 && progress.duration > 0) {
           setSavedStartTime(progress.currentTime);
           setCurrentPlaybackTime(progress.currentTime);
           setVideoDuration(progress.duration);
-          setPlayerKey(prev => prev + 1); // Force player re-render
         } else {
           setSavedStartTime(0);
           setCurrentPlaybackTime(0);
           setVideoDuration(0);
         }
       } catch (e) {
-        console.error('Error in initFromHistory:', e);
-        if (selectedEpisode < 0) setSelectedEpisode(0); // Default to first episode on error
+        console.error('Error loading watch history:', e);
+        if (selectedEpisode < 0) setSelectedEpisode(0);
       }
     };
 
@@ -241,35 +236,38 @@ export default function WatchPage() {
     };
   }, [saveHistory, currentPlaybackTime, videoDuration]);
 
+  // Save on component unmount (SPA route change as well)
+  useEffect(() => {
+    return () => {
+      // Ensure we persist when navigating within the app (no pagehide/beforeunload fired)
+      saveHistory({ currentTime: currentPlaybackTime, duration: videoDuration });
+      void WatchHistoryManager.flushPending();
+    };
+  }, [saveHistory, currentPlaybackTime, videoDuration]);
+
   // Load saved progress when movie and current episode selection are ready
   useEffect(() => {
-    if (!movie || selectedEpisode < 0) return; // Skip if episode not set yet
+    if (!movie || selectedEpisode < 0) return;
+    
     // Reset early-save guard when playback context changes
     initialSaveDoneRef.current = false;
-    
-    // Load saved progress for initial episode/server
+
+    // Load saved progress for current episode/server
     const loadProgress = async () => {
-      console.log('loadProgress: Loading for episode', selectedEpisode);
       const savedProgress = await WatchHistoryManager.getEpisodeProgressAnyServer(
         movie._id,
         selectedEpisode,
         user?.id
       );
-      
-      console.log('loadProgress: savedProgress =', savedProgress);
-      
-      if (savedProgress && savedProgress.currentTime > 0) {
-        console.log('loadProgress: Setting startTime to', savedProgress.currentTime);
+
+      if (savedProgress && savedProgress.currentTime > 0 && savedProgress.duration > 0) {
         setSavedStartTime(savedProgress.currentTime);
         setCurrentPlaybackTime(savedProgress.currentTime);
         setVideoDuration(savedProgress.duration);
-        setPlayerKey(prev => prev + 1); // Force player re-render with new startTime
       } else {
-        console.log('loadProgress: No saved progress, starting from beginning');
         setSavedStartTime(0);
         setCurrentPlaybackTime(0);
         setVideoDuration(0);
-        setPlayerKey(prev => prev + 1); // Force re-render even with 0 startTime
       }
     };
 
@@ -486,8 +484,7 @@ export default function WatchPage() {
   const servers = getServerList();
 
   const applyServerChange = async (nextSource: 'ophim' | 'phimapi' | 'nguonc' | 'mappletv' | 'videasy' | 'vidlink' | 'vidfast', nextServer: number) => {
-    // save immediately for this selection
-    await saveHistory({ source: nextSource, serverIndex: nextServer, episodeIndex: selectedEpisode });
+    // Don't save when just switching server (no duration yet)
     setSelectedSource(nextSource);
     setSelectedServer(nextServer);
 
@@ -511,7 +508,8 @@ export default function WatchPage() {
 
     // New context -> allow early save again
     initialSaveDoneRef.current = false;
-    setPlayerKey(prev => prev + 1); // Force player re-render
+    // Only force re-render when actually changing server (different video source)
+    setPlayerKey(prev => prev + 1);
   };
 
   const fallbackToNextPreferredServer = () => {
@@ -570,17 +568,20 @@ export default function WatchPage() {
                   setCurrentPlaybackTime(currentTime);
                   setVideoDuration(duration);
 
-                  // Ensure we persist at least once early to minimize loss on sudden refresh
-                  if (!initialSaveDoneRef.current && currentTime > 2 && duration > 0) {
-                    saveHistory({ currentTime, duration });
-                    initialSaveDoneRef.current = true;
-                  }
+                  // Only save if we have valid duration
+                  if (duration > 0) {
+                    // Ensure we persist at least once early to minimize loss on sudden refresh
+                    if (!initialSaveDoneRef.current && currentTime > 2) {
+                      saveHistory({ currentTime, duration });
+                      initialSaveDoneRef.current = true;
+                    }
 
-                  // Throttled periodic save (every ~5s)
-                  const now = Date.now();
-                  if (currentTime > 0 && duration > 0 && now - lastPeriodicSaveAtRef.current >= 5000) {
-                    lastPeriodicSaveAtRef.current = now;
-                    saveHistory({ currentTime, duration });
+                    // Throttled periodic save (every ~5s)
+                    const now = Date.now();
+                    if (currentTime > 0 && now - lastPeriodicSaveAtRef.current >= 5000) {
+                      lastPeriodicSaveAtRef.current = now;
+                      saveHistory({ currentTime, duration });
+                    }
                   }
                 }}
               />
@@ -655,7 +656,12 @@ export default function WatchPage() {
                   <button
                     key={idx}
                     onClick={async () => {
-                      await saveHistory({ episodeIndex: idx });
+                      // Always reset progress first
+                      setSavedStartTime(0);
+                      setCurrentPlaybackTime(0);
+                      setVideoDuration(0);
+                      
+                      // Set new episode
                       setSelectedEpisode(idx);
                       
                       // Load saved progress for the new episode
@@ -665,7 +671,8 @@ export default function WatchPage() {
                           idx,
                           user?.id
                         );
-                        if (savedProgress && savedProgress.currentTime > 0) {
+                        
+                        if (savedProgress && savedProgress.currentTime > 0 && savedProgress.duration > 0) {
                           setSavedStartTime(savedProgress.currentTime);
                           setCurrentPlaybackTime(savedProgress.currentTime);
                           setVideoDuration(savedProgress.duration);
@@ -675,8 +682,6 @@ export default function WatchPage() {
                           setVideoDuration(0);
                         }
                       }
-                      
-                      setPlayerKey(prev => prev + 1); // Force player re-render
                     }}
                     className={`px-3 py-2 rounded-lg font-medium transition-colors ${
                       selectedEpisode === idx

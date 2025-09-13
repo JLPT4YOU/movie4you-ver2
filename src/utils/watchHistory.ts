@@ -30,6 +30,10 @@ export class WatchHistoryManager {
   }
 
   private static async sendToSupabase(item: Omit<WatchHistoryItem, 'watchedAt'>, userId: string) {
+    // Double check duration before sending to Supabase
+    if (!item.duration || item.duration <= 0) {
+      return;
+    }
     const progressInput = this.convertToProgressInput(item);
     await watchProgressService.saveProgress(userId, progressInput);
   }
@@ -143,8 +147,14 @@ export class WatchHistoryManager {
   // Lưu/cập nhật progress xem phim (Supabase + localStorage)
   static async saveProgress(item: Omit<WatchHistoryItem, 'watchedAt'>, userId?: string): Promise<void> {
     if (typeof window === 'undefined') return;
+    
+    // Don't save if duration is 0 or invalid
+    if (!item.duration || item.duration <= 0) {
+      return;
+    }
 
     try {
+      
       // Throttle Supabase writes
       this.scheduleSupabaseSave(item, userId);
 
@@ -225,67 +235,51 @@ export class WatchHistoryManager {
 
   // Lấy progress của một tập phim bất kể server nào (ưu tiên Supabase, fallback localStorage)
   static async getEpisodeProgressAnyServer(movieId: string, episodeIndex: number, userId?: string): Promise<WatchHistoryItem | null> {
-    console.log('getEpisodeProgressAnyServer called:', { movieId, episodeIndex, userId });
-    
     // Supabase first: query latest progress for this episode across any server
     if (userId) {
       try {
         const progress = await watchProgressService.getLatestEpisodeProgress(userId, movieId, episodeIndex);
-        console.log('getEpisodeProgressAnyServer: Supabase progress:', progress);
         if (progress) {
-          const result = this.convertToHistoryItem(progress);
-          console.log('getEpisodeProgressAnyServer: returning from Supabase:', result);
-          return result;
+          return this.convertToHistoryItem(progress);
         }
       } catch (error) {
-        console.error('getEpisodeProgressAnyServer: Error from Supabase:', error);
+        console.error('Error loading progress from Supabase:', error);
       }
     }
 
     // Fallback to localStorage: find latest watchedAt for this episode across servers
-    console.log('getEpisodeProgressAnyServer: Falling back to localStorage');
     const history = this.getHistorySync();
     const candidates = history.filter(
       (h: WatchHistoryItem) => h.movieId === movieId && h.episodeIndex === episodeIndex
     );
     if (candidates.length === 0) {
-      console.log('getEpisodeProgressAnyServer: No candidates in localStorage');
       return null;
     }
     candidates.sort((a, b) => new Date(b.watchedAt).getTime() - new Date(a.watchedAt).getTime());
-    console.log('getEpisodeProgressAnyServer: returning from localStorage:', candidates[0]);
     return candidates[0];
   }
 
   // Lấy tập phim gần nhất của một bộ phim (Supabase + localStorage)
   static async getLatestEpisode(movieId: string, userId?: string): Promise<WatchHistoryItem | null> {
-    console.log('getLatestEpisode called with movieId:', movieId, 'userId:', userId);
-    
     // If user is authenticated, try Supabase first
     if (userId) {
       try {
         const movieProgress = await watchProgressService.getMovieProgress(userId, movieId);
-        console.log('getLatestEpisode: movieProgress from Supabase:', movieProgress);
         
         if (movieProgress.length > 0) {
           // Sort by episode index and return the latest
           const sorted = movieProgress.sort((a, b) => new Date(b.watched_at).getTime() - new Date(a.watched_at).getTime());
-          const result = this.convertToHistoryItem(sorted[0]);
-          console.log('getLatestEpisode: returning from Supabase:', result);
-          return result;
+          return this.convertToHistoryItem(sorted[0]);
         }
       } catch (error) {
-        console.error('getLatestEpisode: Error from Supabase:', error);
+        console.error('Error loading latest episode from Supabase:', error);
       }
     }
 
     // Fallback to localStorage
-    console.log('getLatestEpisode: Falling back to localStorage');
     const history = this.getHistorySync();
     const movieHistory = history.filter((h: WatchHistoryItem) => h.movieId === movieId);
-    const result = movieHistory.length > 0 ? movieHistory[0] : null;
-    console.log('getLatestEpisode: returning from localStorage:', result);
-    return result;
+    return movieHistory.length > 0 ? movieHistory[0] : null;
   }
 
   // Xóa lịch sử của một phim (Supabase + localStorage)  

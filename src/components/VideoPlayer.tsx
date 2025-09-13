@@ -35,35 +35,44 @@ export default function VideoPlayer({
 }: VideoPlayerProps) {
   const playerRef = useRef<MediaPlayerInstance>(null);
   const [hasSeeked, setHasSeeked] = useState(false);
+  const [isReady, setIsReady] = useState(false);
   const posterUrl = poster ? resolveOriginalImageUrl(poster) : undefined;
   
-  console.log('VideoPlayer render: src=', src, 'startTime=', startTime);
 
   useEffect(() => {
-    if (!playerRef.current || startTime <= 0 || hasSeeked) {
-      console.log('VideoPlayer seek skip: startTime=', startTime, 'hasSeeked=', hasSeeked);
-      return;
-    }
+    if (!playerRef.current) return;
     
     const player = playerRef.current;
     
     // Subscribe to player state changes
     const subscription = player.subscribe((state) => {
-      // Wait for media to be ready and have duration
-      if (state.canPlay && state.duration > 0 && !hasSeeked) {
-        console.log('VideoPlayer seeking to:', startTime);
+      // Track when player is ready
+      if (state.canPlay && state.duration > 0 && !isReady) {
+        setIsReady(true);
+      }
+      
+      // Perform seek when ready and haven't seeked yet
+      if (state.canPlay && state.duration > 0 && !hasSeeked && startTime > 0) {
         player.currentTime = startTime;
         setHasSeeked(true);
       }
     });
 
     return () => subscription();
-  }, [startTime, hasSeeked]);
+  }, [startTime, hasSeeked, isReady]);
 
-  // Reset seeked flag when src or startTime changes
+  // Reset flags when src changes (new video)
   useEffect(() => {
     setHasSeeked(false);
-  }, [src, startTime]);
+    setIsReady(false);
+  }, [src]);
+  
+  // Reset seeked flag when startTime changes (same video, different position)
+  useEffect(() => {
+    if (startTime > 0) {
+      setHasSeeked(false);
+    }
+  }, [startTime]);
 
   return (
     <MediaPlayer
@@ -80,7 +89,11 @@ export default function VideoPlayer({
           const currentTime = detail?.currentTime ?? 0;
           // Duration is available on the player state, not in the event detail
           const duration = playerRef.current?.state.duration ?? 0;
-          onTimeUpdate(currentTime, duration);
+          
+          // Only report time updates if we have valid duration
+          if (duration > 0) {
+            onTimeUpdate(currentTime, duration);
+          }
         }
       }}
       className="w-full aspect-video bg-black rounded-lg overflow-hidden vds-player"

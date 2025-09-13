@@ -22,6 +22,9 @@ const geistMono = Geist_Mono({
   preload: true,
 });
 
+// Only enable Vercel Analytics/Speed Insights on Vercel deployments
+const isVercelDeployment = process.env.VERCEL === '1';
+
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://movie4you.com'),
   title: {
@@ -136,8 +139,8 @@ export default function RootLayout({
               <GlobalDisclaimerGate />
             </TrailerProvider>
           </AuthProvider>
-          <SpeedInsights />
-          <Analytics />
+          {isVercelDeployment && <SpeedInsights />}
+          {isVercelDeployment && <Analytics />}
         </div>
       </body>
     </html>
