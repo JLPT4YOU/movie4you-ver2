@@ -91,6 +91,11 @@ export default function WatchPage() {
   const lastPeriodicSaveAtRef = useRef(0); // ms timestamp for throttled periodic save
   // removed unused initializedFromHistoryRef
 
+  // iOS fullscreen handling to avoid false unload/pagehide during native fullscreen transitions
+  const isIOSRef = useRef<boolean>(typeof navigator !== 'undefined' && /iPhone|iPad|iPod/i.test(navigator.userAgent));
+  const isFullscreenRef = useRef(false);
+  const lastFullscreenChangeAtRef = useRef(0);
+
   const saveHistory = useCallback((overrides?: {
     source?: 'ophim' | 'phimapi' | 'nguonc' | 'mappletv' | 'videasy' | 'vidlink' | 'vidfast';
     serverIndex?: number;
@@ -213,8 +218,21 @@ export default function WatchPage() {
 
   // Save on page/tab exit with current playback time
   useEffect(() => {
-    const onUnloadOrHide = () => {
+    const onUnloadOrHide = (evt?: Event) => {
+      const now = Date.now();
+      // Skip if this is likely an iOS fullscreen transition
+      if (isIOSRef.current && (isFullscreenRef.current || now - lastFullscreenChangeAtRef.current < 1500)) {
+        // console.debug('[SAVE] Skipped due to iOS fullscreen transition');
+        return;
+      }
+      // Skip if page is entering bfcache (not a real unload)
+      const persisted = (evt as PageTransitionEvent | undefined)?.persisted === true;
+      if (persisted) {
+        // console.debug('[SAVE] Skipped due to bfcache (persisted)');
+        return;
+      }
       // Save latest progress to localStorage immediately and schedule remote save
+      // console.debug('[SAVE] Triggered', { currentPlaybackTime, videoDuration });
       saveHistory({
         currentTime: currentPlaybackTime,
         duration: videoDuration
@@ -222,16 +240,18 @@ export default function WatchPage() {
       // Force flush any pending remote saves to reduce data loss on sudden exit
       void WatchHistoryManager.flushPending();
     };
-    window.addEventListener('beforeunload', onUnloadOrHide);
-    // pagehide is more reliable than beforeunload on mobile/Safari
-    window.addEventListener('pagehide', onUnloadOrHide);
+    const onBeforeUnload = (evt: Event) => onUnloadOrHide(evt);
+    const onPageHide = (evt: PageTransitionEvent) => onUnloadOrHide(evt);
     const onVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') onUnloadOrHide();
+      if (document.visibilityState === 'hidden') onUnloadOrHide(undefined);
     };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    // pagehide is more reliable than beforeunload on mobile/Safari
+    window.addEventListener('pagehide', onPageHide as unknown as EventListener);
     document.addEventListener('visibilitychange', onVisibilityChange);
     return () => {
-      window.removeEventListener('beforeunload', onUnloadOrHide);
-      window.removeEventListener('pagehide', onUnloadOrHide);
+      window.removeEventListener('beforeunload', onBeforeUnload);
+      window.removeEventListener('pagehide', onPageHide as unknown as EventListener);
       document.removeEventListener('visibilitychange', onVisibilityChange);
     };
   }, [saveHistory, currentPlaybackTime, videoDuration]);
@@ -563,6 +583,10 @@ export default function WatchPage() {
                   fallbackToNextPreferredServer();
                 }}
                 startTime={savedStartTime}
+                onFullscreenChange={(fs) => {
+                  isFullscreenRef.current = fs;
+                  lastFullscreenChangeAtRef.current = Date.now();
+                }}
                 onTimeUpdate={(currentTime, duration) => {
                   // Update playback state
                   setCurrentPlaybackTime(currentTime);

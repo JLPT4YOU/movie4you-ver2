@@ -21,6 +21,7 @@ interface VideoPlayerProps {
   showLogo?: boolean;
   logoSrc?: string;
   onError?: () => void;
+  onFullscreenChange?: (isFullscreen: boolean) => void;
 }
 
 export default function VideoPlayer({
@@ -32,11 +33,13 @@ export default function VideoPlayer({
   showLogo = false,
   logoSrc = '/logo.png',
   onError,
+  onFullscreenChange,
 }: VideoPlayerProps) {
   const playerRef = useRef<MediaPlayerInstance>(null);
   const [hasSeeked, setHasSeeked] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const posterUrl = poster ? resolveOriginalImageUrl(poster) : undefined;
+  const prevFullscreenRef = useRef(false);
   
 
   useEffect(() => {
@@ -56,10 +59,16 @@ export default function VideoPlayer({
         player.currentTime = startTime;
         setHasSeeked(true);
       }
+
+      // Emit fullscreen change to parent when toggled
+      if (state.fullscreen !== prevFullscreenRef.current) {
+        prevFullscreenRef.current = state.fullscreen;
+        if (onFullscreenChange) onFullscreenChange(state.fullscreen);
+      }
     });
 
     return () => subscription();
-  }, [startTime, hasSeeked, isReady]);
+  }, [startTime, hasSeeked, isReady, onFullscreenChange]);
 
   // Reset flags when src changes (new video)
   useEffect(() => {
