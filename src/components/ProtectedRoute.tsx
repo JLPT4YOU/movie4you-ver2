@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -9,9 +9,8 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { hasAccess, loading, user, isAuthenticated, supabaseUser } = useAuth();
+  const { hasAccess, loading, user, supabaseUser } = useAuth();
   const router = useRouter();
-  const [isRedirecting, setIsRedirecting] = useState(false);
   const hasPushedRef = useRef(false);
 
   useEffect(() => {
@@ -19,7 +18,6 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     // Redirect only when auth state settled and no session
     if (!loading && !hasAccess && !supabaseUser) {
       hasPushedRef.current = true;
-      setIsRedirecting(true);
       router.replace('/');
     }
   }, [hasAccess, loading, router, supabaseUser]);

@@ -62,7 +62,7 @@ export default function LazyDropdown({
       
       setItems(itemsArray);
       setLoaded(true);
-    } catch (error) {
+    } catch {
     } finally {
       setLoading(false);
     }

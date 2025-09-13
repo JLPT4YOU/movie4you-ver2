@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User as SupabaseUser } from '@supabase/supabase-js';
-import { supabase, User, UserRole } from '@/lib/supabase';
+import { supabase, User } from '@/lib/supabase';
 
 interface AuthContextType {
   user: User | null;
@@ -34,7 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const saveCachedProfile = (profile: User) => {
     try {
       localStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(profile));
-    } catch (e) {
+    } catch {
       
     }
   };
@@ -45,7 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const cached = JSON.parse(raw) as User;
       if (expectedUserId && cached?.id !== expectedUserId) return null;
       return cached;
-    } catch (e) {
+    } catch {
       
       return null;
     }
@@ -75,7 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   
   const saveTermsAcceptance = async (uid: string): Promise<boolean> => {
     try {
-      const { error } = await (supabase as unknown as { from: (t: string) => any })
+      const { error } = await (supabase as unknown as { from: (t: string) => { upsert: (...args: unknown[]) => Promise<{ error?: unknown }> } })
         .from('terms_acceptance')
         .upsert(
           {
@@ -116,7 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       return data as User;
-    } catch (error) {
+    } catch {
       
       return null;
     }
@@ -156,9 +156,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             };
           }
 
-          setUser(profile);
+          // Ensure the ID matches the auth user ID
+          const userProfile = { ...profile, id: data.user.id };
+          setUser(userProfile);
           setSupabaseUser(data.user);
-          saveCachedProfile(profile);
+          saveCachedProfile(userProfile);
           return { success: true };
         }
       }
@@ -182,7 +184,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       setSupabaseUser(null);
       setDisclaimerAccepted(true);
-    } catch (error) {
+    } catch {
       
     } finally {
       // Do not toggle loading here; it is controlled by session checks
@@ -210,11 +212,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const profile = await fetchUserProfile(session.user);
           
           if (profile && profile.is_active && (profile.role === 'Premium' || profile.role === 'Admin')) {
-            setUser(profile);
+            // Ensure the ID matches the auth user ID
+            const userProfile = { ...profile, id: session.user.id };
+            setUser(userProfile);
             setSupabaseUser(session.user);
-            saveCachedProfile(profile);
+            saveCachedProfile(userProfile);
             // Check terms acceptance from database on session restore
-            const hasAccepted = await checkTermsAcceptance(profile.id);
+            const hasAccepted = await checkTermsAcceptance(session.user.id);
             setDisclaimerAccepted(hasAccepted);
           } else {
             setUser(null);
@@ -225,7 +229,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           setDisclaimerAccepted(true);
         }
-      } catch (error) {
+      } catch {
         
       } finally {
         initialSessionComplete = true;
@@ -254,11 +258,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
           const profile = await fetchUserProfile(session.user);
           if (profile && profile.is_active && (profile.role === 'Premium' || profile.role === 'Admin')) {
-            setUser(profile);
+            // Ensure the ID matches the auth user ID
+            const userProfile = { ...profile, id: session.user.id };
+            setUser(userProfile);
             setSupabaseUser(session.user);
-            saveCachedProfile(profile);
+            saveCachedProfile(userProfile);
             // Check if user has already accepted terms in database
-            const hasAccepted = await checkTermsAcceptance(profile.id);
+            const hasAccepted = await checkTermsAcceptance(session.user.id);
             setDisclaimerAccepted(hasAccepted);
           } else {
             setUser(null);

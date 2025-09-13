@@ -51,7 +51,7 @@ export default function SearchPopup({ isOpen, onClose }: SearchPopupProps) {
       } else {
         setSearchResults([]);
       }
-    } catch (error) {
+    } catch {
       setSearchResults([]);
     } finally {
       setIsSearching(false);

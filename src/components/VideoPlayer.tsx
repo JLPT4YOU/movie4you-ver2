@@ -36,9 +36,14 @@ export default function VideoPlayer({
   const playerRef = useRef<MediaPlayerInstance>(null);
   const [hasSeeked, setHasSeeked] = useState(false);
   const posterUrl = poster ? resolveOriginalImageUrl(poster) : undefined;
+  
+  console.log('VideoPlayer render: src=', src, 'startTime=', startTime);
 
   useEffect(() => {
-    if (!playerRef.current || startTime <= 0 || hasSeeked) return;
+    if (!playerRef.current || startTime <= 0 || hasSeeked) {
+      console.log('VideoPlayer seek skip: startTime=', startTime, 'hasSeeked=', hasSeeked);
+      return;
+    }
     
     const player = playerRef.current;
     
@@ -46,6 +51,7 @@ export default function VideoPlayer({
     const subscription = player.subscribe((state) => {
       // Wait for media to be ready and have duration
       if (state.canPlay && state.duration > 0 && !hasSeeked) {
+        console.log('VideoPlayer seeking to:', startTime);
         player.currentTime = startTime;
         setHasSeeked(true);
       }

@@ -13,7 +13,7 @@ export function useWatchedMovies() {
     try {
       const fresh = await WatchHistoryManager.getWatchedMovies(user?.id);
       setItems(fresh);
-    } catch (e) {
+    } catch {
       // fallback already handled in getWatchedMovies, but ensure we always have something
       setItems(WatchHistoryManager.getWatchedMoviesSync());
     } finally {

@@ -29,12 +29,18 @@ export async function GET(
     const data = await response.json();
 
     // Expand PhimAPI episodes to include s1 and s2 server variants when link_m3u8 uses s4.phim1280.tv
-    const originalEpisodes = Array.isArray((data as any)?.episodes) ? (data as any).episodes : [];
+    type EpisodeItem = { link_m3u8?: string };
+    type PhimApiEpisode = { server_name?: string; server_data?: EpisodeItem[] };
 
-    const cloneEpisodesWithVariant = (episodes: any[], variant: 's1' | 's2') => {
+    const rawEpisodes = (data as unknown as { episodes?: unknown }).episodes;
+    const originalEpisodes: PhimApiEpisode[] = Array.isArray(rawEpisodes)
+      ? (rawEpisodes as PhimApiEpisode[])
+      : [];
+
+    const cloneEpisodesWithVariant = (episodes: PhimApiEpisode[], variant: 's1' | 's2'): PhimApiEpisode[] => {
       return episodes.map((ep) => {
-        const serverData = Array.isArray(ep?.server_data) ? ep.server_data : [];
-        const clonedServerData = serverData.map((item: any) => {
+        const serverData: EpisodeItem[] = Array.isArray(ep?.server_data) ? ep.server_data! : [];
+        const clonedServerData = serverData.map((item) => {
           const originalM3u8: string | undefined = item?.link_m3u8;
           let rewrittenM3u8 = originalM3u8;
           if (typeof originalM3u8 === 'string') {
@@ -61,7 +67,7 @@ export async function GET(
     // Format response similar to ophim structure
     return NextResponse.json({
       status: true,
-      movie: (data as any).movie || data,
+      movie: (data as { movie?: unknown }).movie ?? data,
       episodes: expandedEpisodes
     }, {
       headers: { 'x-powered-by': process.env.CUSTOM_APP_NAME || 'Movie4You' }

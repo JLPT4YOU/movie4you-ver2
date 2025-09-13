@@ -76,7 +76,7 @@ export default function FilterBar({
         if (data.data?.items) {
           setCountries(data.data.items);
         }
-      } catch (error) {
+      } catch {
       }
     };
 
@@ -87,7 +87,7 @@ export default function FilterBar({
         if (data.data?.items) {
           setCategories(data.data.items);
         }
-      } catch (error) {
+      } catch {
       }
     };
 

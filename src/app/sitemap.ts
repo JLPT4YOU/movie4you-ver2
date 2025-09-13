@@ -91,7 +91,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         }
       }
     }
-  } catch (error) {
+  } catch {
   }
 
   // Fetch category pages
@@ -114,7 +114,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         }));
       }
     }
-  } catch (error) {
+  } catch {
   }
 
   return [...staticPages, ...moviePages, ...categoryPages];

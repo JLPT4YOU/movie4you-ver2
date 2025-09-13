@@ -73,7 +73,7 @@ export default function WatchPage() {
   const [movie, setMovie] = useState<MovieDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedServer, setSelectedServer] = useState(0);
-  const [selectedEpisode, setSelectedEpisode] = useState(0);
+  const [selectedEpisode, setSelectedEpisode] = useState(-1); // Start with -1 to indicate not initialized
   type PhimApiEpisode = { name?: string; link_embed?: string; link_m3u8?: string };
   type PhimApiData = { episodes?: Array<{ server_name?: string; server_data?: PhimApiEpisode[] }> } | null;
   type NguonCEpisode = { name?: string; embed?: string };
@@ -89,6 +89,7 @@ export default function WatchPage() {
   const videoRef = useRef<HTMLIFrameElement>(null);
   const initialSaveDoneRef = useRef(false);
   const lastPeriodicSaveAtRef = useRef(0); // ms timestamp for throttled periodic save
+  // removed unused initializedFromHistoryRef
 
   const saveHistory = useCallback((overrides?: {
     source?: 'ophim' | 'phimapi' | 'nguonc' | 'mappletv' | 'videasy' | 'vidlink' | 'vidfast';
@@ -163,7 +164,7 @@ export default function WatchPage() {
         ]).then(([phimapi, nguonc]) => {
           setAlternativeSources({ phimapi, nguonc });
         });
-      } catch (error) {
+      } catch {
       } finally {
         setLoading(false);
       }
@@ -171,6 +172,49 @@ export default function WatchPage() {
 
     fetchMovieData();
   }, [params.slug]);
+
+  // Initialize selected episode and progress when movie/user changes.
+  // Only set selectedEpisode on first init (when it's < 0) to avoid overriding user choice.
+  useEffect(() => {
+    const initFromHistory = async () => {
+      if (!movie) return;
+
+      console.log('initFromHistory: movie._id =', movie._id, 'user?.id =', user?.id);
+      console.log('Full user object:', user);
+
+      try {
+        const latest = await WatchHistoryManager.getLatestEpisode(movie._id, user?.id);
+        console.log('Latest episode from history:', latest);
+
+        const epIndex = (latest && typeof latest.episodeIndex === 'number') ? latest.episodeIndex : 0;
+        if (selectedEpisode < 0) {
+          console.log('Setting initial episode to:', epIndex);
+          setSelectedEpisode(epIndex);
+        }
+
+        // Load progress for that episode across any server
+        const progress = await WatchHistoryManager.getEpisodeProgressAnyServer(movie._id, epIndex, user?.id);
+        console.log('Progress for episode:', progress);
+
+        if (progress && progress.currentTime > 0) {
+          console.log('Setting startTime to:', progress.currentTime);
+          setSavedStartTime(progress.currentTime);
+          setCurrentPlaybackTime(progress.currentTime);
+          setVideoDuration(progress.duration);
+          setPlayerKey(prev => prev + 1); // Force player re-render
+        } else {
+          setSavedStartTime(0);
+          setCurrentPlaybackTime(0);
+          setVideoDuration(0);
+        }
+      } catch (e) {
+        console.error('Error in initFromHistory:', e);
+        if (selectedEpisode < 0) setSelectedEpisode(0); // Default to first episode on error
+      }
+    };
+
+    initFromHistory();
+  }, [movie, user, selectedEpisode]);
 
   // Save on page/tab exit with current playback time
   useEffect(() => {
@@ -197,35 +241,41 @@ export default function WatchPage() {
     };
   }, [saveHistory, currentPlaybackTime, videoDuration]);
 
-  // Load saved progress when movie and initial selections are ready
+  // Load saved progress when movie and current episode selection are ready
   useEffect(() => {
-    if (!movie) return;
+    if (!movie || selectedEpisode < 0) return; // Skip if episode not set yet
     // Reset early-save guard when playback context changes
     initialSaveDoneRef.current = false;
     
     // Load saved progress for initial episode/server
     const loadProgress = async () => {
-      const savedProgress = await WatchHistoryManager.getProgress(
+      console.log('loadProgress: Loading for episode', selectedEpisode);
+      const savedProgress = await WatchHistoryManager.getEpisodeProgressAnyServer(
         movie._id,
         selectedEpisode,
-        selectedServer,
         user?.id
       );
       
+      console.log('loadProgress: savedProgress =', savedProgress);
+      
       if (savedProgress && savedProgress.currentTime > 0) {
+        console.log('loadProgress: Setting startTime to', savedProgress.currentTime);
         setSavedStartTime(savedProgress.currentTime);
         setCurrentPlaybackTime(savedProgress.currentTime);
         setVideoDuration(savedProgress.duration);
+        setPlayerKey(prev => prev + 1); // Force player re-render with new startTime
       } else {
+        console.log('loadProgress: No saved progress, starting from beginning');
         setSavedStartTime(0);
         setCurrentPlaybackTime(0);
         setVideoDuration(0);
+        setPlayerKey(prev => prev + 1); // Force re-render even with 0 startTime
       }
     };
 
     loadProgress();
     // Note: saveHistory removed from deps to avoid infinite loop
-  }, [movie, selectedEpisode, selectedServer, user?.id]);
+  }, [movie, selectedEpisode, user?.id]);
 
   const getCurrentVideoSource = () => {
     let videoSource = null;
@@ -349,10 +399,10 @@ export default function WatchPage() {
         return phimapiEpisodes.findIndex((ep) => String(ep?.server_name || '').toLowerCase().includes(label));
       }
       // s4: original entries without (s1)/(s2); prefer those with m3u8 present
-      return phimapiEpisodes.findIndex((ep) => {
+      return phimapiEpisodes.findIndex((ep: { server_name?: string; server_data?: { link_m3u8?: string }[] } | null | undefined) => {
         const name = String(ep?.server_name || '').toLowerCase();
         const isOriginal = !name.includes('(s1)') && !name.includes('(s2)');
-        const hasM3u8 = Array.isArray((ep as any)?.server_data) && (ep as any).server_data.some((it: any) => Boolean(it?.link_m3u8));
+        const hasM3u8 = Array.isArray(ep?.server_data) && ep!.server_data!.some((it) => Boolean(it?.link_m3u8));
         return isOriginal && hasM3u8;
       });
     };
@@ -414,16 +464,7 @@ export default function WatchPage() {
 
   const episodes = getEpisodeList();
 
-  const getServerLanguage = (serverName: string, serverIndex: number) => {
-    const name = serverName.toLowerCase();
-    if (name.includes('vietsub')) return `Vietsub #${serverIndex + 1}`;
-    if (name.includes('lồng tiếng') || name.includes('long tieng')) return `Lồng tiếng #${serverIndex + 1}`;
-    if (name.includes('thuyết minh') || name.includes('thuyet minh')) return `Thuyết minh #${serverIndex + 1}`;
-    // Default based on common patterns
-    if (name.includes('#1')) return `Vietsub #${serverIndex + 1}`;
-    if (name.includes('#2')) return `Thuyết minh #${serverIndex + 1}`;
-    return `Server #${serverIndex + 1}`;
-  };
+  // removed unused getServerLanguage
 
   if (loading) {
     return (
@@ -452,10 +493,9 @@ export default function WatchPage() {
 
     // Load saved progress for the new server/episode
     if (movie) {
-      const savedProgress = await WatchHistoryManager.getProgress(
+      const savedProgress = await WatchHistoryManager.getEpisodeProgressAnyServer(
         movie._id,
         selectedEpisode,
-        nextServer,
         user?.id
       );
       if (savedProgress && savedProgress.currentTime > 0) {
@@ -592,33 +632,7 @@ export default function WatchPage() {
                     
                     const nextSource = server.source as 'ophim' | 'phimapi' | 'nguonc' | 'mappletv' | 'videasy' | 'vidlink' | 'vidfast';
                     const nextServer = server.index;
-                    
-                    // save immediately for this selection
-                    await saveHistory({ source: nextSource, serverIndex: nextServer, episodeIndex: 0 });
-                    setSelectedSource(nextSource);
-                    setSelectedServer(nextServer);
-                    setSelectedEpisode(0);
-                    
-                    // Load saved progress for the new server
-                    if (movie) {
-                      const savedProgress = await WatchHistoryManager.getProgress(
-                        movie._id,
-                        0,
-                        nextServer,
-                        user?.id
-                      );
-                      if (savedProgress && savedProgress.currentTime > 0) {
-                        setSavedStartTime(savedProgress.currentTime);
-                        setCurrentPlaybackTime(savedProgress.currentTime);
-                        setVideoDuration(savedProgress.duration);
-                      } else {
-                        setSavedStartTime(0);
-                        setCurrentPlaybackTime(0);
-                        setVideoDuration(0);
-                      }
-                    }
-                    
-                    setPlayerKey(prev => prev + 1); // Force player re-render
+                    await applyServerChange(nextSource, nextServer);
                   }}
                   className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                     selectedSource === server.source && selectedServer === server.index
@@ -646,10 +660,9 @@ export default function WatchPage() {
                       
                       // Load saved progress for the new episode
                       if (movie) {
-                        const savedProgress = await WatchHistoryManager.getProgress(
+                        const savedProgress = await WatchHistoryManager.getEpisodeProgressAnyServer(
                           movie._id,
                           idx,
-                          selectedServer,
                           user?.id
                         );
                         if (savedProgress && savedProgress.currentTime > 0) {

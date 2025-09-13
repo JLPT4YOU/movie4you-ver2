@@ -166,7 +166,7 @@ export default function Header() {
                     <button
                       onClick={async () => {
                         setIsUserDropdownOpen(false);
-                        try { await signOut(); } catch (e) { /* silent */ }
+                        try { await signOut(); } catch { /* silent */ }
                       }}
                       className="flex items-center gap-3 px-4 py-2 text-sm text-netflix-text-gray hover:text-netflix-white hover:bg-netflix-gray transition-colors w-full text-left"
                     >

@@ -39,14 +39,14 @@ export default function LoginPage() {
       } else {
         setError(result.error || 'Đăng nhập thất bại');
       }
-    } catch (error) {
+    } catch {
       setError('Đã xảy ra lỗi khi đăng nhập');
     } finally {
       setIsLoading(false);
       try {
         captchaRef.current?.resetCaptcha();
         setCaptchaToken(undefined);
-      } catch (_) {
+      } catch {
         
       }
     }
@@ -183,7 +183,7 @@ export default function LoginPage() {
                 {/* hCaptcha (moved below Remember/Forgot and above Login button) */}
                 <div>
                   <HCaptcha
-                    ref={captchaRef as any}
+                    ref={captchaRef}
                     sitekey="185a143a-edae-4240-8ba4-7dbeb87234b6"
                     onVerify={(token) => setCaptchaToken(token)}
                     onExpire={() => setCaptchaToken(undefined)}

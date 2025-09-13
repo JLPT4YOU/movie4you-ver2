@@ -29,8 +29,10 @@ const csp = [
   "font-src 'self' data:",
   // Allow Supabase and hCaptcha networking + websockets
   "connect-src 'self' https: wss: https://*.supabase.co https://hcaptcha.com https://*.hcaptcha.com",
-  // Allow embedding YouTube and hCaptcha
-  "frame-src https://www.youtube.com https://hcaptcha.com https://*.hcaptcha.com",
+  // Explicitly allow Web Workers (needed by HLS/Vidstack)
+  "worker-src 'self' blob:",
+  // Allow embedding video providers and captcha
+  "frame-src 'self' https: data: blob: https://www.youtube.com https://hcaptcha.com https://*.hcaptcha.com https://mappletv.uk https://player.videasy.net https://vidlink.pro https://vidfast.to",
   "media-src 'self' blob: https:"
 ].join('; ');
 

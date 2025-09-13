@@ -36,6 +36,7 @@ class WatchProgressService {
   async saveProgress(userId: string, progressData: WatchProgressInput): Promise<WatchProgress | null> {
     try {
       const now = new Date().toISOString();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase as unknown as { from: (t: string) => any })
         .from('watch_progress')
         .upsert(
@@ -59,7 +60,7 @@ class WatchProgressService {
       }
 
       return Array.isArray(data) ? (data[0] as WatchProgress) : (data as unknown as WatchProgress);
-    } catch (error) {
+    } catch {
       return null;
     }
   }
@@ -88,7 +89,37 @@ class WatchProgressService {
       }
 
       return data || null;
-    } catch (error) {
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Get the latest watch progress for a specific movie episode across ANY server.
+   * Useful when resuming an episode without caring which server was used last.
+   */
+  async getLatestEpisodeProgress(
+    userId: string,
+    movieId: string,
+    episodeIndex: number
+  ): Promise<WatchProgress | null> {
+    try {
+      const { data, error } = await supabase
+        .from('watch_progress')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('movie_id', movieId)
+        .eq('episode_index', episodeIndex)
+        .order('watched_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') {
+        return null;
+      }
+
+      return data || null;
+    } catch {
       return null;
     }
   }
@@ -110,7 +141,7 @@ class WatchProgressService {
       }
 
       return data || [];
-    } catch (error) {
+    } catch {
       return [];
     }
   }
@@ -133,7 +164,7 @@ class WatchProgressService {
       }
 
       return data || [];
-    } catch (error) {
+    } catch {
       return [];
     }
   }
@@ -154,7 +185,7 @@ class WatchProgressService {
       }
 
       return true;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -174,7 +205,7 @@ class WatchProgressService {
       }
 
       return true;
-    } catch (error) {
+    } catch {
       return false;
     }
   }

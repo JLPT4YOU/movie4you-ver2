@@ -66,7 +66,7 @@ export default function MobileMenu({
 
         setCategories(itemsArray);
       }
-    } catch (error) {
+    } catch {
       
     } finally {
       setLoading(prev => ({ ...prev, categories: false }));
@@ -97,7 +97,7 @@ export default function MobileMenu({
 
         setCountries(itemsArray);
       }
-    } catch (error) {
+    } catch {
       
     } finally {
       setLoading(prev => ({ ...prev, countries: false }));
@@ -127,7 +127,7 @@ export default function MobileMenu({
 
         setYears(itemsArray);
       }
-    } catch (error) {
+    } catch {
       
     } finally {
       setLoading(prev => ({ ...prev, years: false }));
@@ -375,7 +375,7 @@ export default function MobileMenu({
           </Link>
           <button
             onClick={async () => {
-              try { await signOut(); } catch (_) {}
+              try { await signOut(); } catch {}
               onClose();
             }}
             className="flex items-center gap-3 py-2 text-netflix-text-gray hover:text-netflix-white transition-colors w-full text-left"

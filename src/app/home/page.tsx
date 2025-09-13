@@ -110,7 +110,7 @@ async function fetchCinemaMoviesData() {
         showtimes: movieDetail.showtimes || movie.showtimes || '',
         modified: movieDetail.modified || movie.modified || { time: new Date().toISOString() }
       } as Movie;
-    } catch (error) {
+    } catch {
       firstMovie = movie as Movie;
     }
 
@@ -157,7 +157,7 @@ async function fetchCinemaMoviesData() {
             showtimes: detail.showtimes || m.showtimes || '',
             modified: detail.modified || m.modified || { time: new Date().toISOString() }
           } as Movie;
-        } catch (error) {
+        } catch {
           return m as unknown as Movie;
         }
       })
@@ -168,7 +168,7 @@ async function fetchCinemaMoviesData() {
       heroMovies: allMovies,
       cinemaMovies: allMovies
     };
-  } catch (error) {
+  } catch {
     return { heroMovies: [], cinemaMovies: [] };
   }
 }

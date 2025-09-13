@@ -53,10 +53,8 @@ export default function MovieDetailPage() {
           script.text = JSON.stringify(structuredData);
           document.head.appendChild(script);
         }
-      } catch (error) {
-      } finally {
-        setLoading(false);
-      }
+      } catch {}
+      setLoading(false);
     };
     
     fetchMovie();
